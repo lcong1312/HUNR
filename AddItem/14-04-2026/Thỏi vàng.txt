@@ -1,0 +1,18 @@
+---------------------------------
+Time: 10:25:24 14/04/2026
+Player: songoku
+Quantity Added: 1000
+  at com.ngocrong.user.Player.addItem(Player.java:12796)
+  at com.ngocrong.user.Player.buffItem(Player.java:10529)
+  at com.ngocrong.user.Player.confirmTextBox(Player.java:10142)
+  at com.ngocrong.network.MessageHandler.onMessage(MessageHandler.java:505)
+=====================================
+
+---------------------------------
+Time: 17:07:22 14/04/2026
+Player: songoku
+Quantity Added: 10
+  at com.ngocrong.user.Player.addItem(Player.java:12842)
+  at _HunrProvision.minigame.KeoBuaBao.lambda$StartGame$0(KeoBuaBao.java:171)
+=====================================
+

@@ -1,0 +1,11 @@
+---------------------------------
+Time: 10:23:32 14/04/2026
+Player: songoku
+Quantity Added: 23
+  at com.ngocrong.user.Player.addItem(Player.java:12858)
+  at com.ngocrong.model.MagicTree.harvest(MagicTree.java:142)
+  at com.ngocrong.user.Player.confirmKeyValue(Player.java:8643)
+  at com.ngocrong.user.Player.menu(Player.java:4071)
+  at com.ngocrong.network.MessageHandler.onMessage(MessageHandler.java:244)
+=====================================
+

@@ -1,0 +1,48 @@
+# =============================
+# Build outputs
+# =============================
+/target/
+/build/
+/dist/
+/out/
+
+# Website build/cache
+/_website/.next/
+/_website/node_modules/
+
+# =============================
+# Logs / temp files
+# =============================
+*.log
+*log.txt
+*.tmp
+
+# =============================
+# IDE / editor
+# =============================
+.idea/
+*.iws
+*.iml
+*.ipr
+/.fleet/
+.vscode/
+
+# =============================
+# NetBeans
+# =============================
+/nbproject/private/
+/nbbuild/
+/nbdist/
+/.nb-gradle/
+
+# =============================
+# OS junk
+# =============================
+.DS_Store
+Thumbs.db
+
+# =============================
+# Keep important project files tracked
+# =============================
+!.mvn/wrapper/maven-wrapper.jar
+!src/main/resources/*.properties

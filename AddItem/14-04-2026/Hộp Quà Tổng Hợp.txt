@@ -1,0 +1,10 @@
+---------------------------------
+Time: 17:23:27 14/04/2026
+Player: songoku
+Quantity Added: 1
+  at com.ngocrong.user.Player.addItem(Player.java:12904)
+  at com.ngocrong.user.Player.buffItem(Player.java:10572)
+  at com.ngocrong.user.Player.confirmTextBox(Player.java:10185)
+  at com.ngocrong.network.MessageHandler.onMessage(MessageHandler.java:505)
+=====================================
+
