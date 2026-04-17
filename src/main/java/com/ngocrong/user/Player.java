@@ -4568,10 +4568,10 @@ public class Player {
 //                            menus.add(new KeyValue(1173, "Top 100\nTiêu thỏi vàng"));
 //                            menus.add(new KeyValue(1174, "Top 100\nĐệ tử"));
 
-//                            menus.add(new KeyValue(1201, "Di chuyển\ntới Map\nThiên tử"));
+                            menus.add(new KeyValue(1201, "Di chuyển\ntới Map\nThiên tử"));
 //                            menus.add(new KeyValue(1172, "Top 100\nBoss Raiti"));
 //                            menus.add(new KeyValue(1173, "Top 100\nTiêu thỏi vàng"));
-                            menus.add(new KeyValue(1174, "Top 100\nĐệ tử"));
+                            // menus.add(new KeyValue(1174, "Top 100\nĐệ tử"));
                         if (ConfigStudio.EVENT_NEWYEAR_2026) {
                                 menus.add(new KeyValue(1220, "Top Event Siêu Hạng"));
                                 menus.add(new KeyValue(1221, "Top mở Hộp\nquà thường"));
@@ -5264,12 +5264,12 @@ public class Player {
 //                            if (OsinCheckInEvent.) {
                             menus.add(new KeyValue(CMDMenu.OSIN_CHECKIN, "Điểm danh"));
 
-                            if (ConfigStudio.EVENT_NEWYEAR_2026) {
-                                menus.add(new KeyValue(CMDMenu.OSIN_RUT_LIXI, "Rút Lì Xì"));
-                                menus.add(new KeyValue(CMDMenu.OSIN_DOI_CHU, "Đổi Chữ"));
-                            }
+                            // if (ConfigStudio.EVENT_NEWYEAR_2026) {
+                            //     menus.add(new KeyValue(CMDMenu.OSIN_RUT_LIXI, "Rút Lì Xì"));
+                            //     menus.add(new KeyValue(CMDMenu.OSIN_DOI_CHU, "Đổi Chữ"));
+                            // }
 
-//                            menus.add(new KeyValue(1182, "Tới Vùng đất ma"));
+                           menus.add(new KeyValue(1182, "Tới Vùng đất ma"));
 //                            menus.add(new KeyValue(1194, "Tới Băng đảo vĩnh hằng"));
 //                            } else if (OsinCheckInEvent.isRewardDay()) {
 //                                menus.add(new KeyValue(CMDMenu.OSIN_REWARD, "Nhận quà"));

@@ -28,7 +28,7 @@ public class MySQLConnect {
         }
         String url = "jdbc:mysql://" + host + ":" + port + "/" + database
                 + "?useUnicode=true&characterEncoding=utf8&rewriteBatchedStatements=true"
-                + "&connectionTimeZone=Asia/Ho_Chi_Minh&forceConnectionTimeZoneToSession=true";
+                + "&serverTimezone=Asia/Bangkok";
         logger.debug("MySQL connect: " + url);
         try {
             conn = DriverManager.getConnection(url, user, pass);

@@ -22,7 +22,6 @@ import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -41,7 +40,7 @@ import java.util.TimeZone;
 
 public class Utils {
 
-    public static final ZoneId VIETNAM_ZONE = ZoneId.of("Asia/Ho_Chi_Minh");
+    public static final java.time.ZoneId VIETNAM_ZONE = VietnamTime.zoneId();
     public static Random rand = new Random();
     private static Pattern pattern = Pattern.compile("^[a-z0-9]{6,15}$");
     private static Pattern patternAlphaNumeric = Pattern.compile("^[a-z0-9]$");

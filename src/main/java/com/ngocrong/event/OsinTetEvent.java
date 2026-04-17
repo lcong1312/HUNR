@@ -125,6 +125,11 @@ public class OsinTetEvent {
 
         int randomChuId = ALL_CHU_IDS[Utils.nextInt(ALL_CHU_IDS.length)];
         Item chuItem = new Item(randomChuId);
+        if (chuItem.template == null) {
+            logger.warn("Osin Lixi reward template missing for itemId=" + randomChuId);
+            player.service.sendThongBao("Vật phẩm sự kiện chưa sẵn sàng.");
+            return;
+        }
         chuItem.setDefaultOptions();
         chuItem.addItemOption(new ItemOption(30, 1));
         chuItem.addItemOption(new ItemOption(174, 2026));
@@ -180,6 +185,11 @@ public class OsinTetEvent {
 
         for (ChuReward reward : rewards) {
             Item rewardItem = new Item(reward.itemId);
+            if (rewardItem.template == null) {
+                logger.warn("Osin Tet exchange template missing for itemId=" + reward.itemId);
+                player.service.sendThongBao("Vật phẩm đổi thưởng chưa sẵn sàng.");
+                return;
+            }
             rewardItem.setDefaultOptions();
             rewardItem.quantity = reward.quantity;
             

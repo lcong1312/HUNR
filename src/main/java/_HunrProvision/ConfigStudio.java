@@ -5,15 +5,15 @@ package _HunrProvision;
  */
 public class ConfigStudio {
 
-    public static final String SLOGAN = "Chào mừng bạn đến với Hồi Ức Ngọc Rồng";
-    public static final String ABBREVIATION = "Hunr";
-    public static final String SLOGAN_BOTCOLD = "Hunr";
-    public static final String SLOGAN_BOTSOSINH = "Hunr";
-    public static final String SLOGAN_BOTTRAIN = "Hunr";
-    public static final String MESSAGE_LOGIN2 = "Đăng ký tài khoản tại Hoiucngocrong.com";
-    public static final String MESSAGE_INPUT_CARD = "Bạn hãy truy cập trang: Hoiucngocrong.com để nạp tiền nhéeeeee!";
-    public static final String SERVER_VERSION = "0.0.7";
-    public static final String WEBSITE_URL = "Hoiucngocrong.COM";
+    public static final String SLOGAN = "Chào mừng bạn đến với Chú bé rồng";
+    public static final String ABBREVIATION = "Chú bé rồng";
+    public static final String SLOGAN_BOTCOLD = "Chú be rồng";
+    public static final String SLOGAN_BOTSOSINH = "Chú bé rồng";
+    public static final String SLOGAN_BOTTRAIN = "Chú bé rồng";
+    public static final String MESSAGE_LOGIN2 = "Đăng ký tài khoản tại vcong.store2003.online nhé!";
+    public static final String MESSAGE_INPUT_CARD = "Bạn hãy truy cập trang: vcong.store2003.online để nạp tiền nhéeeeee!";
+    public static final String SERVER_VERSION = "0.0.1";
+    public static final String WEBSITE_URL = "vcong.store2003.online";
 
     // ====================================== MODE ADMIN
     public static final boolean MODE_ADMIN = false;
@@ -38,6 +38,6 @@ public class ConfigStudio {
     public static final boolean NPC_BO_MONG = true;
 
     // ====================================== NPC BO MONG
-    public static final boolean EVENT_NEWYEAR_2026 = true;
+    public static final boolean EVENT_NEWYEAR_2026 = false;
 
 }

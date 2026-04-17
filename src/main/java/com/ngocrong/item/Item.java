@@ -85,7 +85,15 @@ public class Item {
     }
 
     public void setDefaultOptions() {
-        this.options.clear();
+        if (this.options == null) {
+            this.options = new ArrayList<>();
+        } else {
+            this.options.clear();
+        }
+        if (this.template == null || this.template.options == null) {
+            logger.warn("Skip setDefaultOptions for item id=" + this.id + ": template/options unavailable.");
+            return;
+        }
         for (ItemOption option : this.template.options) {
             addItemOption(new ItemOption(option.optionTemplate.id, option.param));
         }
@@ -115,9 +123,16 @@ public class Item {
     }
 
     public void init() {
+        this.info = "";
+        this.content = "";
+        this.options = new ArrayList<>();
         try {
             Server server = DragonBall.getInstance().getServer();
             this.template = server.iTemplates.get(id);
+            if (this.template == null) {
+                logger.warn("Item template not found for item id=" + this.id);
+                return;
+            }
             int id = this.id;
             byte type = template.type;
             this.typeThrow = 1;// bỏ ra mất luôn
@@ -133,13 +148,9 @@ public class Item {
 //        if (type >= 0 && type <= 12) {
 //            this.typeThrow = 1;
 //        }
-            this.info = "";
-            this.content = "";
-            this.options = new ArrayList<>();
             this.require = template.require;
         } catch (Exception e) {
-            System.err.println("Errror at template id : " + this.id);
-            e.printStackTrace();
+            logger.error("Failed to init item template id=" + this.id, e);
         }
 
     }
@@ -165,6 +176,9 @@ public class Item {
 
     public void addItemOption(ItemOption itemOption) {
         setAttribute(itemOption);
+        if (this.options == null) {
+            this.options = new ArrayList<>();
+        }
         this.options.add(itemOption);
     }
 

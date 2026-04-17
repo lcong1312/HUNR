@@ -4,19 +4,23 @@ import com.ngocrong.repository.*;
 import com.ngocrong.security.MatrixChallengePC;
 import com.ngocrong.server.DragonBall;
 import com.ngocrong.server.DropRateService;
+import com.ngocrong.server.mysql.SchemaCompatibility;
+import com.ngocrong.util.VietnamTime;
 import _HunrProvision.services.BoMongService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
+import javax.sql.DataSource;
+import java.sql.Connection;
 import java.util.TimeZone;
 
 @SpringBootApplication
 public class Run implements CommandLineRunner {
 
     public static void main(String[] args) {
-        TimeZone vietnamTimeZone = TimeZone.getTimeZone("Asia/Ho_Chi_Minh");
+        TimeZone vietnamTimeZone = VietnamTime.timeZone();
         TimeZone.setDefault(vietnamTimeZone);
         System.setProperty("user.timezone", vietnamTimeZone.getID());
         SpringApplication.run(Run.class, args);
@@ -24,6 +28,10 @@ public class Run implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
+        try (Connection connection = dataSource.getConnection()) {
+            SchemaCompatibility.ensureMinimumSchema(connection);
+        }
+
         GameRepository.getInstance().user = userDataRepository;
         GameRepository.getInstance().player = playerDataRepository;
         GameRepository.getInstance().giftCode = giftCodeDataRepository;
@@ -146,4 +154,7 @@ public class Run implements CommandLineRunner {
 
     @Autowired
     BotConfigRepository botConfigRepository;
+
+    @Autowired
+    DataSource dataSource;
 }
