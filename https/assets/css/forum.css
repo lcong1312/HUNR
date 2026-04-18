@@ -1,0 +1,303 @@
+.forum-page {
+    background:
+        radial-gradient(circle at top center, rgba(255, 233, 182, 0.35), transparent 30%),
+        linear-gradient(180deg, #ffb65d 0%, #ff9331 55%, #ff7b14 100%);
+    border-radius: 16px;
+    box-shadow: 0 16px 30px rgba(133, 48, 0, 0.18);
+}
+
+.forum-page .content {
+    padding: 10px 6px 8px;
+}
+
+.forum-board {
+    display: grid;
+    gap: 12px;
+}
+
+.forum-hero-panel {
+    display: flex;
+    justify-content: center;
+    padding: 6px 10px 4px;
+    border-radius: 0;
+    background: linear-gradient(180deg, #ffb55d 0%, #ff9d39 100%);
+    border-top: 2px solid #ffcf84;
+    border-bottom: 3px solid #e36d18;
+}
+
+.forum-download-bar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    flex-wrap: wrap;
+}
+
+.forum-download-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 0;
+    transition: transform 0.16s ease, filter 0.16s ease;
+}
+
+.forum-download-button:hover {
+    transform: translateY(-1px);
+    filter: saturate(1.04);
+}
+
+.forum-download-button img {
+    display: block;
+    height: 35px;
+    width: auto;
+}
+
+.forum-section-head {
+    display: flex;
+    align-items: center;
+    min-height: 40px;
+    padding: 0 12px;
+    border-radius: 10px;
+    background: linear-gradient(90deg, #ff5b29 0%, #ff4330 100%);
+    color: #fff1d2;
+    font-weight: bold;
+    box-shadow: 0 8px 20px rgba(148, 41, 2, 0.16);
+}
+
+.forum-section-head span {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.forum-section-head span::before {
+    content: "*";
+    font-size: 12px;
+}
+
+.forum-section-head--secondary span::before {
+    content: "+";
+}
+
+.forum-back-link {
+    color: #fff4df !important;
+    font-weight: bold;
+}
+
+.forum-detail-toolbar {
+    padding: 0 2px;
+}
+
+.forum-back-link--plain {
+    display: inline-block;
+    color: #fff2d5 !important;
+    font-size: 14px;
+}
+
+.forum-topic-list {
+    display: grid;
+    gap: 4px;
+    padding: 10px 8px 8px;
+    border-radius: 0 0 12px 12px;
+    background:
+        linear-gradient(180deg, rgba(255, 115, 24, 0.88) 0%, rgba(245, 98, 12, 0.96) 100%);
+}
+
+.forum-topic-list--compact {
+    background:
+        linear-gradient(180deg, rgba(255, 186, 109, 0.7) 0%, rgba(255, 150, 43, 0.78) 100%);
+}
+
+.forum-topic {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 10px;
+    align-items: start;
+    padding: 8px 6px;
+    border-bottom: 1px solid rgba(255, 211, 160, 0.16);
+}
+
+.forum-topic:last-child {
+    border-bottom: 0;
+}
+
+.forum-post-mark {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    overflow: hidden;
+    border: 1px solid rgba(223, 140, 56, 0.82);
+    border-radius: 6px;
+    background: #fff3de;
+    box-shadow: 0 4px 12px rgba(96, 19, 0, 0.14);
+}
+
+.forum-post-mark--small {
+    width: 32px;
+    height: 32px;
+    border-radius: 5px;
+}
+
+.forum-post-mark img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.forum-topic__body {
+    min-width: 0;
+}
+
+.forum-topic__title {
+    display: inline-block;
+    color: #fff8e6 !important;
+    font-size: 15px;
+    line-height: 1.35;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.forum-topic__meta {
+    margin-top: 2px;
+    color: rgba(255, 224, 179, 0.92);
+    font-size: 12px;
+    font-style: italic;
+}
+
+.forum-topic__body p {
+    margin: 4px 0 0;
+    color: rgba(255, 239, 207, 0.92);
+    line-height: 1.45;
+}
+
+.forum-post-id {
+    color: rgba(255, 225, 178, 0.85);
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.forum-detail-post {
+    overflow: hidden;
+    border: 2px solid #e9a154;
+    border-radius: 0 0 6px 6px;
+    background: #ffffff;
+}
+
+.forum-detail-post__table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+    background: #ffffff;
+}
+
+.forum-detail-post__author-col {
+    width: 48px;
+    padding: 6px 4px 8px;
+    vertical-align: top;
+    text-align: center;
+    background: #fff1d6;
+    border-right: 1px solid #edd2aa;
+}
+
+.forum-detail-post__avatar-box {
+    width: 32px;
+    height: 32px;
+    margin: 0 auto;
+    overflow: hidden;
+    border: 1px solid #d78733;
+    border-radius: 4px;
+    background: #fff8ee;
+}
+
+.forum-detail-post__avatar-box img {
+    display: block;
+    width: 32px !important;
+    height: 32px !important;
+    max-width: none !important;
+    object-fit: cover;
+}
+
+.forum-detail-post__author-name {
+    display: block;
+    margin-top: 6px;
+    color: #da7031;
+    font-size: 10px;
+    text-decoration: underline;
+}
+
+.forum-detail-post__body-col {
+    vertical-align: top;
+    background: #ffffff;
+}
+
+.forum-detail-post__meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 6px 8px 0;
+    color: #6e5330;
+    font-size: 11px;
+    font-style: italic;
+}
+
+.forum-detail-post__content {
+    padding: 2px 8px 10px;
+    color: #111111;
+    line-height: 1.35;
+    font-size: 14px;
+    word-break: break-word;
+}
+
+.forum-detail-post__title {
+    margin: 0 0 4px;
+    color: #0b49a0;
+    font-size: 17px;
+    line-height: 1.22;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.forum-detail-post__text a {
+    color: #005dc1;
+    text-decoration: underline;
+}
+
+.forum-empty-state {
+    padding: 16px 14px;
+    border-radius: 0 0 12px 12px;
+    background: rgba(255, 243, 218, 0.92);
+    color: #7b3f09;
+    line-height: 1.5;
+}
+
+.forum-empty-state code {
+    font-family: Consolas, monospace;
+    color: #5f2400;
+}
+
+@media (max-width: 640px) {
+    .forum-hero-panel {
+        padding: 6px 6px 4px;
+    }
+
+    .forum-download-bar {
+        gap: 2px;
+    }
+
+    .forum-post-id {
+        grid-column: 2;
+        justify-self: end;
+    }
+
+    .forum-detail-post__title {
+        font-size: 15px;
+    }
+
+    .forum-detail-post__content {
+        font-size: 13px;
+    }
+}

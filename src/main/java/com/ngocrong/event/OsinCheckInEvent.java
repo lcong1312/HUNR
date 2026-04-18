@@ -1,5 +1,6 @@
 package com.ngocrong.event;
 
+import _HunrProvision.ConfigStudio;
 import com.ngocrong.consts.ItemName;
 import com.ngocrong.consts.ItemTimeName;
 import com.ngocrong.data.OsinCheckInData;
@@ -27,12 +28,19 @@ public class OsinCheckInEvent {
         return GameRepository.getInstance().osinCheckInRepository;
     }
 
-    public static final int[] MILESTONES = {2000, 1000, 500, 400, 300, 200};
+    public static final int[] MILESTONES = ConfigStudio.EVENT_OSIN_CHECKIN_MILESTONES.clone();
+
+    public static boolean isActive() {
+        return ConfigStudio.EVENT_OSIN_CHECKIN;
+    }
 
     /**
      * Lấy tổng số lượt điểm danh hôm nay
      */
     public static int getTotalTodayCheckIns() {
+        if (!isActive()) {
+            return 0;
+        }
         return repo().countToday();
     }
 
@@ -41,6 +49,10 @@ public class OsinCheckInEvent {
      */
     public static void checkIn(Player player) {
         if (player == null) {
+            return;
+        }
+        if (!isActive()) {
+            player.service.sendThongBao("Sự kiện điểm danh hiện đang tạm đóng.");
             return;
         }
 
@@ -236,6 +248,9 @@ public class OsinCheckInEvent {
      * Kiểm tra và xử lý x2 TNSM pending
      */
     public static void checkPendingReward(Player player) {
+        if (!isActive()) {
+            return;
+        }
         if (player == null || player.itemTimes == null || player.itemTimes.isEmpty()) {
             return;
         }
@@ -256,6 +271,9 @@ public class OsinCheckInEvent {
      * Lấy thông tin trạng thái sự kiện (cho debug/admin)
      */
     public static String getEventStatus() {
+        if (!isActive()) {
+            return "Sự kiện điểm danh hiện đang tạm đóng.";
+        }
         int total = getTotalTodayCheckIns();
         int currentMilestone = getHighestAchievedMilestone(total);
 

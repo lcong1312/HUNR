@@ -43,6 +43,8 @@ public class Config {
     private String listServers;
     private int voicePort = 14446;
     private boolean backupOnStartup = false;
+    private String resourceDownloadMd5;
+    private String resourceDownloadDeniedMessage;
 
     public static int serverID() {
         Server server = DragonBall.getInstance().getServer();
@@ -79,6 +81,10 @@ public class Config {
             this.itemVersion = Byte.parseByte(props.getProperty("game.item.version"));
             this.mapVersion = Byte.parseByte(props.getProperty("game.map.version"));
             this.skillVersion = Byte.parseByte(props.getProperty("game.skill.version"));
+            this.resourceDownloadMd5 = props.getProperty("security.resource.download.md5", "").trim();
+            this.resourceDownloadDeniedMessage = props.getProperty(
+                    "security.resource.download.denied-message",
+                    "Xac thuc tai du lieu that bai. Vui long su dung dung client.");
 
             this.exp = Integer.parseInt(props.getProperty("game.exp"));
             this.maxQuantity = Integer.parseInt(props.getProperty("game.item.quantity.max"));

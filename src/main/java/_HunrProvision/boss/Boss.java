@@ -21,8 +21,9 @@ import com.ngocrong.skill.SkillName;
 import com.ngocrong.user.Player;
 import com.ngocrong.user.Info;
 import com.ngocrong.util.Utils;
-//import com.ngocrong.NQMP.Event.LuaThanEvent;
-//import com.ngocrong.NQMP.Event.QuocKhanh;
+import _HunrProvision.ConfigStudio;
+import com.ngocrong.NQMP.Event.LuaThanEvent;
+import com.ngocrong.NQMP.Event.QuocKhanh;
 import _HunrProvision.services.BoMongService;
 import com.ngocrong.bot.Bot;
 import com.ngocrong.bot.VirtualBot;
@@ -408,8 +409,12 @@ public abstract class Boss extends Player implements Bot {
         if (killer instanceof Player) {
             Player _c = (Player) killer;
             sendNotificationWhenDead(_c.name);
-//            LuaThanEvent.bossReward(_c, this);
-//            QuocKhanh.bossReward(_c, this);
+            if (ConfigStudio.EVENT_LUA_THAN) {
+                LuaThanEvent.bossReward(_c, this);
+            }
+            if (ConfigStudio.EVENT_QUOC_KHANH) {
+                QuocKhanh.bossReward(_c, this);
+            }
             
             if (_c != null && _c.currentNhiemVuBoMong != null && !(this instanceof VirtualBot)) {
                  BoMongService nv = _c.currentNhiemVuBoMong;

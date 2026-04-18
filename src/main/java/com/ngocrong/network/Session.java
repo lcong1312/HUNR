@@ -60,7 +60,9 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.net.Socket;
+import java.security.MessageDigest;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.math.BigInteger;
@@ -210,6 +212,9 @@ public class Session implements ISession {
             //System.err.println("action " + action);
 
             if (action == 1) {
+                if (!isValidResourceDownloadRequest(ms)) {
+                    return;
+                }
                 Service sv = (Service) service;
                 String folder = "resources/data/" + zoomLevel;
                 ArrayList<String> datas = new ArrayList<>();
@@ -234,6 +239,53 @@ public class Session implements ISession {
             logger.error("failed!", ex);
         } finally {
         }
+    }
+
+    private boolean isValidResourceDownloadRequest(Message ms) {
+        try {
+            Config config = DragonBall.getInstance().getServer().getConfig();
+            String expectedMd5 = config.getResourceDownloadMd5();
+            if (expectedMd5 == null || expectedMd5.isEmpty()) {
+                return true;
+            }
+            if (ms.reader().available() <= 0) {
+                denyResourceDownload(config.getResourceDownloadDeniedMessage(), "missing token");
+                return false;
+            }
+
+            String clientToken = ms.reader().readUTF();
+            String clientMd5 = md5Hex(clientToken);
+            if (!expectedMd5.equalsIgnoreCase(clientMd5)) {
+                denyResourceDownload(config.getResourceDownloadDeniedMessage(), "invalid token");
+                return false;
+            }
+            return true;
+        } catch (Exception ex) {
+            logger.warn("Resource download authentication error", ex);
+            Service sv = (Service) service;
+            if (sv != null) {
+                sv.dialogMessage("Xac thuc tai du lieu that bai. Vui long thu lai.");
+            }
+            return false;
+        }
+    }
+
+    private void denyResourceDownload(String message, String reason) {
+        logger.warn(String.format("Reject resource download for session=%d ip=%s reason=%s", id, ip, reason));
+        Service sv = (Service) service;
+        if (sv != null) {
+            sv.dialogMessage(message);
+        }
+    }
+
+    private String md5Hex(String input) throws Exception {
+        MessageDigest digest = MessageDigest.getInstance("MD5");
+        byte[] hash = digest.digest(input.getBytes(StandardCharsets.UTF_8));
+        StringBuilder builder = new StringBuilder(hash.length * 2);
+        for (byte value : hash) {
+            builder.append(String.format("%02x", value));
+        }
+        return builder.toString();
     }
 
     public static void addPath(ArrayList<String> paths, File file) {

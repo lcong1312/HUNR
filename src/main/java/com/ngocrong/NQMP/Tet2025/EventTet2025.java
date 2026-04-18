@@ -4,6 +4,7 @@
  */
 package com.ngocrong.NQMP.Tet2025;
 
+import _HunrProvision.ConfigStudio;
 import com.ngocrong.consts.ItemName;
 import com.ngocrong.item.Item;
 import com.ngocrong.item.ItemMap;
@@ -25,7 +26,7 @@ public class EventTet2025 {
     public static final int HopQua2025Vip = 2195;
 
     public static void mobReward(Player player) {
-        if (player == null || player.zone == null || true) {
+        if (!ConfigStudio.EVENT_TET_2025 || player == null || player.zone == null) {
             return;
         }
         if (Utils.nextInt(100) <= 20) {

@@ -1,5 +1,6 @@
 package com.ngocrong.NQMP.Event;
 
+import _HunrProvision.ConfigStudio;
 import _HunrProvision.boss.Boss;
 import com.ngocrong.consts.ItemName;
 import com.ngocrong.consts.ItemTimeName;
@@ -35,7 +36,7 @@ public class QuocKhanh {
     private static final int[] NUMBERS = {ItemName.SO_2, ItemName.SO_9};
 
     public static void mobReward(Player player, Mob mob) {
-        if (player == null || player.zone == null || true) {
+        if (!ConfigStudio.EVENT_QUOC_KHANH || player == null || player.zone == null) {
             return;
         }
         if (!Utils.isTrue(1, 100)) {
@@ -57,7 +58,7 @@ public class QuocKhanh {
     }
 
     public static void bossReward(Player player, Boss boss) {
-        if (player == null || boss == null || boss.zone == null || true) {
+        if (!ConfigStudio.EVENT_QUOC_KHANH || player == null || boss == null || boss.zone == null) {
             return;
         }
         int id = BOSS_LETTERS[Utils.nextInt(BOSS_LETTERS.length)];

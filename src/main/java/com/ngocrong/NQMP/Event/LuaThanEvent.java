@@ -1,5 +1,6 @@
 package com.ngocrong.NQMP.Event;
 
+import _HunrProvision.ConfigStudio;
 import _HunrProvision.boss.Boss;
 import com.ngocrong.consts.ItemName;
 import com.ngocrong.consts.MapName;
@@ -46,10 +47,7 @@ public class LuaThanEvent {
     }
 
     public static void mobReward(Player player, Mob mob) {
-        if (true) {
-            return;
-        }
-        if (player == null || player.zone == null || mob == null) {
+        if (!ConfigStudio.EVENT_LUA_THAN || player == null || player.zone == null || mob == null) {
             return;
         }
         int mapId = player.zone.map.mapID;
@@ -63,10 +61,7 @@ public class LuaThanEvent {
     }
 
     public static void bossReward(Player player, Boss boss) {
-        if (true) {
-            return;
-        }
-        if (player == null || boss == null || boss.zone == null) {
+        if (!ConfigStudio.EVENT_LUA_THAN || player == null || boss == null || boss.zone == null) {
             return;
         }
         Item it = new Item(ItemName.NGON_DUOC);

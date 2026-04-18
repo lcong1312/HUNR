@@ -17,8 +17,7 @@ public class EventNewYear2026 {
     private static final Logger logger = Logger.getLogger(EventNewYear2026.class);
     private static final int[] POINTS_BY_RANK = {20, 18, 16, 14, 12, 10, 8, 6, 4, 2};
     private static final int MAX_RANK_FOR_POINTS = 10;
-    public static final boolean MODE_DEBUG = false;
-    public static final long HOLD_TIME_REQUIRED = MODE_DEBUG ? (1000L * 60 * 2) : (1000L * 60 * 30);
+    public static final long HOLD_TIME_REQUIRED = 1000L * 60 * Math.max(1, ConfigStudio.EVENT_NEWYEAR_2026_HOLD_TIME_MINUTES);
     private static volatile boolean schemaAvailable = true;
 
     public static boolean isActive() {
@@ -276,7 +275,7 @@ public class EventNewYear2026 {
                     data.lastRewardTime = System.currentTimeMillis();
                     saveData(player, data);
                     
-                    String timeText = MODE_DEBUG ? "2 phút" : "30 phút";
+                    String timeText = Math.max(1, ConfigStudio.EVENT_NEWYEAR_2026_HOLD_TIME_MINUTES) + " phút";
                     player.service.dialogMessage(String.format(
                             "Bạn đã giữ hạng đủ %s!\n" +
                             "Nhận được %d điểm sự kiện\n" +

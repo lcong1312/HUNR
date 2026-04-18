@@ -468,13 +468,28 @@ public class MainUpdate implements Runnable {
     }
 
     static long lastReg;
-    static long nextTime = 3000;
-    static int numReg = Utils.nextInt(500, 650);
+    static long nextTime = randomOsinCheckInInterval();
+    static int numReg = randomOsinCheckInTarget();
+
+    private static long randomOsinCheckInInterval() {
+        int min = Math.max(0, ConfigStudio.EVENT_OSIN_CHECKIN_AUTO_INTERVAL_MIN_MS);
+        int max = Math.max(min, ConfigStudio.EVENT_OSIN_CHECKIN_AUTO_INTERVAL_MAX_MS);
+        return Utils.nextInt(min, max);
+    }
+
+    private static int randomOsinCheckInTarget() {
+        int min = Math.max(0, ConfigStudio.EVENT_OSIN_CHECKIN_AUTO_TARGET_MIN);
+        int max = Math.max(min, ConfigStudio.EVENT_OSIN_CHECKIN_AUTO_TARGET_MAX);
+        return Utils.nextInt(min, max);
+    }
 
     public static void autoRegEvent() {
+        if (!ConfigStudio.EVENT_OSIN_CHECKIN || !ConfigStudio.EVENT_OSIN_CHECKIN_AUTO_REGISTER) {
+            return;
+        }
         if (System.currentTimeMillis() - lastReg >= nextTime) {
             lastReg = System.currentTimeMillis();
-            nextTime = Utils.nextInt(2000,5000);
+            nextTime = randomOsinCheckInInterval();
             if (OsinCheckInEvent.getTotalTodayCheckIns() % 100 != 99 && OsinCheckInEvent.getTotalTodayCheckIns() < numReg) {
                 OsinCheckInData newData = new OsinCheckInData();
                 newData.setPlayerId(-1);
@@ -482,6 +497,7 @@ public class MainUpdate implements Runnable {
                 newData.setRewarded((byte) 0);
                 newData.setIs_rewarded(0);
                 GameRepository.getInstance().osinCheckInRepository.save(newData);
+                numReg = randomOsinCheckInTarget();
             }
         }
     }

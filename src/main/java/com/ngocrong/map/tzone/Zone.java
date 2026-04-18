@@ -1,5 +1,6 @@
 package com.ngocrong.map.tzone;
 
+import _HunrProvision.ConfigStudio;
 import com.ngocrong.NQMP.DHVTSieuHang.CloneSieuHang;
 import com.ngocrong.consts.MobName;
 import _HunrProvision.boss.Boss;
@@ -18,6 +19,7 @@ import com.ngocrong.bot.boss.mabu.Yacon;
 import com.ngocrong.bot.boss.MatTroi;
 import com.ngocrong.consts.ItemTimeName;
 import com.ngocrong.consts.MapName;
+import com.ngocrong.consts.NpcName;
 import com.ngocrong.item.ItemMap;
 import com.ngocrong.item.ItemTime;
 import com.ngocrong.map.MapService;
@@ -124,6 +126,9 @@ public class Zone extends Thread {
             addMob(m);
         }
         for (Npc npc : this.map.npcs) {
+            if (!shouldSpawnNpc(npc)) {
+                continue;
+            }
             Npc n = npc.clone();
             addNpc(n);
         }
@@ -159,6 +164,40 @@ public class Zone extends Thread {
             lockNpc.writeLock().unlock();
         }
 
+    }
+
+    private boolean shouldSpawnNpc(Npc npc) {
+        if (npc == null) {
+            return false;
+        }
+        int templateId = npc.templateId;
+
+        if (templateId == NpcName.BUNMA_TET) {
+            return ConfigStudio.EVENT_NEWYEAR_2026
+                    || ConfigStudio.EVENT_TET_2025
+                    || ConfigStudio.EVENT_DA_NANG_CAP
+                    || ConfigStudio.EVENT_TAM_THANG_BA;
+        }
+        if (templateId == NpcName.XE_NUOC_MIA) {
+            return ConfigStudio.EVENT_NUOC_MIA;
+        }
+        if (templateId == NpcName.LUA_THAN) {
+            return ConfigStudio.EVENT_LUA_THAN;
+        }
+        if (templateId == NpcName.GOKU_SAO_VANG) {
+            return ConfigStudio.EVENT_QUOC_KHANH;
+        }
+
+        if (this.map.isLang()) {
+            if (templateId == NpcName.TAPION || templateId == NpcName.DAISHINKAN || templateId == 41) {
+                return false;
+            }
+        }
+
+        if (this.map.mapID == MapName.BAI_BIEN_NGAY_HE && templateId == NpcName.DAISHINKAN) {
+            return ConfigStudio.EVENT_SUMMER_BEACH;
+        }
+        return true;
     }
 
     public void removeNpc(Npc npc) {

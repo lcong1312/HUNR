@@ -1,12 +1,13 @@
 package com.ngocrong.mob;
 
-//import com.ngocrong.NQMP.DaNangCap.EventDaNangCap;
-//import com.ngocrong.NQMP.TamThangBa.Event1;
-//import com.ngocrong.NQMP.Tet2025.EventTet2025;
-//import com.ngocrong.NQMP.SummerBeach.SummerBeachEvent;
-//import com.ngocrong.NQMP.Event.NuocMiaEvent;
-//import com.ngocrong.NQMP.Event.LuaThanEvent;
-//import com.ngocrong.NQMP.Event.QuocKhanh;
+import _HunrProvision.ConfigStudio;
+import com.ngocrong.NQMP.DaNangCap.EventDaNangCap;
+import com.ngocrong.NQMP.Event.LuaThanEvent;
+import com.ngocrong.NQMP.Event.NuocMiaEvent;
+import com.ngocrong.NQMP.Event.QuocKhanh;
+import com.ngocrong.NQMP.SummerBeach.SummerBeachEvent;
+import com.ngocrong.NQMP.TamThangBa.Event1;
+import com.ngocrong.NQMP.Tet2025.EventTet2025;
 import _HunrProvision.HoangAnhDz;
 import com.ngocrong.bot.BotCold;
 import com.ngocrong.bot.Disciple;
@@ -581,15 +582,29 @@ public class Mob {
 //                zone.addItemMap(locphat6s);
 //            }
         }
-//        EventTet2025.mobReward(_c);
-//        EventDaNangCap.MobReward(_c);
-//        Event1.mobReward(_c);
-//        SummerBeachEvent.mobReward(_c, this);
-        //  NuocMiaEvent.mobReward(_c, this);
+        if (ConfigStudio.EVENT_TET_2025) {
+            EventTet2025.mobReward(_c);
+        }
+        if (ConfigStudio.EVENT_DA_NANG_CAP) {
+            EventDaNangCap.MobReward(_c);
+        }
+        if (ConfigStudio.EVENT_TAM_THANG_BA) {
+            Event1.mobReward(_c);
+        }
+        if (ConfigStudio.EVENT_SUMMER_BEACH) {
+            SummerBeachEvent.mobReward(_c, this);
+        }
+        if (ConfigStudio.EVENT_NUOC_MIA) {
+            NuocMiaEvent.mobReward(_c, this);
+        }
         com.ngocrong.event.OsinTetEvent.mobReward(_c, this);
 
-//        LuaThanEvent.mobReward(_c, this);
-//        QuocKhanh.mobReward(_c, this);
+        if (ConfigStudio.EVENT_LUA_THAN) {
+            LuaThanEvent.mobReward(_c, this);
+        }
+        if (ConfigStudio.EVENT_QUOC_KHANH) {
+            QuocKhanh.mobReward(_c, this);
+        }
 
 //        else if (this.zone.map.isNormalMap()) {
         ////            int rd = Utils.nextInt(50);

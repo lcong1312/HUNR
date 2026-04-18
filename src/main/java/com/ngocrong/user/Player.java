@@ -63,16 +63,17 @@ import com.ngocrong.NQMP.DHVT_SH.DHVT_SH_Service;
 import com.ngocrong.NQMP.DHVT_SH.SuperRank;
 import _HunrProvision.ConfigStudio;
 import _event.newyear_2026.EventNewYear2026;
-//import com.ngocrong.NQMP.DaNangCap.EventDaNangCap;
+import com.ngocrong.NQMP.DaNangCap.EventDaNangCap;
+import com.ngocrong.NQMP.Event.CauCa;
+import com.ngocrong.NQMP.Event.LuaThanEvent;
+import com.ngocrong.NQMP.Event.NuocMiaEvent;
+import com.ngocrong.NQMP.Event.QuocKhanh;
 import _HunrProvision.minigame.KeoBuaBao;
 import _HunrProvision.MainUpdate;
-//import com.ngocrong.NQMP.TamThangBa.Event1;
-//import com.ngocrong.NQMP.Tet2025.EventTet2025;
-//import com.ngocrong.NQMP.SummerBeach.SummerBeachEvent;
-//import com.ngocrong.NQMP.Event.NuocMiaEvent;
-//import com.ngocrong.NQMP.Event.LuaThanEvent;
-//import com.ngocrong.NQMP.Event.QuocKhanh;
-//import com.ngocrong.NQMP.Event.CauCa;
+import com.ngocrong.NQMP.SummerBeach.SummerBeachEvent;
+import com.ngocrong.NQMP.TamThangBa.Event1;
+import com.ngocrong.NQMP.Tet2025.EventTet2025;
+import com.ngocrong.NQMP.Tet2025.VongQuayTet;
 import _HunrProvision.HoangAnhDz;
 import static  _HunrProvision.HoangAnhDz.lastCreateBot;
 import com.ngocrong.NQMP.Whis.WhisInSingleMap;
@@ -4536,17 +4537,25 @@ public class Player {
                         }
                         break;
                     case NpcName.XE_NUOC_MIA:
-                        menus.add(new KeyValue(1175, "Ghép ly\nSize M"));
-                        menus.add(new KeyValue(1176, "Ghép ly\nSize XXL"));
-                        service.openUIConfirm(npc.templateId, "Bạn muốn ghép loại nào?", npc.avatar, menus);
+                        if (ConfigStudio.EVENT_NUOC_MIA) {
+                            menus.add(new KeyValue(1175, "Ghép ly\nSize M"));
+                            menus.add(new KeyValue(1176, "Ghép ly\nSize XXL"));
+                            service.openUIConfirm(npc.templateId, "Bạn muốn ghép loại nào?", npc.avatar, menus);
+                        } else {
+                            service.openUIConfirm(npc.templateId, "Sự kiện nước mía hiện đang tạm đóng.", npc.avatar, menus);
+                        }
                         break;
                     case NpcName.LUA_THAN:
-//                        menus.add(new KeyValue(1205, "Đuốc Lễ\nHội Bạc"));
-//                        menus.add(new KeyValue(1206, "Đuốc Lễ\nHội Vàng"));
-//                        service.openUIConfirm(npc.templateId, "Ngươi muốn chế tạo đuốc nào?\n"
-//                                + String.format("Khi Server đạt đủ 2000 đuốc được đốt sẽ có phần quà cho những người tham gia đốt đuốc\n"
-//                                        + (LuaThanEvent.torchCount == -1 ? "Đuốc đã đốt đủ 2000 cái trong lần này rồi" : "Số đuốc đã được đốt là:%d")
-//                                        + "\nReset vào những lúc Server bảo trì", LuaThanEvent.torchCount), npc.avatar, menus);
+                        if (ConfigStudio.EVENT_LUA_THAN) {
+                            menus.add(new KeyValue(1205, "Đuốc Lễ\nHội Bạc"));
+                            menus.add(new KeyValue(1206, "Đuốc Lễ\nHội Vàng"));
+                            service.openUIConfirm(npc.templateId, "Ngươi muốn chế tạo đuốc nào?\n"
+                                    + String.format("Khi Server đạt đủ 2000 đuốc được đốt sẽ có phần quà cho những người tham gia đốt đuốc\n"
+                                            + (LuaThanEvent.torchCount == -1 ? "Đuốc đã đốt đủ 2000 cái trong lần này rồi" : "Số đuốc đã được đốt là:%d")
+                                            + "\nReset vào những lúc Server bảo trì", LuaThanEvent.torchCount), npc.avatar, menus);
+                        } else {
+                            service.openUIConfirm(npc.templateId, "Sự kiện Lửa Thần hiện đang tạm đóng.", npc.avatar, menus);
+                        }
                         break;
                     case NpcName.DAISHINKAN:
 //                        if (zone.map.mapID == 178 || zone.map.mapID == 179 || zone.map.mapID == 180) {
@@ -4602,12 +4611,18 @@ public class Player {
                         // menus.add(new KeyValue(1116, "Di chuyển\nĐến Đặc Biệt"));
                         // menus.add(new KeyValue(1134, "Di chuyển\nĐến Quảng Trường\nPháo Hoa"));
 //                        menus.add(new KeyValue(1138, "Hồi Skill Ngay\n(200tr Vàng)"));
-                        // menus.add(new KeyValue(1145, "Đổi bình nước"));
-                        // menus.add(new KeyValue(1139, "Đổi Hộp Quà 2025"));
-                        // menus.add(new KeyValue(1140, "Vòng quay tết 2025"));
-//                        menus.add(new KeyValue(1152, "Đổi Bó hoa sắc màu"));
-//                        menus.add(new KeyValue(1153, "Đổi Bó hoa sum vầy"));
-//                        menus.add(new KeyValue(1155, "Đổi Hộp Mù Bé Ba"));
+                        if (ConfigStudio.EVENT_DA_NANG_CAP) {
+                            menus.add(new KeyValue(1145, "Đổi bình nước"));
+                        }
+                        if (ConfigStudio.EVENT_TET_2025) {
+                            menus.add(new KeyValue(1139, "Đổi Hộp Quà 2025"));
+                            menus.add(new KeyValue(1140, "Vòng quay tết 2025"));
+                        }
+                        if (ConfigStudio.EVENT_TAM_THANG_BA) {
+                            menus.add(new KeyValue(1152, "Đổi Bó hoa sắc màu"));
+                            menus.add(new KeyValue(1153, "Đổi Bó hoa sum vầy"));
+                            menus.add(new KeyValue(1155, "Đổi Hộp Mù Bé Ba"));
+                        }
 
                         service.openUIConfirm(npc.templateId, "Ta có thể giúp gì cho ngươi? \n " // + "Bạn có thể thu
                                 // thập x99 bình nước
@@ -4789,7 +4804,9 @@ public class Player {
                         //
                         menus.add(new KeyValue(535, "Nói chuyện"));
                         if (Config.serverID() == 1) {
-//                            menus.add(new KeyValue(1234, "Đổi cá"));
+                            if (ConfigStudio.EVENT_CAU_CA) {
+                                menus.add(new KeyValue(1234, "Đổi cá"));
+                            }
                         }
                         // Sự kiện Tết 2026: hiện nút Dâng Túi Phúc khi có đủ 3 túi phúc
                         if (_HunrProvision.ConfigStudio.EVENT_NEWYEAR_2026
@@ -5241,28 +5258,22 @@ public class Player {
                         StringBuilder sb = new StringBuilder();
                         int[] data = OsinCheckInEvent.MILESTONES;
                         if (zone.map.mapID == 7 || zone.map.mapID == 14 || zone.map.mapID == 0) {
-                            sb.append("Sự kiện: Điểm Danh Nhận Quà Tại NPC Ôsin\n");
-                            sb.append("- Hướng dẫn: Đến gặp NPC Ôsin tại 3 làng để 'Điểm danh'. Số người điểm danh càng đông, quà càng lớn.\n");
-                            sb.append("- Các mốc phần thưởng:\n");
-                            sb.append(String.format("  + Mốc %d người: 500 triệu vàng\n", data[5]));
-                            sb.append(String.format("  + Mốc %d người: 500 triệu vàng\n", data[4]));
-                            sb.append(String.format("  + Mốc %d người: x3 Vệ tinh ngẫu nhiên.\n", data[3]));
-                            sb.append(String.format("  + Mốc %d người: 1 tỷ vàng" + (Config.serverID() == 2 ? " và x2 TNSM cho các người điểm danh 1 ngày" : "") + "\n", data[2]));
-                            sb.append(String.format("  + Mốc %d người:1 Item cấp 2 ngẫu nhiên và x2 TNSM cho các người điểm danh 1 ngày\n", data[1]));
-                            sb.append(String.format("  + Mốc %d người: 5 Thỏi vàng.\n", data[0]));
-                            //RadioTest
-//                            sb.append("  + Mốc 200 người: 500 triệu vàng\n");
-//                            sb.append("  + Mốc 300 người: 500 triệu vàng\n");
-//                            sb.append("  + Mốc 400 người: x3 Vệ tinh ngẫu nhiên.\n");
-//                            sb.append("  + Mốc 500 người: 50k thỏi vàng\n");
-//                            sb.append("  + Mốc 1000 người:100k thỏi vàng\n");
-//                            sb.append("  + Mốc 2000 người:200k Thỏi vàng.\n");
-
-                            sb.append("- Lưu ý quan trọng: Phải tham gia 'Điểm danh' mới có thể 'Nhận quà'.\n");
-//                            sb.append("- Mẹo nhỏ: Những người điểm danh vào đúng các mốc 200,300,... sẽ được x2 Phần quà\n");
-                            sb.append("- Số người đã điểm danh: " + OsinCheckInEvent.getTotalTodayCheckIns());
-//                            if (OsinCheckInEvent.) {
-                            menus.add(new KeyValue(CMDMenu.OSIN_CHECKIN, "Điểm danh"));
+                            if (OsinCheckInEvent.isActive()) {
+                                sb.append("Sự kiện: Điểm Danh Nhận Quà Tại NPC Ôsin\n");
+                                sb.append("- Hướng dẫn: Đến gặp NPC Ôsin tại 3 làng để 'Điểm danh'. Số người điểm danh càng đông, quà càng lớn.\n");
+                                sb.append("- Các mốc phần thưởng:\n");
+                                sb.append(String.format("  + Mốc %d người: 500 triệu vàng\n", data[5]));
+                                sb.append(String.format("  + Mốc %d người: 500 triệu vàng\n", data[4]));
+                                sb.append(String.format("  + Mốc %d người: x3 Vệ tinh ngẫu nhiên.\n", data[3]));
+                                sb.append(String.format("  + Mốc %d người: 1 tỷ vàng" + (Config.serverID() == 2 ? " và x2 TNSM cho các người điểm danh 1 ngày" : "") + "\n", data[2]));
+                                sb.append(String.format("  + Mốc %d người:1 Item cấp 2 ngẫu nhiên và x2 TNSM cho các người điểm danh 1 ngày\n", data[1]));
+                                sb.append(String.format("  + Mốc %d người: 5 Thỏi vàng.\n", data[0]));
+                                sb.append("- Lưu ý quan trọng: Phải tham gia 'Điểm danh' mới có thể 'Nhận quà'.\n");
+                                sb.append("- Số người đã điểm danh: " + OsinCheckInEvent.getTotalTodayCheckIns());
+                                menus.add(new KeyValue(CMDMenu.OSIN_CHECKIN, "Điểm danh"));
+                            } else {
+                                sb.append("Sự kiện điểm danh hiện đang tạm đóng.");
+                            }
 
                             // if (ConfigStudio.EVENT_NEWYEAR_2026) {
                             //     menus.add(new KeyValue(CMDMenu.OSIN_RUT_LIXI, "Rút Lì Xì"));
@@ -5400,18 +5411,20 @@ public class Player {
                         service.openUIConfirm(54, "Con muốn làm gì?", (short) 3049, menus);
                         break;
                     case NpcName.GOKU_SAO_VANG:
-                        menus.add(new KeyValue(CMDMenu.DOI_CHU_QUOC_KHANH, "Ghép\nQUOCKHANH"));
-                        menus.add(new KeyValue(CMDMenu.DOI_CHU_QUOC_KHANH_29, "Ghép\nQUOCKHANH\n29"));
-
-                        menus.add(new KeyValue(CMDMenu.TOP_HOP_QUA_THUONG, "TOP Hộp quà thường"));
-                        menus.add(new KeyValue(CMDMenu.TOP_HOP_QUA_VIP, "TOP Hộp quà VIP"));
-                        menus.add(new KeyValue(CMDMenu.TOP_HOP_QUA_DACBIET, "TOP Hộp quà Đặc biệt"));
-                        menus.add(new KeyValue(CMDMenu.CANCEL, "Từ chối"));
-
-                        service.openUIConfirm(npc.templateId,
-                                "Ghép chữ QUOCKHANH + 500tr vàng -> 1 Hộp quà thường\n"
-                                + "Ghép chữ QUOCKHANH29 + 3 tỷ vàng -> 1 Hộp quà Cao Cấp"
-                                + "", npc.avatar, menus);
+                        if (ConfigStudio.EVENT_QUOC_KHANH) {
+                            menus.add(new KeyValue(CMDMenu.DOI_CHU_QUOC_KHANH, "Ghép\nQUOCKHANH"));
+                            menus.add(new KeyValue(CMDMenu.DOI_CHU_QUOC_KHANH_29, "Ghép\nQUOCKHANH\n29"));
+                            menus.add(new KeyValue(CMDMenu.TOP_HOP_QUA_THUONG, "TOP Hộp quà thường"));
+                            menus.add(new KeyValue(CMDMenu.TOP_HOP_QUA_VIP, "TOP Hộp quà VIP"));
+                            menus.add(new KeyValue(CMDMenu.TOP_HOP_QUA_DACBIET, "TOP Hộp quà Đặc biệt"));
+                            menus.add(new KeyValue(CMDMenu.CANCEL, "Từ chối"));
+                            service.openUIConfirm(npc.templateId,
+                                    "Ghép chữ QUOCKHANH + 500tr vàng -> 1 Hộp quà thường\n"
+                                            + "Ghép chữ QUOCKHANH29 + 3 tỷ vàng -> 1 Hộp quà Cao Cấp",
+                                    npc.avatar, menus);
+                        } else {
+                            service.openUIConfirm(npc.templateId, "Sự kiện Quốc Khánh hiện đang tạm đóng.", npc.avatar, menus);
+                        }
                         break;
                     case NpcName.WHIS:
                         if (zone.map.mapID == MapName.HANH_TINH_BILL) {
@@ -7938,32 +7951,46 @@ public class Player {
                 service.sendThongBao("Hồi skill thành công");
                 break;
             case 1139:
-//                EventTet2025.DoiHopQua(this);
+                if (ConfigStudio.EVENT_TET_2025) {
+                    EventTet2025.DoiHopQua(this);
+                }
                 break;
             case 1140:
-//                menus.clear();
-//                menus.add(new KeyValue(1141, "Quay 1 lượt"));
-//                menus.add(new KeyValue(1142, "Quay 10 lượt"));
-//                menus.add(new KeyValue(1143, "Quay 25 lượt"));
-//                menus.add(new KeyValue(1144, "Quay 50 lượt"));
-//                service.openUIConfirm(npc.templateId, "Vòng quay tết 2025 "
-//                        + "\n Giá quay là 1 thỏi vàng 1 lượt\n"
-//                        + "Bạn có thể nhận được các vật phẩm may mắn khi quay", npc.avatar, menus);
+                if (ConfigStudio.EVENT_TET_2025) {
+                    menus.clear();
+                    menus.add(new KeyValue(1141, "Quay 1 lượt"));
+                    menus.add(new KeyValue(1142, "Quay 10 lượt"));
+                    menus.add(new KeyValue(1143, "Quay 25 lượt"));
+                    menus.add(new KeyValue(1144, "Quay 50 lượt"));
+                    service.openUIConfirm(npc.templateId, "Vòng quay tết 2025 "
+                            + "\n Giá quay là 1 thỏi vàng 1 lượt\n"
+                            + "Bạn có thể nhận được các vật phẩm may mắn khi quay", npc.avatar, menus);
+                }
                 break;
             case 1141:
-//                com.ngocrong.NQMP.Tet2025.VongQuayTet.instance.start(this, 1);
+                if (ConfigStudio.EVENT_TET_2025) {
+                    VongQuayTet.instance.start(this, 1);
+                }
                 break;
             case 1142:
-//                com.ngocrong.NQMP.Tet2025.VongQuayTet.instance.start(this, 10);
+                if (ConfigStudio.EVENT_TET_2025) {
+                    VongQuayTet.instance.start(this, 10);
+                }
                 break;
             case 1143:
-//                com.ngocrong.NQMP.Tet2025.VongQuayTet.instance.start(this, 25);
+                if (ConfigStudio.EVENT_TET_2025) {
+                    VongQuayTet.instance.start(this, 25);
+                }
                 break;
             case 1144:
-//                com.ngocrong.NQMP.Tet2025.VongQuayTet.instance.start(this, 50);
+                if (ConfigStudio.EVENT_TET_2025) {
+                    VongQuayTet.instance.start(this, 50);
+                }
                 break;
             case 1145:
-//                EventDaNangCap.Exchange(this);
+                if (ConfigStudio.EVENT_DA_NANG_CAP) {
+                    EventDaNangCap.Exchange(this);
+                }
                 break;
             case 1146:
                 DHVT_SH_Service.gI().viewTop(this, (byte) 0);
@@ -8031,10 +8058,14 @@ public class Player {
                 topWhis.show(this);
                 break;
             case 1152:
-//                Event1.ChangeItem(this, (byte) 1);
+                if (ConfigStudio.EVENT_TAM_THANG_BA) {
+                    Event1.ChangeItem(this, (byte) 1);
+                }
                 break;
             case 1153:
-//                Event1.ChangeItem(this, (byte) 2);
+                if (ConfigStudio.EVENT_TAM_THANG_BA) {
+                    Event1.ChangeItem(this, (byte) 2);
+                }
                 break;
             case 1154:
                 this.combine = CombineFactory.getCombine(CombineType.Tach_Vat_Pham);
@@ -8043,7 +8074,9 @@ public class Player {
                 this.combine.showTab();
                 break;
             case 1155:
-//                Event1.ChangeItem(this, (byte) 3);
+                if (ConfigStudio.EVENT_TAM_THANG_BA) {
+                    Event1.ChangeItem(this, (byte) 3);
+                }
                 break;
             case 1156: {
                 if (false && this.getSession().user.getActivated() == 0) {
@@ -8195,16 +8228,24 @@ public class Player {
                 TOP_DISCIPLE_POWER.show(this);
                 break;
             case 1175:
-//                NuocMiaEvent.combine(this, (byte) 1);
+                if (ConfigStudio.EVENT_NUOC_MIA) {
+                    NuocMiaEvent.combine(this, (byte) 1);
+                }
                 break;
             case 1176:
-//                NuocMiaEvent.combine(this, (byte) 2);
+                if (ConfigStudio.EVENT_NUOC_MIA) {
+                    NuocMiaEvent.combine(this, (byte) 2);
+                }
                 break;
             case 1205:
-//                LuaThanEvent.combine(this, (byte) 1);
+                if (ConfigStudio.EVENT_LUA_THAN) {
+                    LuaThanEvent.combine(this, (byte) 1);
+                }
                 break;
             case 1206:
-//                LuaThanEvent.combine(this, (byte) 2);
+                if (ConfigStudio.EVENT_LUA_THAN) {
+                    LuaThanEvent.combine(this, (byte) 2);
+                }
                 break;
             case 1177:
                 Top KILLBOSS = Top.getTop(Top.TOP_KILLBOSS);
@@ -8323,7 +8364,9 @@ public class Player {
             case 1198:
             case 1199:
             case 1200:
-//                CauCa.exchange(this, menuID);
+                if (ConfigStudio.EVENT_CAU_CA) {
+                    CauCa.exchange(this, menuID);
+                }
                 break;
             case 1201:
                 this.joinMap(183);
@@ -8331,15 +8374,21 @@ public class Player {
 
             case CMDMenu.RUONG_CHU_QUOC_KHANH:
                 int letterId = ((Number) keyValue.elements[0]).intValue();
-//                QuocKhanh.selectLetter(this, letterId);
+                if (ConfigStudio.EVENT_QUOC_KHANH) {
+                    QuocKhanh.selectLetter(this, letterId);
+                }
                 break;
 
             case CMDMenu.DOI_CHU_QUOC_KHANH:
-//                QuocKhanh.exchange(this, 1);
+                if (ConfigStudio.EVENT_QUOC_KHANH) {
+                    QuocKhanh.exchange(this, 1);
+                }
                 break;
 
             case CMDMenu.DOI_CHU_QUOC_KHANH_29:
-//                QuocKhanh.exchange(this, 2);
+                if (ConfigStudio.EVENT_QUOC_KHANH) {
+                    QuocKhanh.exchange(this, 2);
+                }
                 break;
             case CMDMenu.TOP_HOP_QUA_THUONG:
                 Top topQuaThuong = Top.getTop(Top.TOP_HOPQUATHUONG);
@@ -13495,24 +13544,24 @@ public class Player {
         }
         if (item != null) {
             if (type == 0) {
-//                if (Event1.useItem(this, item)) {
-//                    return;
-//                }
-//                if (SummerBeachEvent.useItem(this, item)) {
-//                    return;
-//                }
-//                if (NuocMiaEvent.useItem(this, item)) {
-//                    return;
-//                }
-//                if (LuaThanEvent.useItem(this, item)) {
-//                    return;
-//                }
-//                if (QuocKhanh.useItem(this, item)) {
-//                    return;
-//                }
-//                if (CauCa.useItem(this, item)) {
-//                    return;
-//                }
+                if (ConfigStudio.EVENT_TAM_THANG_BA && Event1.useItem(this, item)) {
+                    return;
+                }
+                if (ConfigStudio.EVENT_SUMMER_BEACH && SummerBeachEvent.useItem(this, item)) {
+                    return;
+                }
+                if (ConfigStudio.EVENT_NUOC_MIA && NuocMiaEvent.useItem(this, item)) {
+                    return;
+                }
+                if (ConfigStudio.EVENT_LUA_THAN && LuaThanEvent.useItem(this, item)) {
+                    return;
+                }
+                if (ConfigStudio.EVENT_QUOC_KHANH && QuocKhanh.useItem(this, item)) {
+                    return;
+                }
+                if (ConfigStudio.EVENT_CAU_CA && CauCa.useItem(this, item)) {
+                    return;
+                }
 
                 if (useItemBonus(item)) {
                     info.setInfo();
@@ -14627,10 +14676,10 @@ public class Player {
             useMTS(item);
             return;
         }
-//        if (EventTet2025.useItem(this, item)) {
-//            removeItem(item.indexUI, 1);
-//            return;
-//        }
+        if (ConfigStudio.EVENT_TET_2025 && EventTet2025.useItem(this, item)) {
+            removeItem(item.indexUI, 1);
+            return;
+        }
         if (ConfigStudio.EVENT_NEWYEAR_2026 && com.ngocrong.event.OsinTetEvent.useItem(this, item)) {
             return;
         }
