@@ -130,4 +130,9 @@ public class ItemTimeName {
     public static final short TRA_SEN_TRANG_RAM = 122;
     public static final short KEO_DEM_RAM = 123;
     public static final short BANH_NUONG_RONG_TRANG = 124;
+    public static final short BIEN_HINH_STAGE_1 = 125;
+    public static final short BIEN_HINH_STAGE_2 = 126;
+    public static final short BIEN_HINH_STAGE_3 = 127;
+    public static final short BIEN_HINH_STAGE_4 = 128;
+    public static final short BIEN_HINH_STAGE_5 = 129;
 }

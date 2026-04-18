@@ -361,7 +361,7 @@ public class Utils {
                 return cacheFile.get(url);
             }
 
-            File file = new File(url);
+            File file = resolveResourceFile(url);
             if (file.exists()) {
                 byte[] data = Files.readAllBytes(file.toPath());
                 cacheFile.put(url, data);
@@ -373,6 +373,21 @@ public class Utils {
             ex.printStackTrace();
         }
         return null;
+    }
+
+    private static File resolveResourceFile(String url) {
+        File primary = new File(url);
+        if (primary.exists()) {
+            return primary;
+        }
+        String normalized = url.replace('\\', '/');
+        if (normalized.startsWith("resources/")) {
+            File overlay = new File("resources_extra/" + normalized.substring("resources/".length()));
+            if (overlay.exists()) {
+                return overlay;
+            }
+        }
+        return primary;
     }
 
     public static byte[] compress(byte[] data) {

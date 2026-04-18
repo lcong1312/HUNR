@@ -6,6 +6,7 @@ import com.ngocrong.clan.ClanReward;
 import com.ngocrong.clan.ClanMember;
 import com.ngocrong.collection.Card;
 import com.ngocrong.consts.ItemName;
+import com.ngocrong.consts.TransformSkill;
 import com.ngocrong.effect.AmbientEffect;
 import com.ngocrong.item.Item;
 import com.ngocrong.item.ItemOption;
@@ -590,6 +591,12 @@ public class Info {
             this.mpFullTemp += Utils.percentOf(this.mpFullTemp, 10);
             this.damageFull += Utils.percentOf(this.damageFull, 10);
             this.hpFullTemp += Utils.percentOf(this.hpFullTemp, 10);
+        }
+        if (_player.isBienHinh() && _player.getLevelBienHinh() > 0) {
+            int bienHinhPercent = TransformSkill.getBonusPercent(_player.getLevelBienHinh());
+            this.hpFullTemp += Utils.percentOf(this.hpFullTemp, bienHinhPercent);
+            this.mpFullTemp += Utils.percentOf(this.mpFullTemp, bienHinhPercent);
+            this.damageFull += Utils.percentOf(this.damageFull, bienHinhPercent);
         }
         if (_player.isMonkey()) {
             this.hpFullTemp *= 2;

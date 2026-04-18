@@ -191,6 +191,7 @@ public class Player {
     public int diamond;
     public int diamondLock;
     public int timeIsMoneky;
+    public int timeBienHinh;
     public int hpPercent;
     public int betAmount;
     public int freezSeconds;
@@ -310,6 +311,9 @@ public class Player {
     public boolean isCharge;
     public boolean isRecoveryEnergy;
     private boolean isMonkey;
+    private boolean isBienHinh;
+    private byte levelBienHinh;
+    private byte pointBienHinh;
     private boolean isHaveEquipTeleport;
     private boolean isHaveEquipSelfExplosion;
     private boolean isExploded;
@@ -483,6 +487,12 @@ public class Player {
     // this.escortedPerson = null;
     // }
     public void setAuraEffect() {
+        if (isBienHinh && levelBienHinh > 0) {
+            int genderIndex = Math.max(0, Math.min(TransformSkill.AURA.length - 1, gender));
+            int stageIndex = Math.max(0, Math.min(TransformSkill.AURA[genderIndex].length - 1, levelBienHinh - 1));
+            idAuraEff = TransformSkill.AURA[genderIndex][stageIndex];
+            return;
+        }
         short id = -1;
         for (Card card : cards) {
             if (card.isUse) {
@@ -496,6 +506,130 @@ public class Player {
             id = itemBody[14].template.part;
         }
         idAuraEff = id;
+    }
+
+    private int getBienHinhBaseCooldown() {
+        Skill skill = Skills.getSkill(this.gender, SkillName.BIEN_HINH_3_HANH_TINH, this.select.point);
+        if (skill != null && skill.coolDown > 0) {
+            return skill.coolDown;
+        }
+        return Math.max(0, this.select.coolDown);
+    }
+
+    private int getBienHinhDurationSeconds(int baseCooldown) {
+        return Math.max(1, (int) Math.ceil(baseCooldown * 5D / 1000D));
+    }
+
+    private int getBienHinhStageIndex() {
+        return Math.max(0, Math.min(4, this.levelBienHinh - 1));
+    }
+
+    private int getBienHinhIconLevel() {
+        if (this.pointBienHinh > 0) {
+            return this.pointBienHinh;
+        }
+        if (this.select != null && this.select.template != null
+                && this.select.template.id == SkillName.BIEN_HINH_3_HANH_TINH && this.select.point > 0) {
+            return this.select.point;
+        }
+        return Math.max(1, this.levelBienHinh);
+    }
+
+    private boolean isBienHinhItemTimeId(int id) {
+        return id >= ItemTimeName.BIEN_HINH_STAGE_1 && id <= ItemTimeName.BIEN_HINH_STAGE_5;
+    }
+
+    private int getBienHinhItemTimeId(int stageIndex) {
+        return ItemTimeName.BIEN_HINH_STAGE_1 + stageIndex;
+    }
+
+    private void clearBienHinhItemTimes() {
+        synchronized (this.itemTimes) {
+            ArrayList<ItemTime> listRemove = new ArrayList<>();
+            for (ItemTime item : this.itemTimes) {
+                if (item != null && isBienHinhItemTimeId(item.id)) {
+                    item.seconds = 0;
+                    service.setItemTime(item);
+                    listRemove.add(item);
+                }
+            }
+            this.itemTimes.removeAll(listRemove);
+        }
+    }
+
+    private void syncBienHinhItemTime() {
+        if (this.itemTimes == null) {
+            return;
+        }
+        if (!this.isBienHinh || this.levelBienHinh <= 0) {
+            clearBienHinhItemTimes();
+            return;
+        }
+        int stageIndex = getBienHinhStageIndex();
+        int itemId = getBienHinhItemTimeId(stageIndex);
+        short icon = TransformSkill.getItemTimeIcon(this.gender, getBienHinhIconLevel());
+        int seconds = Math.max(1, this.timeBienHinh);
+        synchronized (this.itemTimes) {
+            ArrayList<ItemTime> listRemove = new ArrayList<>();
+            ItemTime current = null;
+            for (ItemTime item : this.itemTimes) {
+                if (item == null || !isBienHinhItemTimeId(item.id)) {
+                    continue;
+                }
+                if (item.id == itemId) {
+                    current = item;
+                } else {
+                    item.seconds = 0;
+                    service.setItemTime(item);
+                    listRemove.add(item);
+                }
+            }
+            this.itemTimes.removeAll(listRemove);
+            if (current == null) {
+                current = new ItemTime(itemId, icon, seconds, false);
+                this.itemTimes.add(current);
+            } else {
+                current.icon = icon;
+                current.seconds = seconds;
+            }
+            service.setItemTime(current);
+        }
+    }
+
+    private void broadcastBienHinhCastEffect() {
+        if (this.zone == null) {
+            return;
+        }
+        for (Player pl : this.zone.getListChar(Zone.TYPE_ALL)) {
+            pl.service.skillNotFocus(this.id, TransformSkill.CAST_EFFECT_SKILL_ID, (byte) 6, null, null);
+        }
+    }
+
+    private void refreshBienHinhState(boolean recoverAll) {
+        short oldAura = this.idAuraEff;
+        this.updateSkin();
+        this.setAuraEffect();
+        syncBienHinhItemTime();
+        this.info.setInfo();
+        service.loadPoint();
+        if (recoverAll) {
+            this.info.recovery(Info.ALL, 100, true);
+        }
+        if (zone != null) {
+            zone.service.playerLoadBody(this);
+            zone.service.updateBody((byte) 0, this);
+            if (oldAura != this.idAuraEff) {
+                zone.service.setIDAuraEff(this.id, this.idAuraEff);
+            }
+        }
+    }
+
+    public void timeOutBienHinh() {
+        this.isBienHinh = false;
+        this.levelBienHinh = 0;
+        this.pointBienHinh = 0;
+        this.timeBienHinh = 0;
+        refreshBienHinhState(false);
     }
 
     public String getName() {
@@ -1761,6 +1895,13 @@ public class Player {
             this.head = 412;
             this.body = 413;
             this.leg = 414;
+        } else if (this.isBienHinh) {
+            int genderIndex = Math.max(0, Math.min(TransformSkill.BODY.length - 1, this.gender));
+            int stageIndex = getBienHinhStageIndex();
+            this.isMask = true;
+            this.head = TransformSkill.HEAD[genderIndex][stageIndex];
+            this.body = TransformSkill.BODY[genderIndex];
+            this.leg = TransformSkill.LEG[genderIndex];
         } else if (isNhapThe && !isMonkey) {
             this.isMask = true;
             if (itemBody != null && itemBody[5] != null && itemBody[5].template.part == -1 && itemBody[5].isNhapThe) {
@@ -2849,6 +2990,7 @@ public class Player {
                         break;
 
                     case SkillName.BIEN_HINH:
+                    case SkillName.BIEN_HINH_3_HANH_TINH:
                         service.skillNotFocus(_player.id, (short) _player.select.id, (byte) 6, null, null);
                         break;
 
@@ -2893,19 +3035,32 @@ public class Player {
             //  //System.err.println("Status : " + status);
             skillNotFocus(status);
         } catch (Exception e) {
-            
+
             //System.err.println("Error at 102");
+            logger.error("skillNotFocus parse error", e);
         }
     }
 
     public void skillNotFocus(byte type) {
         //    //System.err.println("ActionStatus : " + type);
+        boolean isTransformThreePlanet = this.select != null
+                && this.select.template != null
+                && this.select.template.id == SkillName.BIEN_HINH_3_HANH_TINH;
         if (!isRecoveryEnergy) {
             if (!meCanAttack()) {
+                if (type == 6 || isTransformThreePlanet) {
+                    logger.warn(String.format("[BIEN_HINH_27] blocked player=%s id=%d reason=meCanAttack_false dead=%s freeze=%s sleep=%s held=%s stone=%s select=%s",
+                            this.name, this.id, this.isDead, this.isFreeze, this.isSleep, this.isHeld, this.isStone,
+                            this.select == null || this.select.template == null ? "null"
+                                    : String.valueOf(this.select.template.id)));
+                }
                 return;
             }
         } else {
             if (isDead) {
+                if (type == 6 || isTransformThreePlanet) {
+                    logger.warn(String.format("[BIEN_HINH_27] blocked player=%s id=%d reason=dead_when_recovery", this.name, this.id));
+                }
                 return;
             }
         }
@@ -2933,11 +3088,28 @@ public class Player {
             stopRecoveryEnery();
             return;
         }
+        if (this.select == null || this.select.template == null) {
+            if (type == 6) {
+                logger.warn(String.format("[BIEN_HINH_27] blocked player=%s id=%d reason=select_null", this.name, this.id));
+            }
+            return;
+        }
+        isTransformThreePlanet = this.select.template.id == SkillName.BIEN_HINH_3_HANH_TINH;
         if (this.select.template.type != 3 && this.select.template.id != SkillName.QUA_CAU_KENH_KHI
-                && this.select.template.id != SkillName.MAKANKOSAPPO) {
+                && this.select.template.id != SkillName.MAKANKOSAPPO
+                && this.select.template.id != SkillName.BIEN_HINH_3_HANH_TINH) {
+            if (type == 6 || isTransformThreePlanet) {
+                logger.warn(String.format("[BIEN_HINH_27] blocked player=%s id=%d reason=invalid_selected_skill requestType=%d selectedId=%d selectedType=%d",
+                        this.name, this.id, type, this.select.template.id, this.select.template.type));
+            }
             return;
         }
         if (this.select.isCooldown()) {
+            if (isTransformThreePlanet) {
+                long cooldownRemain = Math.max(0L, (long) this.select.coolDown - (now - this.select.lastTimeUseThisSkill));
+                logger.warn(String.format("[BIEN_HINH_27] blocked player=%s id=%d reason=cooldown point=%d cooldown=%d remainMs=%d",
+                        this.name, this.id, this.select.point, this.select.coolDown, cooldownRemain));
+            }
             return;
         }
         if (this.isRecoveryEnergy) {
@@ -2953,6 +3125,10 @@ public class Player {
             manaUse = 0;
         }
         if (this.info.mp < manaUse) {
+            if (isTransformThreePlanet) {
+                logger.warn(String.format("[BIEN_HINH_27] blocked player=%s id=%d reason=not_enough_mp point=%d mp=%d manaUse=%d",
+                        this.name, this.id, this.select.point, this.info.mp, manaUse));
+            }
             service.sendThongBao("Không đủ KI đế sử dụng");
             return;
         }
@@ -3059,6 +3235,42 @@ public class Player {
                         seconds = 0;
                     }
                 }, this.seconds);
+            } else if (this.select.template.id == SkillName.BIEN_HINH_3_HANH_TINH) {
+                logger.info(String.format("[BIEN_HINH_27] cast request player=%s id=%d point=%d currentLevel=%d isBienHinh=%s timeBienHinh=%d mp=%d manaUse=%d",
+                        this.name, this.id, this.select.point, this.levelBienHinh, this.isBienHinh, this.timeBienHinh,
+                        this.info.mp, manaUse));
+                if (this.levelBienHinh >= this.select.point) {
+                    logger.warn(String.format("[BIEN_HINH_27] blocked player=%s id=%d reason=max_level_reached currentLevel=%d selectedPoint=%d",
+                            this.name, this.id, this.levelBienHinh, this.select.point));
+                    return;
+                }
+                setCharge(true);
+                this.seconds = 1000;
+                Utils.setTimeout(() -> {
+                    try {
+                        if (!this.isDead && zone != null) {
+                            int baseCooldown = getBienHinhBaseCooldown();
+                            boolean lastLevel = this.levelBienHinh >= this.select.point - 1;
+                            this.isBienHinh = true;
+                            this.levelBienHinh = (byte) Math.min(this.select.point, this.levelBienHinh + 1);
+                            this.pointBienHinh = (byte) this.select.point;
+                            this.timeBienHinh = getBienHinhDurationSeconds(baseCooldown);
+                            this.select.coolDown = !lastLevel && baseCooldown > 0 ? Math.max(1, baseCooldown * 5 / 100) : baseCooldown;
+                            logger.info(String.format("[BIEN_HINH_27] cast success player=%s id=%d newLevel=%d targetLevel=%d durationSeconds=%d baseCooldown=%d appliedCooldown=%d",
+                                    this.name, this.id, this.levelBienHinh, this.select.point, this.timeBienHinh,
+                                    baseCooldown, this.select.coolDown));
+                            refreshBienHinhState(true);
+                            service.updateCoolDown(this.skills);
+                            broadcastBienHinhCastEffect();
+                        } else {
+                            logger.warn(String.format("[BIEN_HINH_27] cast canceled player=%s id=%d dead=%s zoneNull=%s",
+                                    this.name, this.id, this.isDead, zone == null));
+                        }
+                    } finally {
+                        setCharge(false);
+                        seconds = 0;
+                    }
+                }, this.seconds);
             }
         }
         if (type == 7) {
@@ -3129,6 +3341,11 @@ public class Player {
             }
         }
         select.lastTimeUseThisSkill = now;
+        if (type == 6 && this.select.template.id == SkillName.BIEN_HINH_3_HANH_TINH) {
+            service.updateCoolDown(this.skills);
+            broadcastBienHinhCastEffect();
+            return;
+        }
         zone.service.skillNotFocus(this, type, mobs, players);
     }
 
@@ -16390,9 +16607,40 @@ public class Player {
         if (this.isCharge() || this.isSkillSpecial()) {
             return;
         }
+        Skill oldSelect = this.select;
+        boolean foundSkill = false;
+        boolean sameSelection = false;
         for (Skill skill : this.skills) {
             if (skill.template.id == id) {
                 this.select = skill;
+                foundSkill = true;
+                sameSelection = oldSelect != null
+                        && oldSelect.template != null
+                        && this.select.template != null
+                        && oldSelect.template.id == this.select.template.id
+                        && oldSelect.point == this.select.point;
+                break;
+            }
+        }
+        if (id == SkillName.BIEN_HINH_3_HANH_TINH) {
+            if (foundSkill) {
+                boolean changed = !sameSelection;
+                if (changed) {
+                    logger.info(String.format("[BIEN_HINH_27] selected player=%s id=%d point=%d cooldown=%d",
+                            this.name, this.id, this.select.point, this.select.coolDown));
+                } else {
+                    logger.info(String.format("[BIEN_HINH_27] select repeated player=%s id=%d fallback=skill_not_focus_type_6",
+                            this.name, this.id));
+                    if (this.zone != null) {
+                        skillNotFocus((byte) 6);
+                    } else {
+                        logger.warn(String.format("[BIEN_HINH_27] fallback skipped player=%s id=%d reason=zone_null",
+                                this.name, this.id));
+                    }
+                }
+            } else {
+                logger.warn(String.format("[BIEN_HINH_27] select failed player=%s id=%d reason=skill_not_found",
+                        this.name, this.id));
             }
         }
     }
@@ -16883,6 +17131,14 @@ public class Player {
             }
             try {
                 this.timePlayed++;
+                if (isBienHinh) {
+                    if (this.timeBienHinh > 0) {
+                        this.timeBienHinh--;
+                    }
+                    if (this.timeBienHinh == 0) {
+                        this.timeOutBienHinh();
+                    }
+                }
                 if (isMonkey) {
                     if (this.timeIsMoneky > 0) {
                         this.timeIsMoneky--;

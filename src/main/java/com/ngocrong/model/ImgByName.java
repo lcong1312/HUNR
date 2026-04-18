@@ -29,7 +29,11 @@ public class ImgByName {
 
     public void init() {
         for (int i = 0; i < this.imageData.length; i++) {
-            imageData[i] = Utils.getFile("resources/image/" + (i + 1) + "/imgbyname/" + this.filename);
+            byte[] data = Utils.getFile("resources/image/" + (i + 1) + "/imgbyname/" + this.filename);
+            if (data == null) {
+                data = Utils.getFile("resources_extra/image/" + (i + 1) + "/imgbyname/" + this.filename);
+            }
+            imageData[i] = data;
         }
     }
 }

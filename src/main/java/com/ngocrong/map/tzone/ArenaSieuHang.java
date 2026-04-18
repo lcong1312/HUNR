@@ -239,7 +239,9 @@ public class ArenaSieuHang extends Zone {
                 long lastTimeUseThisSkill = obj.getLong("last_time_use");
                 Skill skill = Skills.getSkill(data.classId, templateId, level);
                 if (skill != null && skill.template.id != SkillName.QUA_CAU_KENH_KHI && skill.template.id != SkillName.MAKANKOSAPPO
-                        && skill.template.id != SkillName.TROI && skill.template.id != SkillName.THOI_MIEN && skill.template.id != SkillName.BIEN_HINH && skill.template.id != SkillName.DE_TRUNG) {
+                        && skill.template.id != SkillName.TROI && skill.template.id != SkillName.THOI_MIEN
+                        && skill.template.id != SkillName.BIEN_HINH && skill.template.id != SkillName.BIEN_HINH_3_HANH_TINH
+                        && skill.template.id != SkillName.DE_TRUNG) {
                     Skill skill2 = skill.clone();
                     if (data.id != 1) {
                         skill2.lastTimeUseThisSkill = lastTimeUseThisSkill;

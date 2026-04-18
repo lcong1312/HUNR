@@ -2708,6 +2708,23 @@ public class Service implements IService {
         }, 50);
     }
 
+    private byte[] getSmallIconData(int id) {
+        int zoom = session.zoomLevel;
+        String[] paths = {
+                String.format("resources_extra/image/%d/small/Small%d.png", zoom, id),
+                String.format("resources_extra/image/%d/small/%d.png", zoom, id),
+                String.format("resources/image/%d/small/Small%d.png", zoom, id),
+                String.format("resources/image/%d/small/%d.png", zoom, id)
+        };
+        for (String path : paths) {
+            byte[] data = Utils.getFile(path);
+            if (data != null) {
+                return data;
+            }
+        }
+        return null;
+    }
+
     public void requestIcon(int id) {
         try {
             if (id < 0 || id >= small.length) {
@@ -2716,7 +2733,7 @@ public class Service implements IService {
                 //System.err.println("_SmallIcon -> Thiếu Icon ID: " + id + " | " + name + " | Zoom " + session.zoomLevel);
                 return;
             }
-            byte[] ab = Utils.getFile(String.format("resources/image/%d/small/Small%d.png", session.zoomLevel, id));
+            byte[] ab = getSmallIconData(id);
             if (ab == null) {
                 String name = (player != null && player.name != null) ? player.name : 
                              (session != null && session.user != null) ? session.user.getUsername() : "Unknown";
@@ -2747,7 +2764,7 @@ public class Service implements IService {
                 //System.err.println("_SmallIcon -> Thiếu Icon ID: " + id + " | " + name + " | Zoom " + session.zoomLevel);
                 return;
             }
-            byte[] ab = Utils.getFile(String.format("resources/image/%d/small/Small%d.png", session.zoomLevel, id));
+            byte[] ab = getSmallIconData(id);
             if (ab == null) {
                 String name = (player != null && player.name != null) ? player.name : 
                              (session != null && session.user != null) ? session.user.getUsername() : "Unknown";

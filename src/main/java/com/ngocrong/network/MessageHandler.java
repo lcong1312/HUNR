@@ -9,6 +9,7 @@ import com.ngocrong.consts.Cmd;
 import com.ngocrong.data.UserData;
 import com.ngocrong.repository.GameRepository;
 import com.ngocrong.security.multilayer.MultiLayerMessageHandler;
+import com.ngocrong.skill.SkillName;
 import com.ngocrong.user.Player;
 import org.apache.log4j.Logger;
 
@@ -333,9 +334,20 @@ public class MessageHandler implements IMessageHandler {
 
                     case Cmd.SKILL_NOT_FOCUS:
                         if (_player != null && _player.zone != null) {
+                            boolean bienHinh27Selected = _player.select != null
+                                    && _player.select.template != null
+                                    && _player.select.template.id == SkillName.BIEN_HINH_3_HANH_TINH;
+                            if (bienHinh27Selected) {
+                                logger.info(String.format("[BIEN_HINH_27] packet skill_not_focus received player=%s id=%d bytes=%d",
+                                        _player.name, _player.id, mss.reader().available()));
+                            }
                             _player.skillNotFocus(mss);
+                            if (bienHinh27Selected) {
+                                logger.info(String.format("[BIEN_HINH_27] packet skill_not_focus consumed player=%s id=%d remaining=%d",
+                                        _player.name, _player.id, mss.reader().available()));
+                            }
                         }
-                        if (mss.reader().available() == 0 || mss.reader().readShort() != 20) {
+                        if (_player != null && (mss.reader().available() < 2 || mss.reader().readShort() != 20)) {
                             _player.infoClient = "notMyClient 4";
                             _player.insertInfoClient();
 

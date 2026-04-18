@@ -75,6 +75,7 @@ import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Scanner;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
@@ -1946,31 +1947,36 @@ public class Server {
 
             smallVersion = new byte[4][];
             for (int i = 0; i < 4; i++) {
-                File file = new File("resources/image/" + (i + 1) + "/small/");
-                File[] files = file.listFiles();
+                HashMap<Integer, File> filesById = new HashMap<>();
+                collectSmallFiles(filesById, new File("resources/image/" + (i + 1) + "/small/"));
+                collectSmallFiles(filesById, new File("resources_extra/image/" + (i + 1) + "/small/"));
                 int max = 0;
-                for (File f : files) {
-                    String name = f.getName();
-                    name = name.replaceAll("Small", "");
-                    name = name.replace(".png", "");
-                    int id = Integer.parseInt(name);
+                for (int id : filesById.keySet()) {
                     if (id > max) {
                         max = id;
                     }
                 }
                 smallVersion[i] = new byte[max + 1];
-                for (File f : files) {
-                    String name = f.getName();
-                    name = name.replaceAll("Small", "");
-                    name = name.replace(".png", "");
-                    int id = Integer.parseInt(name);
-
+                for (Map.Entry<Integer, File> entry : filesById.entrySet()) {
+                    int id = entry.getKey();
+                    File f = entry.getValue();
                     smallVersion[i][id] = (byte) (Files.readAllBytes(f.toPath()).length % 127);
                 }
             }
         } catch (Exception ex) {
             
             logger.error("small version", ex);
+        }
+    }
+
+    private void collectSmallFiles(HashMap<Integer, File> filesById, File folder) {
+        File[] files = folder.listFiles();
+        if (files == null) {
+            return;
+        }
+        for (File f : files) {
+            String name = f.getName().replace("Small", "").replace(".png", "");
+            filesById.put(Integer.parseInt(name), f);
         }
     }
 

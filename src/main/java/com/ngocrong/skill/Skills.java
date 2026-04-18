@@ -209,6 +209,23 @@ public class Skills {
         books.add(new KeyValue(513, new SkillBook(21, 5, 10 * 24 * 60 * 60 * 1000L)));
         books.add(new KeyValue(514, new SkillBook(21, 6, 14 * 24 * 60 * 60 * 1000L)));
         books.add(new KeyValue(515, new SkillBook(21, 7, 20 * 24 * 60 * 60 * 1000L)));
+
+        // biến hình 3 hành tinh
+        books.add(new KeyValue(1326, new SkillBook(27, 1, 24 * 60 * 60 * 1000L)));
+        books.add(new KeyValue(1327, new SkillBook(27, 2, 2 * 24 * 60 * 60 * 1000L)));
+        books.add(new KeyValue(1328, new SkillBook(27, 3, 4 * 24 * 60 * 60 * 1000L)));
+        books.add(new KeyValue(1329, new SkillBook(27, 4, 7 * 24 * 60 * 60 * 1000L)));
+        books.add(new KeyValue(1330, new SkillBook(27, 5, 10 * 24 * 60 * 60 * 1000L)));
+        books.add(new KeyValue(1331, new SkillBook(27, 1, 24 * 60 * 60 * 1000L)));
+        books.add(new KeyValue(1332, new SkillBook(27, 2, 2 * 24 * 60 * 60 * 1000L)));
+        books.add(new KeyValue(1333, new SkillBook(27, 3, 4 * 24 * 60 * 60 * 1000L)));
+        books.add(new KeyValue(1334, new SkillBook(27, 4, 7 * 24 * 60 * 60 * 1000L)));
+        books.add(new KeyValue(1335, new SkillBook(27, 5, 10 * 24 * 60 * 60 * 1000L)));
+        books.add(new KeyValue(1336, new SkillBook(27, 1, 24 * 60 * 60 * 1000L)));
+        books.add(new KeyValue(1337, new SkillBook(27, 2, 2 * 24 * 60 * 60 * 1000L)));
+        books.add(new KeyValue(1338, new SkillBook(27, 3, 4 * 24 * 60 * 60 * 1000L)));
+        books.add(new KeyValue(1339, new SkillBook(27, 4, 7 * 24 * 60 * 60 * 1000L)));
+        books.add(new KeyValue(1340, new SkillBook(27, 5, 10 * 24 * 60 * 60 * 1000L)));
     }
 
     public static SkillBook getSkillBook(int key) {

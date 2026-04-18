@@ -110,6 +110,10 @@ public class Item {
             this.quantity = obj.getInt("quantity");
             JSONArray options = obj.getJSONArray("options");
             addItemOptions(options);
+            if (this.template == null) {
+                logger.warn("Skip load item id=" + this.id + ": template unavailable.");
+                return;
+            }
             if (!this.template.isUpToUp() && this.quantity > 1) {
                 this.quantity = 1;
             }
@@ -171,7 +175,7 @@ public class Item {
     }
 
     public boolean isLock() {
-        return isLock || template.isLock;
+        return isLock || (template != null && template.isLock);
     }
 
     public void addItemOption(ItemOption itemOption) {

@@ -927,6 +927,10 @@ public class Session implements ISession {
                         if (item.quantity == 0) {
                             item.quantity = 1;
                         }
+                        if (item.template == null) {
+                            logger.warn(String.format("Skip itemBody for player=%s id=%d: missing template", _player.name, item.id));
+                            continue;
+                        }
                         int typeItem = item.template.type;
                         if (typeItem == 32) {
                             typeItem = 6;
@@ -1014,6 +1018,10 @@ public class Session implements ISession {
                         if (item.quantity == 0) {
                             item.quantity = 1;
                         }
+                        if (item.template == null) {
+                            logger.warn(String.format("Skip itemBag for player=%s id=%d: missing template", _player.name, item.id));
+                            continue;
+                        }
                         if (HoangAnhDz.isItemRemove(item.template.id)) {
                             continue;
                         }
@@ -1045,6 +1053,10 @@ public class Session implements ISession {
                         if (item.quantity == 0) {
                             item.quantity = 1;
                         }
+                        if (item.template == null) {
+                            logger.warn(String.format("Skip itemBox for player=%s id=%d: missing template", _player.name, item.id));
+                            continue;
+                        }
                         if (HoangAnhDz.isItemRemove(item.template.id)) {
                             continue;
                         }
@@ -1072,6 +1084,10 @@ public class Session implements ISession {
                     try {
                         Item item = new Item();
                         item.load(cr.getJSONObject(i));
+                        if (item.template == null) {
+                            logger.warn(String.format("Skip boxCrackBall for player=%s id=%d: missing template", _player.name, item.id));
+                            continue;
+                        }
                         _player.boxCrackBall.add(item);
                     } catch (Exception e) {
                         
