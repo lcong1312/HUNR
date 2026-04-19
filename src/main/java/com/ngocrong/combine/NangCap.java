@@ -1,5 +1,6 @@
 package com.ngocrong.combine;
 
+import _HunrProvision.ConfigStudio;
 import _HunrProvision.services.BoMongService;
 
 import com.ngocrong.item.Item;
@@ -242,7 +243,7 @@ public class NangCap extends Combine {
                 if (itemOption2.param > 7) {
                     player.saveData();
                 }
-                if (player.currentNhiemVuBoMong != null) {
+                if (!ConfigStudio.BO_MONG_LEGACY_MODE && player.currentNhiemVuBoMong != null) {
                     BoMongService nv = player.currentNhiemVuBoMong;
                     if (nv.loaiNv == BoMongService.LOAI_NANG_TRANG_BI) {
                         nv.tienDo++;

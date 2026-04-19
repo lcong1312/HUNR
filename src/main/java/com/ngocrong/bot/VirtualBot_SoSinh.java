@@ -54,26 +54,11 @@ public class VirtualBot_SoSinh extends VirtualBot {
                 }
                 
                 boolean found = false;
-                
+
                 for (int i = 0; i < botnameArray.length(); i++) {
                     String configBotname = botnameArray.optString(i, "");
                     if (configBotname.equals(this.name)) {
-                        JSONArray usedNamesArray = new JSONArray();
-                        if (config.getUsedBotnames() != null && !config.getUsedBotnames().isEmpty()) {
-                            usedNamesArray = new JSONArray(config.getUsedBotnames());
-                        }
-                        
-                        boolean alreadyUsed = false;
-                        for (int j = 0; j < usedNamesArray.length(); j++) {
-                            if (usedNamesArray.optString(j, "").equals(this.name)) {
-                                alreadyUsed = true;
-                                break;
-                            }
-                        }
-                        
-                        if (!alreadyUsed) {
-                            found = true;
-                        }
+                        found = true;
                         break;
                     }
                 }

@@ -179,4 +179,7 @@ public class PlayerData {
 
     @Column(name = "count_task_completed_today")
     public Integer countTaskCompletedToday;
+
+    @Column(name = "side_task")
+    public String sideTask;
 }

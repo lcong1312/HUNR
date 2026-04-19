@@ -1692,6 +1692,7 @@ public class Server {
                         idHead[i] = obj.getInt("head");
                         idAvatar[i] = obj.getInt("avatar");
                     }
+                    overrideTransformHeadAvatars();
                 }
                 if (name.equals("shop")) {
                     JSONArray shops = new JSONArray(value);
@@ -1967,6 +1968,46 @@ public class Server {
             
             logger.error("small version", ex);
         }
+    }
+
+    private void overrideTransformHeadAvatars() {
+        putHeadAvatar(1400, 31126);
+        putHeadAvatar(1401, 31133);
+        putHeadAvatar(1402, 31140);
+        putHeadAvatar(1403, 31139);
+        putHeadAvatar(1404, 31141);
+        putHeadAvatar(1405, 31128);
+        putHeadAvatar(1406, 31129);
+        putHeadAvatar(1407, 31131);
+        putHeadAvatar(1408, 31130);
+        putHeadAvatar(1409, 31132);
+        putHeadAvatar(1410, 31134);
+        putHeadAvatar(1411, 31135);
+        putHeadAvatar(1412, 31136);
+        putHeadAvatar(1413, 31137);
+        putHeadAvatar(1414, 31138);
+    }
+
+    private void putHeadAvatar(int head, int avatar) {
+        if (idHead == null || idAvatar == null) {
+            idHead = new int[] {head};
+            idAvatar = new int[] {avatar};
+            return;
+        }
+        for (int i = 0; i < idHead.length; i++) {
+            if (idHead[i] == head) {
+                idAvatar[i] = avatar;
+                return;
+            }
+        }
+        int[] newHeads = new int[idHead.length + 1];
+        int[] newAvatars = new int[idAvatar.length + 1];
+        System.arraycopy(idHead, 0, newHeads, 0, idHead.length);
+        System.arraycopy(idAvatar, 0, newAvatars, 0, idAvatar.length);
+        newHeads[idHead.length] = head;
+        newAvatars[idAvatar.length] = avatar;
+        idHead = newHeads;
+        idAvatar = newAvatars;
     }
 
     private void collectSmallFiles(HashMap<Integer, File> filesById, File folder) {

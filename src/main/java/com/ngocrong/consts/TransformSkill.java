@@ -3,6 +3,7 @@ package com.ngocrong.consts;
 public final class TransformSkill {
 
     public static final short CAST_EFFECT_SKILL_ID = 97;
+    public static final int DURATION_SECONDS = 120;
 
     public static final byte[][] AURA = {
             {6, 7, 9, 30, 31},

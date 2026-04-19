@@ -253,4 +253,14 @@ public class CMDMenu {
     public static final int BO_MONG_HUY_NV_CONFIRM = 3004;
     public static final int BO_MONG_NO_HU = 3005;
     public static final int BO_MONG_NO_HU_CONFIRM = 3006;
+    public static final int BO_MONG_LEGACY_TASK = 3010;
+    public static final int BO_MONG_LEGACY_ACHIEVEMENT = 3011;
+    public static final int BO_MONG_LEGACY_TOP = 3012;
+    public static final int BO_MONG_LEGACY_EASY = 3013;
+    public static final int BO_MONG_LEGACY_NORMAL = 3014;
+    public static final int BO_MONG_LEGACY_HARD = 3015;
+    public static final int BO_MONG_LEGACY_VERY_HARD = 3016;
+    public static final int BO_MONG_LEGACY_HELL = 3017;
+    public static final int BO_MONG_LEGACY_PAY = 3018;
+    public static final int BO_MONG_LEGACY_CANCEL = 3019;
 }

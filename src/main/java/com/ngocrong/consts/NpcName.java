@@ -79,4 +79,5 @@ public class NpcName {
     public static final int XE_NUOC_MIA = 73;
     public static final int LUA_THAN = 74;
     public static final int GOKU_SAO_VANG = 75;
+    public static final int GAS = 76;
 }

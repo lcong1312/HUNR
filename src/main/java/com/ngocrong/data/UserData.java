@@ -49,4 +49,7 @@ public class UserData {
 
     @Column(name = "create_time")
     public Timestamp createTime;
+
+    @Column(name = "nang_dong")
+    public Integer nangDong;
 }

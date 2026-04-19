@@ -21,6 +21,7 @@ public final class SchemaCompatibility {
         }
         try {
             ensureNrPlayerColumns(connection);
+            ensureNrUserColumns(connection);
             ensureNrSuperRankEventColumn(connection);
             ensureOsinLixiTable(connection);
             ensureBoMongSchema(connection);
@@ -35,6 +36,11 @@ public final class SchemaCompatibility {
         ensureColumn(connection, "nr_player", "last_reset_nv_bo_mong", "BIGINT DEFAULT 0");
         ensureColumn(connection, "nr_player", "last_coin_value", "INT DEFAULT 0");
         ensureColumn(connection, "nr_player", "count_task_completed_today", "INT DEFAULT 0");
+        ensureColumn(connection, "nr_player", "side_task", "TEXT NULL");
+    }
+
+    private static void ensureNrUserColumns(Connection connection) throws SQLException {
+        ensureColumn(connection, "nr_user", "nang_dong", "INT DEFAULT 0");
     }
 
     private static void ensureNrSuperRankEventColumn(Connection connection) throws SQLException {

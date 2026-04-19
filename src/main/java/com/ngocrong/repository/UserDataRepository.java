@@ -42,4 +42,8 @@ public interface UserDataRepository extends JpaRepository<UserData, Integer> {
     @Modifying(clearAutomatically = true)
     @Query("UPDATE UserData u SET u.activated = :activated WHERE u.id = :id")
     void updateActivated(@Param("id") Integer id, @Param("activated") Integer activated);
+
+    @Modifying(clearAutomatically = true)
+    @Query(value = "UPDATE nr_user SET nang_dong = COALESCE(nang_dong, 0) + 1 WHERE id = :id", nativeQuery = true)
+    void incrementNangDong(@Param("id") Integer id);
 }

@@ -142,7 +142,8 @@ public class Item {
             this.typeThrow = 1;// bỏ ra mất luôn
 
             // drop item
-            if (type == 8 || type == 6 || type == 12 || type == 32 || type == 33 || this.id == 521 || id == ItemName.THOI_VANG) {
+            if (type == 8 || type == 6 || type == 12 || type == 32 || type == 33 || this.id == 521
+                    || id == ItemName.THOI_VANG || id == ItemName.THOI_VANG_KHOA) {
                 this.typeThrow = 2;// ko cho bỏ
             }
             if (type == 5 || type == 7 || type == 8 || type == 14 || type == 16 || type == 22 || type == 23 || type == 24 || type == 25 || type == 30 || type == 31 || type == 11) {
@@ -630,7 +631,7 @@ public class Item {
     }
 
     public boolean isCanSaleToConsignment() {
-        if (template.id == 457) {
+        if (template.id == ItemName.THOI_VANG || template.id == ItemName.THOI_VANG_KHOA) {
             return false;
         }
         if (template.id == ItemName.QUA_TRUNG) {

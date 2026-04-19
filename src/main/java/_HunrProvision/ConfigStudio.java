@@ -13,8 +13,8 @@ public class ConfigStudio {
     private static final Properties PROPS = loadProperties();
 
     public static final String SLOGAN = "Chào mừng bạn đến với Chú bé rồng";
-    public static final String ABBREVIATION = "Chú bé rồng";
-    public static final String SLOGAN_BOTCOLD = "Chú be rồng";
+    public static final String ABBREVIATION = "CBR";
+    public static final String SLOGAN_BOTCOLD = "Chú bé rồng";
     public static final String SLOGAN_BOTSOSINH = "Chú bé rồng";
     public static final String SLOGAN_BOTTRAIN = "Chú bé rồng";
     public static final String MESSAGE_LOGIN2 = "Đăng ký tài khoản tại vcong.store2003.online nhé!";
@@ -43,6 +43,7 @@ public class ConfigStudio {
 
     // ====================================== NPC BO MONG
     public static final boolean NPC_BO_MONG = getBoolean("event.bo_mong.enabled", true);
+    public static final boolean BO_MONG_LEGACY_MODE = getBoolean("event.bo_mong.legacy_mode", true);
 
     // ====================================== EVENT NEWYEAR 2026
     public static final boolean EVENT_NEWYEAR_2026 = getBoolean("event.newyear_2026.enabled", false);

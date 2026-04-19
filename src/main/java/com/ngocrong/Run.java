@@ -63,7 +63,9 @@ public class Run implements CommandLineRunner {
         GameRepository.getInstance().boMongMocDiem = boMongMocDiemRepository;
         GameRepository.getInstance().botConfig = botConfigRepository;
         DropRateService.load();
-        BoMongService.loadConfig();
+        if (!_HunrProvision.ConfigStudio.BO_MONG_LEGACY_MODE) {
+            BoMongService.loadConfig();
+        }
         MatrixChallengePC.loadPCKey();
         DragonBall.getInstance().start();
     }

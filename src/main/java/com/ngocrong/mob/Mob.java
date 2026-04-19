@@ -1249,7 +1249,11 @@ public class Mob {
                     logger.info(String.format("[BoMong] Boss %s killed by player %s", this.getClass().getSimpleName(), killer != null ? String.valueOf(killer.id) : "NULL"));
                 }
                 
-                if (killer != null && killer.currentNhiemVuBoMong != null) {
+                if (killer != null && ConfigStudio.BO_MONG_LEGACY_MODE) {
+                    killer.trackLegacySideTaskKillMob(this.templateId);
+                }
+
+                if (!ConfigStudio.BO_MONG_LEGACY_MODE && killer != null && killer.currentNhiemVuBoMong != null) {
                     BoMongService nv = killer.currentNhiemVuBoMong;
                     logger.info(String.format("[BoMong] Player %d has nhiem vu: loaiNv=%d, isBoss=%s", killer.id, nv.loaiNv, this.isBoss));
                     

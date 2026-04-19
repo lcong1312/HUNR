@@ -93,7 +93,8 @@ public interface PlayerDataRepository extends JpaRepository<PlayerData, Integer>
             + "p.resetTime = :resetTime,"
             + "p.dataDHVT23 = :dataDHVT23,"
             + "p.thoivang = :thoivang, "
-            + "p.dropItem = :dropItem "
+            + "p.dropItem = :dropItem, "
+            + "p.sideTask = :sideTask "
             + "WHERE p.id = :id")
     void saveData(Integer id, String task, Long gold, Integer diamond, Integer diamondLock,
             String itemBag, String itemBody, String itemBox,
@@ -104,7 +105,7 @@ public interface PlayerDataRepository extends JpaRepository<PlayerData, Integer>
             Integer timePlayed, String studying, String boxCrackBall, Long timeAtSplitFusion,
             Integer head2, Integer body, Integer leg, Integer porata,
             String collectionBook, String specialSkill, Short countNumberOfSpecialSkillChanges,
-            Timestamp resetTime, String dataDHVT23, Integer thoivang, String dropItem);
+            Timestamp resetTime, String dataDHVT23, Integer thoivang, String dropItem, String sideTask);
 
     @Modifying
     @Query("UPDATE PlayerData p SET p.pointBoMong = :pointBoMong, p.countNhiemVuBoMong = :countNhiemVuBoMong, p.lastResetNvBoMong = :lastResetNvBoMong WHERE p.id = :id")

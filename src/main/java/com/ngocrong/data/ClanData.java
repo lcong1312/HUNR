@@ -18,6 +18,9 @@ import java.sql.Timestamp;
 @AllArgsConstructor
 public class ClanData {
 
+    private static final int MAX_ABBREVIATION_LENGTH = 10;
+    private static final String DEFAULT_CLAN_ABBREVIATION = "CLAN";
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
@@ -26,7 +29,7 @@ public class ClanData {
     @Column(name = "name")
     public String name;
 
-    @Column(name = "abbreviation")
+    @Column(name = "abbreviation", length = 10)
     public String abbreviation;
 
     @Column(name = "leader_id")
@@ -69,8 +72,16 @@ public class ClanData {
         powerPoint = 0L;
         level = 1;
         slogan = ConfigStudio.SLOGAN;
-        abbreviation = ConfigStudio.ABBREVIATION;
+        abbreviation = buildDefaultAbbreviation();
         itemBox = "[]";
         createTime = new Timestamp(System.currentTimeMillis());
+    }
+
+    private static String buildDefaultAbbreviation() {
+        String configured = ConfigStudio.ABBREVIATION == null ? "" : ConfigStudio.ABBREVIATION.trim();
+        if (!configured.isEmpty()) {
+            return configured.substring(0, Math.min(MAX_ABBREVIATION_LENGTH, configured.length()));
+        }
+        return DEFAULT_CLAN_ABBREVIATION;
     }
 }

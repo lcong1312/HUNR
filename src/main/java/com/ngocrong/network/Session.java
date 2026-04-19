@@ -2,6 +2,7 @@ package com.ngocrong.network;
 
 import _HunrProvision.ConfigStudio;
 import _HunrProvision.services.BoMongService;
+import _HunrProvision.services.LegacyBoMongService;
 import com.ngocrong.clan.ClanManager;
 import com.ngocrong.data.DiscipleData;
 import com.ngocrong.data.PlayerData;
@@ -39,6 +40,7 @@ import com.ngocrong.NQMP.Whis.RewardWhis;
 import com.ngocrong.consts.ItemName;
 import com.ngocrong.data.VongQuayThuongDeData;
 import com.ngocrong.data.WhisData;
+import com.ngocrong.data.UserData;
 import com.ngocrong.event.OsinCheckInEvent;
 import com.ngocrong.map.MapManager;
 import com.ngocrong.map.TMap;
@@ -745,7 +747,9 @@ public class Session implements ISession {
                 messageHandler.setChar(_player);
                 _player.setService(sv);
                 _player.setSession(this);
-                if (_player.currentNhiemVuBoMong != null && _player.currentNhiemVuBoMong.loaiNv == BoMongService.LOAI_DAT_SM) {
+                if (!ConfigStudio.BO_MONG_LEGACY_MODE
+                        && _player.currentNhiemVuBoMong != null
+                        && _player.currentNhiemVuBoMong.loaiNv == BoMongService.LOAI_DAT_SM) {
                     _player.checkBoMongDatSMAfterLogin();
                 }
                 _player.enter();
@@ -814,7 +818,7 @@ public class Session implements ISession {
             }
             PlayerData data = dataList.get(0);
             long now = System.currentTimeMillis();
-            if (data.logoutTime != null) {
+            if (data.logoutTime != null && !isRoleOneUser()) {
                 long time = now - data.logoutTime.getTime();
                 long delayLogin = 1000L;
                 if (time < 0) {
@@ -880,6 +884,9 @@ public class Session implements ISession {
             _player.lastResetNvBoMong = data.lastResetNvBoMong != null ? data.lastResetNvBoMong : 0;
             _player.lastCoinValue = data.lastCoinValue != null ? data.lastCoinValue : 0;
             _player.countTaskCompletedToday = data.countTaskCompletedToday != null ? data.countTaskCompletedToday : 0;
+            if (ConfigStudio.BO_MONG_LEGACY_MODE) {
+                _player.legacySideTask = LegacyBoMongService.load(data.sideTask);
+            }
             _player.setNewMember(now - data.createTime.getTime() < 2592000000L);
             _player.ship = data.ship;
             _player.setCountNumberOfSpecialSkillChanges(data.countNumberOfSpecialSkillChanges);
@@ -890,9 +897,11 @@ public class Session implements ISession {
             }
             _player.info = gson.fromJson(data.info, Info.class);
             // Load nhiệm vụ sau khi info đã được load để có thể check SM realtime
-            _player.loadBoMongNhiemVu();
-            if (_player.currentNhiemVuBoMong != null && _player.currentNhiemVuBoMong.loaiNv == BoMongService.LOAI_DAT_SM) {
-                _player.syncBoMongDatSM();
+            if (!ConfigStudio.BO_MONG_LEGACY_MODE) {
+                _player.loadBoMongNhiemVu();
+                if (_player.currentNhiemVuBoMong != null && _player.currentNhiemVuBoMong.loaiNv == BoMongService.LOAI_DAT_SM) {
+                    _player.syncBoMongDatSM();
+                }
             }
             _player.skills = new ArrayList<>();
             JSONArray skills = new JSONArray(data.skill);
@@ -1288,23 +1297,26 @@ public class Session implements ISession {
             }
 
             String username = ms.reader().readUTF();
-            long nowTime = System.currentTimeMillis();
-            long lastTimeLogin = SessionManager.getTimeUserLogin(username);
-            long delayLogin = 15000L;
-            long time = lastTimeLogin + delayLogin - nowTime;
-            if (time > 0) {
-                ((Service) service).dialogMessage(String.format("Vui lòng thử lại sau %d giây", time / 1000));
-                return;
-            }
-
             String version = ms.reader().readUTF();
             String password = ms.reader().readUTF();
-            
+
             // Xử lý guest player: nếu username bắt đầu bằng @guest.ingame_ thì dùng password "a"
             if (username.startsWith("@guest.ingame_")) {
                 password = "a";
             }
-            
+
+            boolean bypassRelogDelay = isRoleOneAccount(username, password);
+            long nowTime = System.currentTimeMillis();
+            if (!bypassRelogDelay) {
+                long lastTimeLogin = SessionManager.getTimeUserLogin(username);
+                long delayLogin = 15000L;
+                long time = lastTimeLogin + delayLogin - nowTime;
+                if (time > 0) {
+                    ((Service) service).dialogMessage(String.format("Vui lòng thử lại sau %d giây", time / 1000));
+                    return;
+                }
+            }
+
             // Lưu version
             this.version = version;
             
@@ -1348,6 +1360,18 @@ public class Session implements ISession {
             
             logger.error("failed!", ex);
         }
+    }
+
+    private boolean isRoleOneAccount(String username, String password) {
+        List<UserData> userDataList = GameRepository.getInstance().user.findByUsernameAndPassword(username.toLowerCase(), password);
+        if (userDataList.isEmpty()) {
+            return false;
+        }
+        return Integer.valueOf(1).equals(userDataList.get(0).getRole());
+    }
+
+    private boolean isRoleOneUser() {
+        return user != null && user.getRole() == 1;
     }
 
     public static void createBot() {

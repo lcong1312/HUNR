@@ -23,7 +23,7 @@ public class ItemTemplate {
     }
 
     public boolean isUpToUp() {
-        return this.isUpToUp || this.type == 12 || this.type == 14 || this.type == 6 || this.type == 7 || this.type == 8 || this.type == 15 || this.type == 29 || this.type == 30 || this.id == 457 || this.id == 193 || this.id == 211 || this.id == 361 || this.id == 521 || this.id == 400 || this.id == 401 || this.id == 402 || this.id == 403 || this.id == 404 || this.id == 759 || this.id == 342 || this.id == 343 || this.id == 344 || this.id == 345;
+        return this.isUpToUp || this.type == 12 || this.type == 14 || this.type == 6 || this.type == 7 || this.type == 8 || this.type == 15 || this.type == 29 || this.type == 30 || this.id == ItemName.THOI_VANG || this.id == ItemName.THOI_VANG_KHOA || this.id == 193 || this.id == 211 || this.id == 361 || this.id == 521 || this.id == 400 || this.id == 401 || this.id == 402 || this.id == 403 || this.id == 404 || this.id == 759 || this.id == 342 || this.id == 343 || this.id == 344 || this.id == 345;
     }
 
     public boolean isDeTu() {

@@ -39,6 +39,7 @@ public abstract class Top {
     public static final int TOP_DUOCBAC = 15, TOP_DUOCVANG = 16;
     public static final int TOP_HOPQUATHUONG = 17, TOP_HOPQUAVIP = 18, TOP_HOPQUADACBIET = 19;
     public static final int TOP_BANH1TRUNG = 20, TOP_BANH2TRUNG = 21, TOP_BANHDACBIET = 22;
+    public static final int TOP_NANG_DONG = 23;
     public static final int TOP_NEWYEAR_2026 = 100;
     public static final int TOP_HOPQUA_THUONG_TET2026 = 101;
     public boolean isToggle;
@@ -65,6 +66,7 @@ public abstract class Top {
     public static void initialize() {
             addTop(new TopPower(TOP_POWER, TYPE_NONE, "Sức mạnh", (byte) 100));
             addTop(new TopTask(TOP_TASK, TYPE_NONE, "Nhiệm Vụ", (byte) 100));
+            addTop(new TopNangDong(TOP_NANG_DONG, TYPE_NONE, "Top Năng Động", (byte) 100));
 //            addTop(new TopUseGoldbar(Top.TOP_USING_GOLBAR, TYPE_NONE, "Top sử dụng thỏi vàng", (byte) 100));
             addTop(new TopDisciplePower(Top.TOP_DISCIPLE_POWER, TYPE_NONE, "Top Sức Mạnh đệ tử", (byte) 100));
 //            startFastUpdate();

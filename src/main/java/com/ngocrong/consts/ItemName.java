@@ -1303,4 +1303,5 @@ public class ItemName {
     public static final int NGOC_THAN_THUY = 2468;
     public static final int PET_MEOWTH = 2469;
     public static final int HOA_LUAN = 2470;
+    public static final int THOI_VANG_KHOA = 2471;
 }

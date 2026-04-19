@@ -50,6 +50,7 @@ import com.ngocrong.task.Task;
 import com.ngocrong.top.Top;
 import com.ngocrong.top.TopInfo;
 import _HunrProvision.services.BoMongService;
+import _HunrProvision.services.LegacyBoMongService;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Strings;
 import com.google.gson.Gson;
@@ -84,7 +85,6 @@ import com.ngocrong.bot.VirtualBot_SoSinh;
 import com.ngocrong.bot.boss.BossDisciple.SuperBroly;
 import com.ngocrong.calldragon.CallDragonNamek;
 import com.ngocrong.mob._BigBoss.Hirudegarn;
-import java.io.BufferedWriter;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.lang3.RandomStringUtils;
@@ -96,7 +96,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import com.ngocrong.network.FastDataOutputStream;
 import com.ngocrong.user.func.BaiSu;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -122,8 +121,6 @@ import com.ngocrong.server.mysql.MySQLConnect;
 import com.ngocrong.top.AutoReward.ItemTop;
 import com.ngocrong.top.ExportTop;
 import com.ngocrong.voicechat.VoiceSetting;
-import java.io.File;
-import java.io.PrintWriter;
 
 @Getter
 @Setter
@@ -251,6 +248,7 @@ public class Player {
     public int lastCoinValue;
     public int countTaskCompletedToday;
     public BoMongService currentNhiemVuBoMong;
+    public LegacySideTask legacySideTask = new LegacySideTask();
     public long trainStartTime;
     public int trainDurationAccumulated;
     public long lastCoinCheckTime;
@@ -439,6 +437,25 @@ public class Player {
         lastAttack = now;
     }
 
+    private boolean isProtectedGoldBarItem(int itemId) {
+        return itemId == ItemName.THOI_VANG || itemId == ItemName.THOI_VANG_KHOA;
+    }
+
+    private boolean isLegacyBoMongMap() {
+        return zone != null && zone.map != null && (zone.map.mapID == 47 || zone.map.mapID == 84);
+    }
+
+    private void refreshLegacySideTaskDay() {
+        if (legacySideTask == null) {
+            legacySideTask = new LegacySideTask();
+            return;
+        }
+        if (legacySideTask.receivedTime > 0
+                && !LegacyBoMongService.isSameDay(legacySideTask.receivedTime, System.currentTimeMillis())) {
+            legacySideTask = new LegacySideTask();
+        }
+    }
+
     public void initializedCollectionBook() {
         if (cards == null) {
             cards = new ArrayList<>();
@@ -524,7 +541,11 @@ public class Player {
     }
 
     private int getBienHinhDurationSeconds(int baseCooldown) {
-        return Math.max(1, (int) Math.ceil(baseCooldown * 5D / 1000D));
+        return TransformSkill.DURATION_SECONDS;
+    }
+
+    private int clampBienHinhSeconds(int seconds) {
+        return Math.max(0, Math.min(TransformSkill.DURATION_SECONDS, seconds));
     }
 
     private int getBienHinhStageIndex() {
@@ -584,13 +605,15 @@ public class Player {
         if (baseCooldown <= 0) {
             return;
         }
+        int currentCooldown = baseCooldown;
         if (this.isBienHinh && this.levelBienHinh > 0) {
             boolean lastLevel = this.levelBienHinh >= bienHinhSkill.point;
-            bienHinhSkill.coolDown = lastLevel ? baseCooldown : Math.max(1, baseCooldown * 5 / 100);
+            currentCooldown = lastLevel ? baseCooldown : Math.max(1, baseCooldown * 5 / 100);
         }
+        bienHinhSkill.coolDown = currentCooldown;
         if (this.select != null && this.select.template != null
                 && this.select.template.id == SkillName.BIEN_HINH_3_HANH_TINH) {
-            this.select.coolDown = bienHinhSkill.coolDown;
+            this.select.coolDown = currentCooldown;
         }
     }
 
@@ -627,7 +650,8 @@ public class Player {
         int stageIndex = getBienHinhStageIndex();
         int itemId = getBienHinhItemTimeId(stageIndex);
         short icon = TransformSkill.getItemTimeIcon(this.gender, getBienHinhIconLevel());
-        int seconds = Math.max(1, this.timeBienHinh);
+        int seconds = Math.max(1, clampBienHinhSeconds(this.timeBienHinh));
+        this.timeBienHinh = seconds;
         synchronized (this.itemTimes) {
             ArrayList<ItemTime> listRemove = new ArrayList<>();
             ItemTime current = null;
@@ -669,6 +693,7 @@ public class Player {
         short oldAura = this.idAuraEff;
         this.updateSkin();
         this.setAuraEffect();
+        syncBienHinhSkillCooldown();
         syncBienHinhItemTime();
         if (this.info != null) {
             this.info.setInfo();
@@ -680,8 +705,16 @@ public class Player {
             this.info.recovery(Info.ALL, 100, true);
         }
         if (zone != null && zone.service != null) {
-            zone.service.playerLoadBody(this);
-            zone.service.updateBody((byte) 0, this);
+            if (this.isMask) {
+                zone.service.updateBody((byte) 0, this);
+                zone.service.playerLoadBody(this);
+            } else {
+                zone.service.updateBody((byte) -1, this);
+                zone.service.playerLoadAll(this);
+                if (this.service != null) {
+                    this.service.setItemBody();
+                }
+            }
             if (oldAura != this.idAuraEff) {
                 zone.service.setIDAuraEff(this.id, this.idAuraEff);
             }
@@ -693,7 +726,9 @@ public class Player {
         this.levelBienHinh = 0;
         this.pointBienHinh = 0;
         this.timeBienHinh = 0;
+        this.lastSaveData = 0L;
         refreshBienHinhState(false);
+        broadcastBienHinhCastEffect();
     }
 
     private boolean isSpecialSkillNotFocusTemplateId(int skillTemplateId) {
@@ -1755,7 +1790,7 @@ public class Player {
             service.sendThongBao("Bạn chưa đủ sức mạnh để vứt vật phẩm vui lòng thử lại sau");
             return;
         }
-        if (item.id == 457) {
+        if (isProtectedGoldBarItem(item.id)) {
             service.sendThongBao("Không thể bỏ vật phẩm này");
             return;
         }
@@ -1787,7 +1822,7 @@ public class Player {
                 zone.service.playerLoadBody(this);
                 zone.service.updateBody((byte) 0, this);
             } else {
-                if (item.id == 457) {
+                if (isProtectedGoldBarItem(item.id)) {
                     service.sendThongBao("Không thể bỏ vật phẩm này");
                     return;
                 }
@@ -2324,6 +2359,7 @@ public class Player {
 
     public void updateSkin() {
         this.bag = -1;
+        this.isMask = false;
         if (taskMain != null && taskMain.id == 3 && taskMain.index == 2) {
             this.bag = ClanImageName.DUA_BE_51;
         }
@@ -4340,7 +4376,7 @@ public class Player {
         Item item = this.itemBag[index];
 
         if (item != null) {
-            if (item.template.id == ItemName.MANH_VO_BONG_TAI || item.template.id == ItemName.THOI_VANG) {
+            if (item.template.id == ItemName.MANH_VO_BONG_TAI || isProtectedGoldBarItem(item.template.id)) {
                 service.dialogMessage("Không thể cất vật phẩm này");
                 return;
             }
@@ -4371,7 +4407,7 @@ public class Player {
             boolean added = false;
             if (item.template.isUpToUp()) {
                 var maxQuantity = 999999;
-                if (item.template.id == 457) {
+                if (isProtectedGoldBarItem(item.template.id)) {
                     // Tìm item có thể stack quantity (cùng template và options)
                     Item existingItem = findItemInList2(this.itemBox, item);
                     if (existingItem != null) {
@@ -5459,7 +5495,6 @@ public class Player {
                         //   menus.add(new KeyValue(1210, "Úp Bông tai Cấp 2"));
                         if (clan != null) {
                             menus.add(new KeyValue(536, "Bang hội"));
-                            menus.add(new KeyValue(606, "Kho báu\ndưới biển"));
                         }
                         //
                         menus.add(new KeyValue(535, "Nói chuyện"));
@@ -5474,6 +5509,12 @@ public class Player {
                             menus.add(new KeyValue(com.ngocrong.consts.CMDMenu.DANG_TU_PHUC, "Dâng Túi Phúc"));
                         }
                         service.openUIConfirm(npc.templateId, "Cần ta giúp gì không?", npc.avatar, menus);
+                        break;
+
+                    case NpcName.GAS:
+                        service.openUISay(npc.templateId,
+                                "Ta là Gas. Nếu cần hỗ trợ bang hội, con cứ tới Quy lão Kame để mở bản đồ kho báu.",
+                                npc.avatar);
                         break;
 
                     case NpcName.TRUONG_LAO_GURU:
@@ -5515,25 +5556,34 @@ public class Player {
                             service.dialogMessage("Tính năng đang được phát triển. vui lòng quay lại sau");
                             break;
                         }
-                        checkResetNhiemVuBoMong();
-                        if (currentNhiemVuBoMong == null) {
-                            loadBoMongNhiemVu();
-                        }
-                        checkExpiredNhiemVuBoMong();
-                        menus.add(new KeyValue(CMDMenu.BO_MONG_XEM_DIEM, "Xem Điểm"));
-                        if (currentNhiemVuBoMong != null) {
-                            menus.add(new KeyValue(CMDMenu.BO_MONG_XEM_NV, "Xem Nhiệm Vụ"));
-                            menus.add(new KeyValue(CMDMenu.BO_MONG_HUY_NV, "Hủy Nhiệm Vụ"));
+                        if (ConfigStudio.BO_MONG_LEGACY_MODE) {
+                            refreshLegacySideTaskDay();
+                            menus.add(new KeyValue(CMDMenu.BO_MONG_LEGACY_TASK, "Nhiệm vụ\nhàng ngày"));
+                            menus.add(new KeyValue(CMDMenu.BO_MONG_LEGACY_ACHIEVEMENT, "Nhận ngọc\nmiễn phí"));
+                            menus.add(new KeyValue(CMDMenu.BO_MONG_LEGACY_TOP, "Xem Top\nnăng động"));
+                            String menuText = "Ta là Bò Mộng.\nTa giúp ngươi việc bang hội và việc hằng ngày.\nNgươi muốn gì nào?";
+                            service.openUIConfirm(npc.templateId, menuText, npc.avatar, menus);
                         } else {
-                            if (countNhiemVuBoMong < 10) {
-                                menus.add(new KeyValue(CMDMenu.BO_MONG_NHAN_NV, "Nhận Nhiệm Vụ"));
+                            checkResetNhiemVuBoMong();
+                            if (currentNhiemVuBoMong == null) {
+                                loadBoMongNhiemVu();
                             }
+                            checkExpiredNhiemVuBoMong();
+                            menus.add(new KeyValue(CMDMenu.BO_MONG_XEM_DIEM, "Xem Điểm"));
+                            if (currentNhiemVuBoMong != null) {
+                                menus.add(new KeyValue(CMDMenu.BO_MONG_XEM_NV, "Xem Nhiệm Vụ"));
+                                menus.add(new KeyValue(CMDMenu.BO_MONG_HUY_NV, "Hủy Nhiệm Vụ"));
+                            } else {
+                                if (countNhiemVuBoMong < 10) {
+                                    menus.add(new KeyValue(CMDMenu.BO_MONG_NHAN_NV, "Nhận Nhiệm Vụ"));
+                                }
+                            }
+                            menus.add(new KeyValue(CMDMenu.BO_MONG_NO_HU, "Nổ Hũ"));
+                            String menuText = "Ta là Bò Mộng, ngươi muốn làm gì?\n\n";
+                            menuText += "Nhiệm vụ hôm nay: " + countNhiemVuBoMong + "/10\n";
+                            menuText += "Điểm tích lũy: " + pointBoMong + "/1000";
+                            service.openUIConfirm(npc.templateId, menuText, npc.avatar, menus);
                         }
-                        menus.add(new KeyValue(CMDMenu.BO_MONG_NO_HU, "Nổ Hũ"));
-                        String menuText = "Ta là Bò Mộng, ngươi muốn làm gì?\n\n";
-                        menuText += "Nhiệm vụ hôm nay: " + countNhiemVuBoMong + "/10\n";
-                        menuText += "Điểm tích lũy: " + pointBoMong + "/1000";
-                        service.openUIConfirm(npc.templateId, menuText, npc.avatar, menus);
                         break;
 
                     case NpcName.THAN_MEO_KARIN:
@@ -6365,6 +6415,46 @@ public class Player {
 
             case CMDMenu.BO_MONG_NO_HU_CONFIRM:
                 handleBoMongNoHuConfirm(keyValue);
+                break;
+
+            case CMDMenu.BO_MONG_LEGACY_TASK:
+                openLegacyBoMongTaskMenu();
+                break;
+
+            case CMDMenu.BO_MONG_LEGACY_ACHIEVEMENT:
+                openAchievementFromBoMong();
+                break;
+
+            case CMDMenu.BO_MONG_LEGACY_TOP:
+                openLegacyBoMongTop();
+                break;
+
+            case CMDMenu.BO_MONG_LEGACY_EASY:
+                receiveLegacySideTask(LegacyBoMongService.EASY);
+                break;
+
+            case CMDMenu.BO_MONG_LEGACY_NORMAL:
+                receiveLegacySideTask(LegacyBoMongService.NORMAL);
+                break;
+
+            case CMDMenu.BO_MONG_LEGACY_HARD:
+                receiveLegacySideTask(LegacyBoMongService.HARD);
+                break;
+
+            case CMDMenu.BO_MONG_LEGACY_VERY_HARD:
+                receiveLegacySideTask(LegacyBoMongService.VERY_HARD);
+                break;
+
+            case CMDMenu.BO_MONG_LEGACY_HELL:
+                receiveLegacySideTask(LegacyBoMongService.HELL);
+                break;
+
+            case CMDMenu.BO_MONG_LEGACY_PAY:
+                payLegacySideTask();
+                break;
+
+            case CMDMenu.BO_MONG_LEGACY_CANCEL:
+                cancelLegacySideTask();
                 break;
 
             case CMDMenu.CLAN_SHOP: {
@@ -7396,6 +7486,7 @@ public class Player {
                 sb.append("Con muốn thực hiện một số chức năng bang hội à?").append("\n");
                 sb.append("Để ta giúp con.");
                 menus.add(new KeyValue(CMDMenu.VE_KHU_VUC_BANG, "Về khu\nvực bang"));
+                menus.add(new KeyValue(606, "Bản đồ\nkho báu"));
                 menus.add(new KeyValue(CMDMenu.GIAI_TAN_BANG, "Giải tán\nBang hội"));
                 menus.add(new KeyValue(CMDMenu.CANCEL, "Đóng"));
                 service.openUIConfirm(npc.templateId, sb.toString(), npc.avatar, menus);
@@ -8146,8 +8237,8 @@ public class Player {
                 }
                 break;
             case 606: {
-                if (true) {
-                    service.openUISay(npc.id, "Chức năng đã tạm đóng", npc.avatar);
+                if (clan == null) {
+                    service.sendThongBao("Hãy tham gia bang hội để sử dụng bản đồ kho báu");
                     return;
                 }
                 StringBuilder sb = new StringBuilder();
@@ -10881,6 +10972,9 @@ public class Player {
                     case CMDTextBox.SELL_GOLD_BAR:
                         sellGoldBar(inputDlg.getLong());
                         break;
+                    case CMDTextBox.SELL_LOCKED_GOLD_BAR:
+                        sellLockedGoldBar(inputDlg.getLong());
+                        break;
                     case CMDTextBox.CSMM_1_SO:
                         AddCSMM(0);
                         break;
@@ -12352,72 +12446,7 @@ public class Player {
         service.openUIConfirm(npcTemplateID, say, avatar, menus);
     }
 
-// Method để log buy item
     private void logBuyItem(int itemID, String itemName, int quantity, long goldSpent, long gemSpent, long specialSpent, String specialType, int shopType) {
-        try {
-            // Tạo định dạng ngày tháng năm
-            SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy");
-            String currentDate = dateFormat.format(new Date());
-
-            // Tạo định dạng thời gian đầy đủ
-            SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm:ss dd/MM/yyyy");
-            String currentTime = timeFormat.format(new Date());
-
-            // Tạo đường dẫn folder
-            String folderPath = "BuyItem/" + currentDate;
-            File folder = new File(folderPath);
-
-            // Tạo folder nếu chưa tồn tại
-            if (!folder.exists()) {
-                folder.mkdirs();
-            }
-
-            // Tạo đường dẫn file theo itemID
-            String filePath = folderPath + "/" + itemID + ".txt";
-            File logFile = new File(filePath);
-
-            // Tạo file nếu chưa tồn tại
-            if (!logFile.exists()) {
-                logFile.createNewFile();
-            }
-
-            // Tạo thông tin chi phí
-            StringBuilder costInfo = new StringBuilder();
-            if (goldSpent > 0) {
-                costInfo.append(" | Gold: ").append(goldSpent);
-            }
-            if (gemSpent > 0) {
-                costInfo.append(" | Gem: ").append(gemSpent);
-            }
-            if (specialSpent > 0) {
-                costInfo.append(" | ").append(specialType).append(": ").append(specialSpent);
-            }
-
-            // Xác định loại shop
-            String shopTypeStr = "";
-            switch (shopType) {
-                case 1:
-                    shopTypeStr = "Skill Shop";
-                    break;
-                case 4:
-                    shopTypeStr = "Box/CMS Shop";
-                    break;
-                default:
-                    shopTypeStr = "Normal Shop";
-                    break;
-            }
-
-            // Ghi log vào file
-            try (FileWriter fw = new FileWriter(logFile, true); BufferedWriter bw = new BufferedWriter(fw); PrintWriter out = new PrintWriter(bw)) {
-
-                out.println("[" + currentTime + "] Player: " + this.name
-                        + " | Shop Type: " + shopTypeStr + " | Quantity: " + quantity);
-            }
-
-        } catch (IOException e) {
-            //System.err.println("Error writing to buy log file: " + e.getMessage());
-            e.printStackTrace();
-        }
     }
 
 // Method buyItem đã được cập nhật với log
@@ -13100,8 +13129,8 @@ public class Player {
         return number;
     }
 
-    public void sellGoldBar(long number) {
-        if (number < 0) {
+    private void sellGoldBarItem(int itemId, long number, String itemName) {
+        if (number <= 0) {
             service.sendThongBao("Vui lòng nhập đúng số lượng");
             return;
         }
@@ -13112,9 +13141,9 @@ public class Player {
             return;
         }
         Item item = null;
-        int index = this.getIndexBagById(ItemName.THOI_VANG);
+        int index = this.getIndexBagById(itemId);
         if (index < 0) {
-            service.sendThongBao("Không tìm thấy thỏi vàng trong hành trang");
+            service.sendThongBao("Không tìm thấy " + itemName + " trong hành trang");
             return;
         }
         if (index < this.itemBag.length) {
@@ -13133,9 +13162,17 @@ public class Player {
         addGold(gold);
         service.setItemBag();
         this.saveData();
-        service.sendThongBao(String.format("Đã bán %s thu được %s vàng", name, Utils.currencyFormat(gold)));
+        service.sendThongBao(String.format("Đã dùng %d %s và nhận %s vàng", number, itemName, Utils.currencyFormat(gold)));
 //        pointThoiVang += (int) number;
 //        isChangePoint = true;
+    }
+
+    public void sellGoldBar(long number) {
+        sellGoldBarItem(ItemName.THOI_VANG, number, "thỏi vàng");
+    }
+
+    public void sellLockedGoldBar(long number) {
+        sellGoldBarItem(ItemName.THOI_VANG_KHOA, number, "thỏi vàng khóa");
     }
 
     public void saleItem(Message ms) {
@@ -13334,151 +13371,12 @@ public class Player {
     }
 
     public void writeLog(Item item, byte type) {
-        try {
-            // Lấy thời gian hiện tại để thêm vào log
-            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-            String timestamp = dateFormat.format(new Date());
-
-            // Lấy stack trace
-            StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
-
-            // Tạo StringBuilder để build nội dung log
-            StringBuilder logContent = new StringBuilder();
-            // Thêm thông tin tên nhân vật và số lượng item
-            logContent.append(type == 0 ? "    Add" : "    Remove").append("\n");
-            logContent.append("Time :" + timestamp).append("\n");
-            logContent.append("Name: ").append(this.name).append("\n");
-            logContent.append("Quantity: ").append(item.quantity).append("\n");
-
-            // Format và thêm stack trace
-            for (int i = 2; i < stackTrace.length - 2; i++) {
-                StackTraceElement element = stackTrace[i];
-                logContent.append(String.format("  at %s.%s(%s:%d)\n",
-                        element.getClassName(),
-                        element.getMethodName(),
-                        element.getFileName(),
-                        element.getLineNumber()));
-            }
-            logContent.append("=====================================\n\n");
-
-            // Ghi vào file
-            try (FileWriter fw = new FileWriter("logthoivang.txt", true); BufferedWriter bw = new BufferedWriter(fw)) {
-                bw.write(logContent.toString());
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
     }
 
     public void writeLog(int quantity, int quantity1, int quantity2, byte type) {
-        try {
-            // Lấy thời gian hiện tại để thêm vào log
-            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-            SimpleDateFormat fileDateFormat = new SimpleDateFormat("yyyy-MM-dd");
-            String timestamp = dateFormat.format(new Date());
-            String fileDate = fileDateFormat.format(new Date());
-
-            // Tạo folder LogThoiVang nếu chưa tồn tại
-            File logDir = new File("LogThoiVang");
-            if (!logDir.exists()) {
-                logDir.mkdirs();
-            }
-
-            // Tạo tên file với định dạng ngày tháng năm
-            String fileName = "logthoivang_" + fileDate + ".txt";
-            File logFile = new File(logDir, fileName);
-
-            // Lấy stack trace
-            StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
-
-            // Tạo StringBuilder để build nội dung log
-            StringBuilder logContent = new StringBuilder();
-
-            // Thêm thông tin tên nhân vật và số lượng item
-            logContent.append(type == 0 ? "    Add" : "    Remove").append("\n");
-            logContent.append("Time: ").append(timestamp).append("\n");
-            logContent.append("Name: ").append(this.name).append("\n");
-            logContent.append("Quantity: ").append(quantity).append("\n");
-            logContent.append("Quantity after: ").append(quantity1).append("\n");
-            logContent.append("Quantity before: ").append(quantity2).append("\n");
-
-            // Format và thêm stack trace
-            for (int i = 2; i < stackTrace.length - 2; i++) {
-                StackTraceElement element = stackTrace[i];
-                logContent.append(String.format("  at %s.%s(%s:%d)\n",
-                        element.getClassName(),
-                        element.getMethodName(),
-                        element.getFileName(),
-                        element.getLineNumber()));
-            }
-            logContent.append("=====================================\n\n");
-
-            // Ghi vào file trong folder LogThoiVang
-            try (FileWriter fw = new FileWriter(logFile, true); BufferedWriter bw = new BufferedWriter(fw)) {
-                bw.write(logContent.toString());
-            }
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
     }
 
     private void logAddItem(Item item, int quantityAdded, String playerName) {
-        try {
-            // Tạo định dạng ngày tháng năm
-            SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy");
-            String currentDate = dateFormat.format(new Date());
-
-            // Tạo định dạng thời gian đầy đủ
-            SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm:ss dd/MM/yyyy");
-            String currentTime = timeFormat.format(new Date());
-
-            // Tạo đường dẫn folder
-            String folderPath = "AddItem/" + currentDate;
-            File folder = new File(folderPath);
-
-            // Tạo folder nếu chưa tồn tại
-            if (!folder.exists()) {
-                folder.mkdirs();
-            }
-
-            // Tạo đường dẫn file
-            String filePath = folderPath + "/" + item.template.name + ".txt";
-            File logFile = new File(filePath);
-
-            // Tạo file nếu chưa tồn tại
-            if (!logFile.exists()) {
-                logFile.createNewFile();
-            }
-
-            // Lấy stack trace
-            StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
-
-            // Ghi log vào file
-            try (FileWriter fw = new FileWriter(logFile, true); BufferedWriter bw = new BufferedWriter(fw); PrintWriter out = new PrintWriter(bw)) {
-
-                // Thông tin cơ bản
-                out.println("---------------------------------");
-                out.println("Time: " + currentTime);
-                out.println("Player: " + playerName);
-                out.println("Quantity Added: " + quantityAdded);
-
-                // Stack trace (bỏ qua 2 method đầu tiên: getStackTrace() và logAddItem())
-                for (int i = 2; i < stackTrace.length - 2; i++) {
-                    StackTraceElement element = stackTrace[i];
-                    out.println(String.format("  at %s.%s(%s:%d)",
-                            element.getClassName(),
-                            element.getMethodName(),
-                            element.getFileName(),
-                            element.getLineNumber()));
-                }
-                out.println("=====================================\n");
-            }
-
-        } catch (IOException e) {
-            //System.err.println("Error writing to log file: " + e.getMessage());
-            e.printStackTrace();
-        }
     }
 // Method addItem đã được cập nhật với log
 
@@ -13519,7 +13417,7 @@ public class Player {
         if (item.template.isUpToUp()) {
             int maxQuantity = Server.getMaxQuantityItem();
 
-            if (item.template.id == 457) {
+            if (isProtectedGoldBarItem(item.template.id)) {
                 // Tìm item có thể stack quantity (cùng template và options)
                 int quantity2 = 0;
                 int quantity3 = 0;
@@ -13685,6 +13583,13 @@ public class Player {
 
     public boolean addItemToBox(Item item) {
         //System.err.println("Add itemBox");
+        if (item == null || item.template == null) {
+            return false;
+        }
+        if (item.template.id == ItemName.MANH_VO_BONG_TAI || isProtectedGoldBarItem(item.template.id)) {
+            service.dialogMessage("Không thể cất vật phẩm này");
+            return false;
+        }
         if (item.template.isUpToUp()) {
             int maxQuantity = Server.getMaxQuantityItem();
             int index = getIndexBoxById(item.id);
@@ -13867,6 +13772,7 @@ public class Player {
                         switch (item.template.type) {
                             case 9:
                                 this.gold += item.quantity;
+                                trackLegacySideTaskPickGold(item);
                                 text = "";
                                 break;
 
@@ -14718,20 +14624,29 @@ public class Player {
             }
         }
         if (bienHinhItem != null) {
+            int bienHinhSeconds = clampBienHinhSeconds(bienHinhItem.seconds);
+                        if (bienHinhSeconds <= 0) {
+                            synchronized (itemTimes) {
+                                itemTimes.remove(bienHinhItem);
+                            }
+                            bienHinhItem = null;
+                        } else {
             this.isBienHinh = true;
             this.levelBienHinh = (byte) (bienHinhItem.id - ItemTimeName.BIEN_HINH_STAGE_1 + 1);
             this.pointBienHinh = resolveBienHinhPoint(bienHinhItem);
             if (this.pointBienHinh < this.levelBienHinh) {
                 this.pointBienHinh = this.levelBienHinh;
             }
-            this.timeBienHinh = Math.max(1, bienHinhItem.seconds);
-            bienHinhItem.icon = TransformSkill.getItemTimeIcon(this.gender, this.pointBienHinh);
-            bienHinhItem.isSave = true;
-            syncBienHinhSkillCooldown();
-            updateSkin();
-            setAuraEffect();
-            info.setInfo();
-        }
+            bienHinhItem.seconds = bienHinhSeconds;
+            this.timeBienHinh = bienHinhItem.seconds;
+                            bienHinhItem.icon = TransformSkill.getItemTimeIcon(this.gender, this.pointBienHinh);
+                            bienHinhItem.isSave = true;
+                            syncBienHinhSkillCooldown();
+                            updateSkin();
+                            setAuraEffect();
+                            info.setInfo();
+                        }
+                    }
         SachDacBiet();
     }
 
@@ -15526,6 +15441,12 @@ public class Player {
             case ItemName.THOI_VANG:
                 inputDlg = new InputDialog(CMDTextBox.SELL_GOLD_BAR, "Nhập số lượng thỏi vàng muốn dùng",
                         new TextField("Nhập Số lượng , 1 thỏi vàng sẽ được 500tr vàng"));
+                inputDlg.setService(service);
+                inputDlg.show();
+                break;
+            case ItemName.THOI_VANG_KHOA:
+                inputDlg = new InputDialog(CMDTextBox.SELL_LOCKED_GOLD_BAR, "Nhập số lượng thỏi vàng khóa muốn dùng",
+                        new TextField("Nhập Số lượng , 1 thỏi vàng khóa sẽ được 500tr vàng"));
                 inputDlg.setService(service);
                 inputDlg.show();
                 break;
@@ -17598,14 +17519,6 @@ public class Player {
             }
             try {
                 this.timePlayed++;
-                if (isBienHinh) {
-                    if (this.timeBienHinh > 0) {
-                        this.timeBienHinh--;
-                    }
-                    if (this.timeBienHinh == 0) {
-                        this.timeOutBienHinh();
-                    }
-                }
                 if (isMonkey) {
                     if (this.timeIsMoneky > 0) {
                         this.timeIsMoneky--;
@@ -17724,9 +17637,13 @@ public class Player {
             if (this.mabuEgg != null && this.zone != null && this.zone.map.mapID == 21 + gender) {
                 this.mabuEgg.sendMabuEgg();
             }
-            checkExpiredNhiemVuBoMong();
-            checkBoMongTrain();
-            syncBoMongDatSM();
+            if (ConfigStudio.BO_MONG_LEGACY_MODE) {
+                refreshLegacySideTaskDay();
+            } else {
+                checkExpiredNhiemVuBoMong();
+                checkBoMongTrain();
+                syncBoMongDatSM();
+            }
         } catch (Exception e) {
             
             e.printStackTrace();
@@ -18103,7 +18020,7 @@ public class Player {
                 lastUpdates[UPDATE_HALF_SECONDS] = now;
                 updateEveryHalfSeconds();
             }
-            if (now - lastUpdates[UPDATE_ONE_SECONDS] >= 10000) {// update 10s
+            if (now - lastUpdates[UPDATE_ONE_SECONDS] >= 1000) {// update 1s
                 lastUpdates[UPDATE_ONE_SECONDS] = now;
                 if (_HunrProvision.ConfigStudio.EVENT_NEWYEAR_2026) {
                     _event.newyear_2026.EventNewYear2026.checkHoldTime(this);
@@ -18329,6 +18246,9 @@ public class Player {
                     info.setInfo();
                     service.loadPoint();
                 }
+                boolean hasBienHinhItemTime = false;
+                boolean needTimeoutBienHinh = false;
+                boolean needRemoveMaPhongBa = false;
                 synchronized (this.itemTimes) {
                     ArrayList<ItemTime> listRemove = new ArrayList<>();
                     for (ItemTime item : this.itemTimes) {
@@ -18340,6 +18260,16 @@ public class Player {
                             item.update();
                         } catch (Exception e) {
                             e.printStackTrace();
+                        }
+                        if (isBienHinhItemTimeId(item.id)) {
+                            if (item.seconds > TransformSkill.DURATION_SECONDS) {
+                                item.seconds = TransformSkill.DURATION_SECONDS;
+                                service.setItemTime(item);
+                            }
+                            if (item.seconds > 0) {
+                                hasBienHinhItemTime = true;
+                                this.timeBienHinh = item.seconds;
+                            }
                         }
                         if (item.seconds <= 0) {
                             excep = "item.id = " + item.id;
@@ -18398,7 +18328,7 @@ public class Player {
                                 case ItemTimeName.MA_PHONG_BA_STAGE_1:
                                 case ItemTimeName.MA_PHONG_BA_STAGE_2:
                                 case ItemTimeName.MA_PHONG_BA_STAGE_3:
-                                    removeMaPhongBa(false);
+                                    needRemoveMaPhongBa = true;
                                     break;
 
                                 case ItemTimeName.BIEN_HINH_STAGE_1:
@@ -18406,7 +18336,7 @@ public class Player {
                                 case ItemTimeName.BIEN_HINH_STAGE_3:
                                 case ItemTimeName.BIEN_HINH_STAGE_4:
                                 case ItemTimeName.BIEN_HINH_STAGE_5:
-                                    timeOutBienHinh();
+                                    needTimeoutBienHinh = true;
                                     break;
 
                                 case ItemTimeName.MO_GIOI_HAN_SUC_MANH:
@@ -18809,6 +18739,16 @@ public class Player {
                         }
                     }
                     this.itemTimes.removeAll(listRemove);
+                }
+                if (this.isBienHinh && !hasBienHinhItemTime) {
+                    needTimeoutBienHinh = true;
+                }
+                if (needRemoveMaPhongBa) {
+                    removeMaPhongBa(false);
+                }
+                if (needTimeoutBienHinh) {
+                    this.timeBienHinh = 0;
+                    timeOutBienHinh();
                 }
             }
             excep = "sachdacbiet";
@@ -20473,11 +20413,26 @@ public class Player {
             maps.add(x);
             maps.add(y);
             ArrayList<ItemTime> items = new ArrayList<>();
-            for (ItemTime item : itemTimes) {
-                if (!item.isSave) {
-                    continue;
+            if (itemTimes != null) {
+                synchronized (this.itemTimes) {
+                    int activeBienHinhItemId = this.isBienHinh && this.levelBienHinh > 0
+                            ? getBienHinhItemTimeId(getBienHinhStageIndex()) : -1;
+                    for (ItemTime item : itemTimes) {
+                        if (item == null || !item.isSave || item.seconds <= 0) {
+                            continue;
+                        }
+                        if (isBienHinhItemTimeId(item.id)) {
+                            if (!this.isBienHinh || item.id != activeBienHinhItemId) {
+                                continue;
+                            }
+                            item.seconds = clampBienHinhSeconds(item.seconds);
+                            if (item.seconds <= 0) {
+                                continue;
+                            }
+                        }
+                        items.add(item);
+                    }
                 }
-                items.add(item);
             }
             JSONArray skills = new JSONArray();
             for (Skill skill : this.skills) {
@@ -20521,7 +20476,8 @@ public class Player {
                     g.toJson(this.amulets), this.typeTraining, g.toJson(this.achievements), this.timePlayed, study,
                     g.toJson(this.boxCrackBall), this.timeAtSplitFusion, (int) this.head, (int) this.body,
                     (int) this.leg, typePorata, g.toJson(this.cards), g.toJson(this.specialSkill),
-                    this.countNumberOfSpecialSkillChanges, resetTime, dataDHVT23, thoivang, datadrop.toString());
+                    this.countNumberOfSpecialSkillChanges, resetTime, dataDHVT23, thoivang, datadrop.toString(),
+                    ConfigStudio.BO_MONG_LEGACY_MODE ? LegacyBoMongService.save(this.legacySideTask) : null);
             if (mabuEgg != null) {
                 mabuEgg.save();
             }
@@ -23152,7 +23108,217 @@ public class Player {
         return new int[0];
     }
 
+    private void openLegacyBoMongTaskMenu() {
+        if (!ConfigStudio.BO_MONG_LEGACY_MODE) {
+            return;
+        }
+        refreshLegacySideTaskDay();
+        menus.clear();
+        if (legacySideTask != null && legacySideTask.isActive()) {
+            menus.add(new KeyValue(CMDMenu.BO_MONG_LEGACY_PAY, "Trả nhiệm vụ"));
+            menus.add(new KeyValue(CMDMenu.BO_MONG_LEGACY_CANCEL, "Hủy nhiệm vụ"));
+            String text = "Nhiệm vụ hiện tại:\n"
+                    + legacySideTask.getName() + "\n"
+                    + "Độ khó: " + legacySideTask.getLevelName() + "\n"
+                    + "Tiến độ: " + legacySideTask.count + "/" + legacySideTask.maxCount + " ("
+                    + legacySideTask.getPercentProcess() + "%)\n"
+                    + "Lượt còn lại hôm nay: " + legacySideTask.leftTask;
+            service.openUIConfirm(NpcName.BO_MONG, text, (short) 0, menus);
+            return;
+        }
+        if (legacySideTask.leftTask <= 0) {
+            service.openUISay(NpcName.BO_MONG, "Bạn đã nhận hết nhiệm vụ hôm nay. Hãy chờ tới ngày mai rồi nhận tiếp", (short) 0);
+            return;
+        }
+        menus.add(new KeyValue(CMDMenu.BO_MONG_LEGACY_EASY, "Dễ"));
+        menus.add(new KeyValue(CMDMenu.BO_MONG_LEGACY_NORMAL, "Bình thường"));
+        menus.add(new KeyValue(CMDMenu.BO_MONG_LEGACY_HARD, "Khó"));
+        menus.add(new KeyValue(CMDMenu.BO_MONG_LEGACY_VERY_HARD, "Siêu khó"));
+        menus.add(new KeyValue(CMDMenu.BO_MONG_LEGACY_HELL, "Địa ngục"));
+        menus.add(new KeyValue(CMDMenu.CANCEL, "Từ chối"));
+        String text = "Ngươi muốn nhận nhiệm vụ ở độ khó nào?\n"
+                + "Lượt còn lại hôm nay: " + legacySideTask.leftTask + "/" + LegacyBoMongService.MAX_SIDE_TASK;
+        service.openUIConfirm(NpcName.BO_MONG, text, (short) 0, menus);
+    }
+
+    private void receiveLegacySideTask(int level) {
+        if (!ConfigStudio.BO_MONG_LEGACY_MODE) {
+            return;
+        }
+        refreshLegacySideTaskDay();
+        if (legacySideTask == null) {
+            legacySideTask = new LegacySideTask();
+        }
+        if (legacySideTask.isActive()) {
+            service.sendThongBao("Bạn đang có nhiệm vụ hằng ngày chưa hoàn thành");
+            return;
+        }
+        if (legacySideTask.leftTask <= 0) {
+            service.sendThongBao("Bạn đã nhận hết nhiệm vụ hôm nay");
+            return;
+        }
+        LegacySideTask task = LegacyBoMongService.createTask((byte) level, legacySideTask.leftTask - 1);
+        legacySideTask = task;
+        saveData();
+        openLegacyBoMongTaskMenu();
+    }
+
+    private void cancelLegacySideTask() {
+        if (!ConfigStudio.BO_MONG_LEGACY_MODE || legacySideTask == null || !legacySideTask.isActive()) {
+            return;
+        }
+        String taskName = legacySideTask.getName();
+        legacySideTask.clearCurrentTask();
+        saveData();
+        service.sendThongBao("Nhiệm vụ " + taskName + " đã bị hủy bỏ");
+    }
+
+    private void payLegacySideTask() {
+        if (!ConfigStudio.BO_MONG_LEGACY_MODE || legacySideTask == null || !legacySideTask.isActive()) {
+            service.sendThongBao("Bạn chưa có nhiệm vụ hằng ngày");
+            return;
+        }
+        if (!legacySideTask.isDone()) {
+            service.sendThongBao("Bạn chưa hoàn thành nhiệm vụ");
+            return;
+        }
+        int rewardLockedGoldBar = LegacyBoMongService.getRewardLockedGoldBar(legacySideTask.level);
+        if (rewardLockedGoldBar > 0 && getItemInBag(ItemName.THOI_VANG_KHOA) == null && getSlotNullInBag() == 0) {
+            service.sendThongBao(Language.ME_BAG_FULL);
+            return;
+        }
+        if (rewardLockedGoldBar > 0) {
+            Item lockedGoldBar = new Item(ItemName.THOI_VANG_KHOA);
+            lockedGoldBar.quantity = rewardLockedGoldBar;
+            lockedGoldBar.setDefaultOptions();
+            if (lockedGoldBar.getItemOption(30) == null) {
+                lockedGoldBar.addItemOption(new ItemOption(30, 0));
+            }
+            if (!addItem(lockedGoldBar)) {
+                service.sendThongBao(Language.ME_BAG_FULL);
+                return;
+            }
+            service.sendThongBao("Bạn nhận được " + rewardLockedGoldBar + " thỏi vàng khóa");
+        }
+        int rewardGold = LegacyBoMongService.getRewardGold(legacySideTask.level);
+        if (rewardGold > 0) {
+            addGold(rewardGold);
+            service.sendThongBao("Bạn nhận được " + Utils.currencyFormat(rewardGold) + " vàng");
+        }
+        if (session != null && session.user != null) {
+            GameRepository.getInstance().user.incrementNangDong(session.user.getId());
+            service.sendThongBao("Bạn nhận được 1 điểm năng động");
+            Top top = Top.getTop(Top.TOP_NANG_DONG);
+            if (top != null) {
+                top.getElements().clear();
+                top.load();
+            }
+        }
+        legacySideTask.clearCurrentTask();
+        service.setItemBag();
+        saveData();
+    }
+
+    private void openAchievementFromBoMong() {
+        if (achievements == null || achievements.size() <= 11) {
+            return;
+        }
+        achievements.get(0).upadateCount(info.power);
+        achievements.get(1).upadateCount(info.power);
+        achievements.get(2).upadateCount(magicTree.level);
+        achievements.get(8).upadateCount(timePlayed / 60 / 60);
+        achievements.get(11).upadateCount(0);
+        service.achievement((byte) 0, (byte) -1);
+    }
+
+    private void openLegacyBoMongTop() {
+        Top top = Top.getTop(Top.TOP_NANG_DONG);
+        if (top == null) {
+            service.sendThongBao("Top năng động chưa sẵn sàng");
+            return;
+        }
+        top.show(this);
+    }
+
+    public void trackLegacySideTaskKillMob(int mobTemplateId) {
+        if (!ConfigStudio.BO_MONG_LEGACY_MODE) {
+            return;
+        }
+        refreshLegacySideTaskDay();
+        if (legacySideTask == null || !legacySideTask.isActive() || legacySideTask.isDone()) {
+            return;
+        }
+        Integer mobId = LegacyBoMongService.getMobIdByTemplate(legacySideTask.template.id);
+        if (mobId == null || mobId != mobTemplateId) {
+            return;
+        }
+        legacySideTask.count = Math.min(legacySideTask.maxCount, legacySideTask.count + 1);
+        notifyLegacySideTaskProgress();
+    }
+
+    public void trackLegacySideTaskPickGold(Item item) {
+        if (!ConfigStudio.BO_MONG_LEGACY_MODE) {
+            return;
+        }
+        refreshLegacySideTaskDay();
+        if (legacySideTask == null || !LegacyBoMongService.isPickGoldTask(legacySideTask) || legacySideTask.isDone()) {
+            return;
+        }
+        legacySideTask.count = Math.min(legacySideTask.maxCount, legacySideTask.count + Math.max(0, item.quantity));
+        notifyLegacySideTaskProgress();
+    }
+
+    private void notifyLegacySideTaskProgress() {
+        if (legacySideTask == null || !legacySideTask.isActive()) {
+            return;
+        }
+        int percentDone = legacySideTask.getPercentProcess();
+        boolean notify = false;
+        if (percentDone >= 90 && !legacySideTask.notify90) {
+            legacySideTask.notify90 = true;
+            notify = true;
+        } else if (percentDone >= 80 && !legacySideTask.notify80) {
+            legacySideTask.notify80 = true;
+            notify = true;
+        } else if (percentDone >= 70 && !legacySideTask.notify70) {
+            legacySideTask.notify70 = true;
+            notify = true;
+        } else if (percentDone >= 60 && !legacySideTask.notify60) {
+            legacySideTask.notify60 = true;
+            notify = true;
+        } else if (percentDone >= 50 && !legacySideTask.notify50) {
+            legacySideTask.notify50 = true;
+            notify = true;
+        } else if (percentDone >= 40 && !legacySideTask.notify40) {
+            legacySideTask.notify40 = true;
+            notify = true;
+        } else if (percentDone >= 30 && !legacySideTask.notify30) {
+            legacySideTask.notify30 = true;
+            notify = true;
+        } else if (percentDone >= 20 && !legacySideTask.notify20) {
+            legacySideTask.notify20 = true;
+            notify = true;
+        } else if (percentDone >= 10 && !legacySideTask.notify10) {
+            legacySideTask.notify10 = true;
+            notify = true;
+        } else if (!legacySideTask.notify0) {
+            legacySideTask.notify0 = true;
+            notify = true;
+        }
+        if (legacySideTask.isDone()) {
+            service.sendThongBao("Chúc mừng bạn đã hoàn thành nhiệm vụ, bây giờ hãy quay về Bò Mộng trả nhiệm vụ.");
+            return;
+        }
+        if (notify) {
+            service.sendThongBao("Nhiệm vụ: " + legacySideTask.getName() + " đã hoàn thành: "
+                    + legacySideTask.count + "/" + legacySideTask.maxCount + " (" + percentDone + "%)");
+        }
+    }
+
     public void checkBoMongProgress(BoMongService nv) {
+        if (ConfigStudio.BO_MONG_LEGACY_MODE) {
+            return;
+        }
         if (nv == null || nv.yeuCau <= 0 || this.service == null) {
             return;
         }
@@ -23194,6 +23360,9 @@ public class Player {
     }
 
     private void checkResetNhiemVuBoMong() {
+        if (ConfigStudio.BO_MONG_LEGACY_MODE) {
+            return;
+        }
         long now = System.currentTimeMillis();
         if (lastResetNvBoMong == 0) {
             lastResetNvBoMong = now;
@@ -23211,6 +23380,9 @@ public class Player {
     }
 
     private void checkExpiredNhiemVuBoMong() {
+        if (ConfigStudio.BO_MONG_LEGACY_MODE) {
+            return;
+        }
         if (currentNhiemVuBoMong == null) {
             return;
         }
@@ -23233,6 +23405,9 @@ public class Player {
     }
 
     private void handleBoMongNhanNv() {
+        if (ConfigStudio.BO_MONG_LEGACY_MODE) {
+            return;
+        }
         checkResetNhiemVuBoMong();
         checkExpiredNhiemVuBoMong();
         if (countNhiemVuBoMong >= 10) {
@@ -23294,6 +23469,9 @@ public class Player {
     }
 
     private void handleBoMongXemNv() {
+        if (ConfigStudio.BO_MONG_LEGACY_MODE) {
+            return;
+        }
         checkExpiredNhiemVuBoMong();
         if (currentNhiemVuBoMong == null) {
             logger.info(String.format("[BoMong] Player %d handleBoMongXemNv: không có nhiệm vụ", this.id));
@@ -23316,6 +23494,9 @@ public class Player {
     }
 
     private void handleBoMongXemDiem() {
+        if (ConfigStudio.BO_MONG_LEGACY_MODE) {
+            return;
+        }
         String text = "Điểm tích lũy: " + String.format("%d/1000 điểm", pointBoMong) + ". Dùng điểm để nổ hũ và nhận quà!";
         ArrayList<KeyValue> menus = new ArrayList<>();
         menus.add(new KeyValue(CMDMenu.CANCEL, "Đóng"));
@@ -23323,6 +23504,9 @@ public class Player {
     }
 
     private void handleBoMongHuyNv() {
+        if (ConfigStudio.BO_MONG_LEGACY_MODE) {
+            return;
+        }
         checkExpiredNhiemVuBoMong();
         if (currentNhiemVuBoMong == null) {
             String text = "Ngươi chưa có nhiệm vụ nào!\nHãy nhận nhiệm vụ để bắt đầu.";
@@ -23341,6 +23525,9 @@ public class Player {
     }
 
     private void handleBoMongHuyNvConfirm() {
+        if (ConfigStudio.BO_MONG_LEGACY_MODE) {
+            return;
+        }
         checkExpiredNhiemVuBoMong();
         if (currentNhiemVuBoMong == null) {
             if (this.service != null) {
@@ -23361,6 +23548,9 @@ public class Player {
     }
 
     private void handleBoMongNoHu() {
+        if (ConfigStudio.BO_MONG_LEGACY_MODE) {
+            return;
+        }
         if (BoMongService.CAC_MOC_DIEM.isEmpty()) {
             BoMongService.loadMocDiem();
         }
@@ -23381,6 +23571,9 @@ public class Player {
     }
 
     private void handleBoMongNoHuConfirm(KeyValue keyValue) {
+        if (ConfigStudio.BO_MONG_LEGACY_MODE) {
+            return;
+        }
         if (BoMongService.CAC_MOC_DIEM.isEmpty()) {
             BoMongService.loadMocDiem();
         }
@@ -23507,6 +23700,9 @@ public class Player {
     }
 
     public void syncBoMongDatSM() {
+        if (ConfigStudio.BO_MONG_LEGACY_MODE) {
+            return;
+        }
         if (this.currentNhiemVuBoMong != null && this.info != null) {
             BoMongService nv = this.currentNhiemVuBoMong;
             if (nv.loaiNv == BoMongService.LOAI_DAT_SM) {
@@ -23525,6 +23721,9 @@ public class Player {
     }
 
     public void checkBoMongDatSMAfterLogin() {
+        if (ConfigStudio.BO_MONG_LEGACY_MODE) {
+            return;
+        }
         if (this.currentNhiemVuBoMong != null && this.info != null) {
             BoMongService nv = this.currentNhiemVuBoMong;
             if (nv.loaiNv == BoMongService.LOAI_DAT_SM) {
@@ -23543,6 +23742,9 @@ public class Player {
     }
 
     private void checkBoMongDatSM(byte type) {
+        if (ConfigStudio.BO_MONG_LEGACY_MODE) {
+            return;
+        }
         if (type == Info.POWER && this.currentNhiemVuBoMong != null && this.info != null) {
             BoMongService nv = this.currentNhiemVuBoMong;
             if (nv.loaiNv == BoMongService.LOAI_DAT_SM) {
@@ -23561,6 +23763,9 @@ public class Player {
     }
 
     private void checkBoMongTrain() {
+        if (ConfigStudio.BO_MONG_LEGACY_MODE) {
+            return;
+        }
         if (this.currentNhiemVuBoMong == null) {
             return;
         }
@@ -23601,6 +23806,9 @@ public class Player {
     }
 
     private void checkBoMongNapTien() {
+        if (ConfigStudio.BO_MONG_LEGACY_MODE) {
+            return;
+        }
         if (this.currentNhiemVuBoMong == null) {
             return;
         }
@@ -23655,6 +23863,9 @@ public class Player {
     }
 
     public void completeNhiemVuBoMong() {
+        if (ConfigStudio.BO_MONG_LEGACY_MODE) {
+            return;
+        }
         if (currentNhiemVuBoMong == null) {
             return;
         }
@@ -23675,6 +23886,9 @@ public class Player {
     }
 
     public void loadBoMongNhiemVu() {
+        if (ConfigStudio.BO_MONG_LEGACY_MODE) {
+            return;
+        }
         try {
             Optional<BoMongNhiemVuData> dataOpt = GameRepository.getInstance().boMongNhiemVu.findByPlayerId(this.id);
             if (dataOpt.isPresent()) {
@@ -23761,6 +23975,9 @@ public class Player {
     }
 
     public void saveBoMongNhiemVu() {
+        if (ConfigStudio.BO_MONG_LEGACY_MODE) {
+            return;
+        }
         try {
             if (this.currentNhiemVuBoMong != null) {
                 BoMongService nv = this.currentNhiemVuBoMong;
@@ -23823,6 +24040,9 @@ public class Player {
     }
 
     private void saveBoMongPoint() {
+        if (ConfigStudio.BO_MONG_LEGACY_MODE) {
+            return;
+        }
         try {
             GameRepository.getInstance().player.saveBoMongPoint(this.id, this.pointBoMong, this.countNhiemVuBoMong, this.lastResetNvBoMong);
         } catch (Exception e) {
@@ -23831,6 +24051,9 @@ public class Player {
     }
 
     private void saveLastCoinValue() {
+        if (ConfigStudio.BO_MONG_LEGACY_MODE) {
+            return;
+        }
         try {
             Connection conn = com.ngocrong.server.mysql.MySQLConnect.getConnection();
             if (conn == null) {

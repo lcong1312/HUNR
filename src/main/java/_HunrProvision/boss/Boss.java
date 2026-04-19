@@ -416,7 +416,7 @@ public abstract class Boss extends Player implements Bot {
                 QuocKhanh.bossReward(_c, this);
             }
             
-            if (_c != null && _c.currentNhiemVuBoMong != null && !(this instanceof VirtualBot)) {
+            if (!ConfigStudio.BO_MONG_LEGACY_MODE && _c != null && _c.currentNhiemVuBoMong != null && !(this instanceof VirtualBot)) {
                  BoMongService nv = _c.currentNhiemVuBoMong;
                 
                 if (nv.loaiNv == BoMongService.LOAI_KILL_BOSS) {
