@@ -366,6 +366,29 @@ public class MapService {
         }
     }
 
+    public void specialSkillNotFocusStart(Player source, short skillTemplateId, byte dir, int timePre, byte typePaint) {
+        zone.lockChar.readLock().lock();
+        try {
+            for (Player target : zone.players) {
+                target.service.specialSkillNotFocusStart(source, skillTemplateId, dir, timePre, typePaint);
+            }
+        } finally {
+            zone.lockChar.readLock().unlock();
+        }
+    }
+
+    public void specialSkillNotFocusEnd(Player source, short skillTemplateId, int x, int time, int range,
+                                        ArrayList<Object> hits, byte typePaint) {
+        zone.lockChar.readLock().lock();
+        try {
+            for (Player target : zone.players) {
+                target.service.specialSkillNotFocusEnd(source, skillTemplateId, x, time, range, hits, typePaint);
+            }
+        } finally {
+            zone.lockChar.readLock().unlock();
+        }
+    }
+
     public void playerLoadLive(Player _player) {
         try {
             Message mss = new Message(Cmd.RETURN_POINT_MAP);

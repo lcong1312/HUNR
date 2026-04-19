@@ -314,6 +314,11 @@ public class Player {
     private boolean isBienHinh;
     private byte levelBienHinh;
     private byte pointBienHinh;
+    private boolean isMaPhongBa;
+    private int levelMaPhongBa;
+    private long lastTimeMaPhongBaDamage;
+    private Player playerUseMaPhongBa;
+    private byte specialSkillDir = 1;
     private boolean isHaveEquipTeleport;
     private boolean isHaveEquipSelfExplosion;
     private boolean isExploded;
@@ -509,11 +514,13 @@ public class Player {
     }
 
     private int getBienHinhBaseCooldown() {
-        Skill skill = Skills.getSkill(this.gender, SkillName.BIEN_HINH_3_HANH_TINH, this.select.point);
+        Skill currentSkill = getBienHinhSkill();
+        int point = currentSkill != null ? currentSkill.point : (this.select != null ? this.select.point : 0);
+        Skill skill = Skills.getSkill(this.gender, SkillName.BIEN_HINH_3_HANH_TINH, point);
         if (skill != null && skill.coolDown > 0) {
             return skill.coolDown;
         }
-        return Math.max(0, this.select.coolDown);
+        return this.select != null ? Math.max(0, this.select.coolDown) : 0;
     }
 
     private int getBienHinhDurationSeconds(int baseCooldown) {
@@ -528,11 +535,63 @@ public class Player {
         if (this.pointBienHinh > 0) {
             return this.pointBienHinh;
         }
+        Skill bienHinhSkill = getBienHinhSkill();
+        if (bienHinhSkill != null && bienHinhSkill.point > 0) {
+            return bienHinhSkill.point;
+        }
         if (this.select != null && this.select.template != null
                 && this.select.template.id == SkillName.BIEN_HINH_3_HANH_TINH && this.select.point > 0) {
             return this.select.point;
         }
         return Math.max(1, this.levelBienHinh);
+    }
+
+    private Skill getBienHinhSkill() {
+        if (this.skills == null) {
+            return null;
+        }
+        for (Skill skill : this.skills) {
+            if (skill != null && skill.template != null
+                    && skill.template.id == SkillName.BIEN_HINH_3_HANH_TINH) {
+                return skill;
+            }
+        }
+        return null;
+    }
+
+    private byte resolveBienHinhPoint(ItemTime item) {
+        Skill bienHinhSkill = getBienHinhSkill();
+        if (bienHinhSkill != null && bienHinhSkill.point > 0) {
+            return (byte) bienHinhSkill.point;
+        }
+        if (item != null) {
+            int iconLevel = TransformSkill.getItemTimeLevel(this.gender, item.icon);
+            if (iconLevel > 0) {
+                return (byte) iconLevel;
+            }
+        }
+        return (byte) Math.max(1, this.levelBienHinh);
+    }
+
+    private void syncBienHinhSkillCooldown() {
+        Skill bienHinhSkill = getBienHinhSkill();
+        if (bienHinhSkill == null) {
+            return;
+        }
+        Skill templateSkill = Skills.getSkill(this.gender, SkillName.BIEN_HINH_3_HANH_TINH, bienHinhSkill.point);
+        int baseCooldown = templateSkill != null && templateSkill.coolDown > 0
+                ? templateSkill.coolDown : Math.max(0, bienHinhSkill.coolDown);
+        if (baseCooldown <= 0) {
+            return;
+        }
+        if (this.isBienHinh && this.levelBienHinh > 0) {
+            boolean lastLevel = this.levelBienHinh >= bienHinhSkill.point;
+            bienHinhSkill.coolDown = lastLevel ? baseCooldown : Math.max(1, baseCooldown * 5 / 100);
+        }
+        if (this.select != null && this.select.template != null
+                && this.select.template.id == SkillName.BIEN_HINH_3_HANH_TINH) {
+            this.select.coolDown = bienHinhSkill.coolDown;
+        }
     }
 
     private boolean isBienHinhItemTimeId(int id) {
@@ -586,11 +645,12 @@ public class Player {
             }
             this.itemTimes.removeAll(listRemove);
             if (current == null) {
-                current = new ItemTime(itemId, icon, seconds, false);
+                current = new ItemTime(itemId, icon, seconds, true);
                 this.itemTimes.add(current);
             } else {
                 current.icon = icon;
                 current.seconds = seconds;
+                current.isSave = true;
             }
             service.setItemTime(current);
         }
@@ -610,12 +670,16 @@ public class Player {
         this.updateSkin();
         this.setAuraEffect();
         syncBienHinhItemTime();
-        this.info.setInfo();
-        service.loadPoint();
-        if (recoverAll) {
+        if (this.info != null) {
+            this.info.setInfo();
+        }
+        if (this.service != null) {
+            service.loadPoint();
+        }
+        if (recoverAll && this.info != null) {
             this.info.recovery(Info.ALL, 100, true);
         }
-        if (zone != null) {
+        if (zone != null && zone.service != null) {
             zone.service.playerLoadBody(this);
             zone.service.updateBody((byte) 0, this);
             if (oldAura != this.idAuraEff) {
@@ -630,6 +694,398 @@ public class Player {
         this.pointBienHinh = 0;
         this.timeBienHinh = 0;
         refreshBienHinhState(false);
+    }
+
+    private boolean isSpecialSkillNotFocusTemplateId(int skillTemplateId) {
+        return skillTemplateId == SkillName.SUPER_KAMEJOKO
+                || skillTemplateId == SkillName.CADIC_LIEN_HOAN_CHUONG
+                || skillTemplateId == SkillName.MA_PHONG_BA;
+    }
+
+    private int getSpecialSkillPrepareTime() {
+        return 2000;
+    }
+
+    private int getSpecialSkillDamageTime() {
+        return 3000;
+    }
+
+    private byte getSpecialSkillTypePaint() {
+        return 1;
+    }
+
+    private long getSkillManaUse(Skill skill) {
+        long manaUse = skill.manaUse;
+        if (skill.template.manaUseType == 1) {
+            manaUse = Utils.percentOf(this.info.mpFull, manaUse);
+        }
+        if (isBoss()) {
+            return 0;
+        }
+        return manaUse;
+    }
+
+    private boolean canAttackPlayerBySpecialSkill(Player cAtt) {
+        return cAtt != null && !cAtt.isMiniDisciple() && select != null && select.template.type != 2
+                && ((((int) cAtt.typePk == 3 && (int) this.typePk == 3)
+                || ((int) this.typePk == 5 || (int) cAtt.typePk == 5
+                || ((int) this.typePk == 1 && (int) cAtt.typePk == 1))
+                || ((int) this.typePk == 4 && (int) cAtt.typePk == 4)
+                || (this.testCharId >= 0 && this.testCharId == cAtt.id)
+                || (this.killCharId >= 0 && this.killCharId == cAtt.id && !this.isLang())
+                || (cAtt.killCharId >= 0 && cAtt.killCharId == this.id && !this.isLang())
+                || ((int) this.flag == 8 && (int) cAtt.flag != 0)
+                || ((int) this.flag != 0 && (int) cAtt.flag == 8)
+                || ((int) this.flag != (int) cAtt.flag && (int) this.flag != 0 && (int) cAtt.flag != 0))
+                && cAtt.statusMe != 14)
+                && cAtt.statusMe != 5;
+    }
+
+    private boolean isMaPhongBaItemTimeId(int id) {
+        return id >= ItemTimeName.MA_PHONG_BA_STAGE_1 && id <= ItemTimeName.MA_PHONG_BA_STAGE_3;
+    }
+
+    private int getMaPhongBaItemTimeId(int point) {
+        if (point < 3) {
+            return ItemTimeName.MA_PHONG_BA_STAGE_1;
+        }
+        if (point <= 5) {
+            return ItemTimeName.MA_PHONG_BA_STAGE_2;
+        }
+        return ItemTimeName.MA_PHONG_BA_STAGE_3;
+    }
+
+    private short getMaPhongBaItemTimeIcon(int point) {
+        if (point < 3) {
+            return 11236;
+        }
+        if (point <= 5) {
+            return 11235;
+        }
+        return 11237;
+    }
+
+    private void clearMaPhongBaItemTimes() {
+        if (this.itemTimes == null) {
+            return;
+        }
+        synchronized (this.itemTimes) {
+            ArrayList<ItemTime> listRemove = new ArrayList<>();
+            for (ItemTime item : this.itemTimes) {
+                if (item != null && isMaPhongBaItemTimeId(item.id)) {
+                    item.seconds = 0;
+                    service.setItemTime(item);
+                    listRemove.add(item);
+                }
+            }
+            this.itemTimes.removeAll(listRemove);
+        }
+    }
+
+    private void applyMaPhongBa(Player caster, int point) {
+        this.playerUseMaPhongBa = caster;
+        this.isMaPhongBa = true;
+        this.levelMaPhongBa = point;
+        this.lastTimeMaPhongBaDamage = 0;
+        clearMaPhongBaItemTimes();
+        addItemTime(new ItemTime(getMaPhongBaItemTimeId(point), getMaPhongBaItemTimeIcon(point), 30, false));
+        this.updateSkin();
+        if (zone != null) {
+            zone.service.playerLoadBody(this);
+            zone.service.updateBody((byte) 0, this);
+        }
+    }
+
+    private void removeMaPhongBa(boolean clearItemTime) {
+        this.isMaPhongBa = false;
+        this.levelMaPhongBa = 0;
+        this.lastTimeMaPhongBaDamage = 0;
+        this.playerUseMaPhongBa = null;
+        if (clearItemTime) {
+            clearMaPhongBaItemTimes();
+        }
+        this.updateSkin();
+        if (zone != null) {
+            zone.service.playerLoadBody(this);
+            zone.service.updateBody((byte) 0, this);
+        }
+    }
+
+    private void updateMaPhongBaEffect() {
+        if (!this.isMaPhongBa || this.isDead || this.zone == null) {
+            return;
+        }
+        long now = System.currentTimeMillis();
+        if (now - this.lastTimeMaPhongBaDamage < 1000L) {
+            return;
+        }
+        this.lastTimeMaPhongBaDamage = now;
+        Player caster = this.playerUseMaPhongBa;
+        if (caster == null) {
+            return;
+        }
+        this.lock.lock();
+        try {
+            if (!this.isMaPhongBa || this.isDead) {
+                return;
+            }
+            long dame = Math.max(1L, Utils.percentOf(caster.info.hpFull, Math.max(1, this.levelMaPhongBa)));
+            if (this.limitDame > 0 && dame > this.limitDame) {
+                dame = this.limitDame;
+            }
+            dame -= Utils.percentOf(dame, this.info.options[94]);
+            if (this.isProtected) {
+                if (dame >= this.info.hpFull) {
+                    this.setTimeForItemtime(0, 0);
+                    this.service.sendThongBao("Khiên năng lượng đã vỡ");
+                }
+                dame = 1;
+            }
+            dame = this.injure(caster, null, dame);
+            if (dame <= 0) {
+                return;
+            }
+            this.info.hp -= dame;
+            zone.service.attackPlayer(this, dame, false, (byte) -1);
+            if (this.info.hp <= 0) {
+                caster.kill(this);
+                this.killed(caster);
+                this.startDie();
+            }
+        } finally {
+            this.lock.unlock();
+        }
+    }
+
+    private long getSpecialBeamDamage(Skill skill, boolean isLastTick) {
+        long damageFull = this.info.damageFull;
+        long dame = damageFull + Utils.percentOf(damageFull, (skill.damage - 100));
+        dame = Utils.nextLong(Math.max(1L, dame - (dame / 10)), Math.max(1L, dame));
+        dame += Utils.percentOf(dame, this.info.options[19]);
+        if (this.isBuaManhMe()) {
+            dame *= 2;
+        }
+        int percentDamageBonus = this.getPercentDamageBonus();
+        if (percentDamageBonus > 0) {
+            dame += Utils.percentOf(dame, percentDamageBonus);
+            this.setPercentDamageBonus(0);
+        }
+        if (isLastTick) {
+            dame *= 2;
+        }
+        return Math.max(1L, dame);
+    }
+
+    private void damageSpecialBeamTargets(Zone castZone, Skill skill, byte dir, boolean isLastTick) {
+        long baseDamage = getSpecialBeamDamage(skill, isLastTick);
+        int skillRange = Math.max(1, skill.dx);
+        List<Mob> mobs = castZone.getListMob();
+        for (Mob mob : mobs) {
+            mob.lock.lock();
+            try {
+                if (mob.isDead()) {
+                    continue;
+                }
+                if (Math.abs(this.y - mob.y) > 100) {
+                    continue;
+                }
+                if (dir == 1) {
+                    if (mob.x < this.x || Math.abs(this.x - mob.x) > skillRange) {
+                        continue;
+                    }
+                } else {
+                    if (mob.x > this.x || Math.abs(this.x - mob.x) > skillRange) {
+                        continue;
+                    }
+                }
+                mob.hp -= baseDamage;
+                castZone.service.attackNpc(baseDamage, false, mob, (byte) -1);
+                if (mob.hp <= 0) {
+                    kill(mob);
+                    mob.startDie(baseDamage, false, this);
+                }
+            } finally {
+                mob.lock.unlock();
+            }
+        }
+        List<Player> players = castZone.getListChar(Zone.TYPE_ALL);
+        for (Player target : players) {
+            if (target == null || target == this || target.isDead || !canAttackPlayerBySpecialSkill(target)) {
+                continue;
+            }
+            if (Math.abs(this.y - target.y) > 100) {
+                continue;
+            }
+            if (dir == 1) {
+                if (target.x < this.x || Math.abs(this.x - target.x) > skillRange) {
+                    continue;
+                }
+            } else {
+                if (target.x > this.x || Math.abs(this.x - target.x) > skillRange) {
+                    continue;
+                }
+            }
+            target.lock.lock();
+            try {
+                if (target.isDead) {
+                    continue;
+                }
+                long dame = baseDamage;
+                if (target.limitDame > 0 && dame > target.limitDame) {
+                    dame = target.limitDame;
+                }
+                dame -= Utils.percentOf(dame, target.info.options[94]);
+                if (target.isProtected) {
+                    if (dame >= target.info.hpFull) {
+                        target.setTimeForItemtime(0, 0);
+                        target.service.sendThongBao("Khiên năng lượng đã vỡ");
+                    }
+                    dame = 1;
+                }
+                dame = target.injure(this, null, dame);
+                if (dame <= 0) {
+                    continue;
+                }
+                target.info.hp -= dame;
+                castZone.service.attackPlayer(target, dame, false, (byte) -1);
+                if (target.info.hp <= 0) {
+                    kill(target);
+                    target.killed(this);
+                    target.startDie();
+                }
+            } finally {
+                target.lock.unlock();
+            }
+        }
+    }
+
+    private void finishSpecialBeamSkill(Zone castZone, Skill skill, byte dir) {
+        int rangeX = this.x + (dir == 1 ? skill.dx : -skill.dx);
+        castZone.service.specialSkillNotFocusEnd(this, (short) skill.template.id, rangeX,
+                getSpecialSkillDamageTime(), 50, null, getSpecialSkillTypePaint());
+        new Thread(() -> {
+            try {
+                int period = Math.max(1, getSpecialSkillDamageTime() / 15);
+                for (int tick = 1; tick <= 15; tick++) {
+                    if (this.isDead || this.zone != castZone) {
+                        break;
+                    }
+                    damageSpecialBeamTargets(castZone, skill, dir, tick == 15);
+                    Thread.sleep(period);
+                }
+            } catch (InterruptedException ignored) {
+            } finally {
+                setSkillSpecial(false);
+            }
+        }).start();
+    }
+
+    private void finishMaPhongBa(Zone castZone, Skill skill, byte dir) {
+        int point = skill.point;
+        int distanceX = this.x + (50 * dir);
+        int maxDistance = 100 + (15 * point);
+        ArrayList<Object> hits = new ArrayList<>();
+        List<Mob> mobs = castZone.getListMob().stream()
+                .filter(mob -> !mob.isDead() && Utils.getDistance(distanceX, this.y, mob.x, mob.y) <= maxDistance)
+                .sorted(Comparator.comparingInt(mob -> Math.abs(distanceX - mob.x)))
+                .collect(Collectors.toList());
+        for (Mob mob : mobs) {
+            if (hits.stream().filter(Mob.class::isInstance).count() >= skill.point) {
+                break;
+            }
+            hits.add(mob);
+        }
+        List<Player> players = castZone.getListChar(Zone.TYPE_ALL).stream()
+                .filter(target -> target != null && target != this && !target.isDead
+                        && canAttackPlayerBySpecialSkill(target)
+                        && Utils.getDistance(distanceX, this.y, target.x, target.y) <= maxDistance)
+                .sorted(Comparator.comparingInt(target -> Math.abs(distanceX - target.x)))
+                .collect(Collectors.toList());
+        for (Player target : players) {
+            if (hits.stream().filter(Player.class::isInstance).count() >= skill.point) {
+                break;
+            }
+            hits.add(target);
+        }
+        castZone.service.specialSkillNotFocusEnd(this, (short) skill.template.id, distanceX,
+                getSpecialSkillDamageTime(), maxDistance, hits, getSpecialSkillTypePaint());
+        new Thread(() -> {
+            try {
+                Thread.sleep(getSpecialSkillDamageTime());
+                for (Object hit : hits) {
+                    if (hit instanceof Mob) {
+                        Mob mob = (Mob) hit;
+                        if (!mob.isDead() && mob.zone == castZone) {
+                            mob.applyMaPhongBa(this, point);
+                        }
+                    } else if (hit instanceof Player) {
+                        Player target = (Player) hit;
+                        if (!target.isDead && target.zone == castZone) {
+                            target.applyMaPhongBa(this, point);
+                        }
+                    }
+                }
+            } catch (InterruptedException ignored) {
+            } finally {
+                setSkillSpecial(false);
+            }
+        }).start();
+    }
+
+    private void useSpecialSkillNotFocus(byte skillTemplateId, short xPlayer, short yPlayer, byte dir, short x, short y) {
+        if (this.select == null || this.select.template == null || this.zone == null) {
+            return;
+        }
+        if (!meCanAttack()) {
+            return;
+        }
+        if (!isSpecialSkillNotFocusTemplateId(skillTemplateId) || this.select.template.id != skillTemplateId) {
+            return;
+        }
+        if (this.x != xPlayer || this.y != yPlayer) {
+            return;
+        }
+        if (this.select.isCooldown()) {
+            return;
+        }
+        long manaUse = getSkillManaUse(this.select);
+        if (this.info.mp < manaUse) {
+            service.sendThongBao("Không đủ KI đế sử dụng");
+            return;
+        }
+        if (this.isRecoveryEnergy) {
+            stopRecoveryEnery();
+        }
+        long now = System.currentTimeMillis();
+        Skill castingSkill = this.select;
+        Zone castZone = this.zone;
+        this.specialSkillDir = dir;
+        this.info.mp -= manaUse;
+        castingSkill.lastTimeUseThisSkill = now;
+        service.updateCoolDown(this.skills);
+        setCharge(true);
+        setSkillSpecial(true);
+        this.seconds = getSpecialSkillPrepareTime();
+        castZone.service.specialSkillNotFocusStart(this, skillTemplateId, dir, this.seconds, getSpecialSkillTypePaint());
+        Utils.setTimeout(() -> {
+            boolean keepSpecialState = false;
+            try {
+                if (!this.isDead && this.zone == castZone) {
+                    keepSpecialState = true;
+                    if (skillTemplateId == SkillName.MA_PHONG_BA) {
+                        finishMaPhongBa(castZone, castingSkill, dir);
+                    } else {
+                        finishSpecialBeamSkill(castZone, castingSkill, dir);
+                    }
+                }
+            } finally {
+                setCharge(false);
+                seconds = 0;
+                if (!keepSpecialState) {
+                    setSkillSpecial(false);
+                }
+            }
+        }, this.seconds);
     }
 
     public String getName() {
@@ -1902,6 +2358,11 @@ public class Player {
             this.head = TransformSkill.HEAD[genderIndex][stageIndex];
             this.body = TransformSkill.BODY[genderIndex];
             this.leg = TransformSkill.LEG[genderIndex];
+        } else if (this.isMaPhongBa) {
+            this.isMask = true;
+            this.head = 1376;
+            this.body = 1377;
+            this.leg = 1378;
         } else if (isNhapThe && !isMonkey) {
             this.isMask = true;
             if (itemBody != null && itemBody[5] != null && itemBody[5].template.part == -1 && itemBody[5].isNhapThe) {
@@ -2592,7 +3053,7 @@ public class Player {
     }
 
     public boolean meCanMove() {
-        return !isDead && !isBlind && !isFreeze && !isSleep && !isCharge && !isStone
+        return !isDead && !isBlind && !isFreeze && !isSleep && !isCharge && !isStone && !isMaPhongBa
                 && !(hold != null && hold.detainee == this);
     }
 
@@ -2989,6 +3450,13 @@ public class Player {
                         service.skillNotFocus(_player.id, (short) _player.select.id, (byte) 4, null, null);
                         break;
 
+                    case SkillName.SUPER_KAMEJOKO:
+                    case SkillName.CADIC_LIEN_HOAN_CHUONG:
+                    case SkillName.MA_PHONG_BA:
+                        service.specialSkillNotFocusStart(_player, (short) _player.select.template.id,
+                                _player.specialSkillDir, Math.max(1, _player.seconds), _player.getSpecialSkillTypePaint());
+                        break;
+
                     case SkillName.BIEN_HINH:
                     case SkillName.BIEN_HINH_3_HANH_TINH:
                         service.skillNotFocus(_player.id, (short) _player.select.id, (byte) 6, null, null);
@@ -3032,7 +3500,18 @@ public class Player {
     public void skillNotFocus(Message ms) {
         try {
             byte status = ms.reader().readByte();
-            //  //System.err.println("Status : " + status);
+            if (status == 20 && ms.reader().available() >= 10) {
+                byte skillTemplateId = ms.reader().readByte();
+                short xPlayer = ms.reader().readShort();
+                short yPlayer = ms.reader().readShort();
+                byte dir = ms.reader().readByte();
+                short x = ms.reader().readShort();
+                short y = ms.reader().readShort();
+                if (isSpecialSkillNotFocusTemplateId(skillTemplateId)) {
+                    useSpecialSkillNotFocus(skillTemplateId, xPlayer, yPlayer, dir, x, y);
+                    return;
+                }
+            }
             skillNotFocus(status);
         } catch (Exception e) {
 
@@ -3048,19 +3527,10 @@ public class Player {
                 && this.select.template.id == SkillName.BIEN_HINH_3_HANH_TINH;
         if (!isRecoveryEnergy) {
             if (!meCanAttack()) {
-                if (type == 6 || isTransformThreePlanet) {
-                    logger.warn(String.format("[BIEN_HINH_27] blocked player=%s id=%d reason=meCanAttack_false dead=%s freeze=%s sleep=%s held=%s stone=%s select=%s",
-                            this.name, this.id, this.isDead, this.isFreeze, this.isSleep, this.isHeld, this.isStone,
-                            this.select == null || this.select.template == null ? "null"
-                                    : String.valueOf(this.select.template.id)));
-                }
                 return;
             }
         } else {
             if (isDead) {
-                if (type == 6 || isTransformThreePlanet) {
-                    logger.warn(String.format("[BIEN_HINH_27] blocked player=%s id=%d reason=dead_when_recovery", this.name, this.id));
-                }
                 return;
             }
         }
@@ -3089,27 +3559,15 @@ public class Player {
             return;
         }
         if (this.select == null || this.select.template == null) {
-            if (type == 6) {
-                logger.warn(String.format("[BIEN_HINH_27] blocked player=%s id=%d reason=select_null", this.name, this.id));
-            }
             return;
         }
         isTransformThreePlanet = this.select.template.id == SkillName.BIEN_HINH_3_HANH_TINH;
         if (this.select.template.type != 3 && this.select.template.id != SkillName.QUA_CAU_KENH_KHI
                 && this.select.template.id != SkillName.MAKANKOSAPPO
                 && this.select.template.id != SkillName.BIEN_HINH_3_HANH_TINH) {
-            if (type == 6 || isTransformThreePlanet) {
-                logger.warn(String.format("[BIEN_HINH_27] blocked player=%s id=%d reason=invalid_selected_skill requestType=%d selectedId=%d selectedType=%d",
-                        this.name, this.id, type, this.select.template.id, this.select.template.type));
-            }
             return;
         }
         if (this.select.isCooldown()) {
-            if (isTransformThreePlanet) {
-                long cooldownRemain = Math.max(0L, (long) this.select.coolDown - (now - this.select.lastTimeUseThisSkill));
-                logger.warn(String.format("[BIEN_HINH_27] blocked player=%s id=%d reason=cooldown point=%d cooldown=%d remainMs=%d",
-                        this.name, this.id, this.select.point, this.select.coolDown, cooldownRemain));
-            }
             return;
         }
         if (this.isRecoveryEnergy) {
@@ -3125,10 +3583,6 @@ public class Player {
             manaUse = 0;
         }
         if (this.info.mp < manaUse) {
-            if (isTransformThreePlanet) {
-                logger.warn(String.format("[BIEN_HINH_27] blocked player=%s id=%d reason=not_enough_mp point=%d mp=%d manaUse=%d",
-                        this.name, this.id, this.select.point, this.info.mp, manaUse));
-            }
             service.sendThongBao("Không đủ KI đế sử dụng");
             return;
         }
@@ -3236,12 +3690,7 @@ public class Player {
                     }
                 }, this.seconds);
             } else if (this.select.template.id == SkillName.BIEN_HINH_3_HANH_TINH) {
-                logger.info(String.format("[BIEN_HINH_27] cast request player=%s id=%d point=%d currentLevel=%d isBienHinh=%s timeBienHinh=%d mp=%d manaUse=%d",
-                        this.name, this.id, this.select.point, this.levelBienHinh, this.isBienHinh, this.timeBienHinh,
-                        this.info.mp, manaUse));
                 if (this.levelBienHinh >= this.select.point) {
-                    logger.warn(String.format("[BIEN_HINH_27] blocked player=%s id=%d reason=max_level_reached currentLevel=%d selectedPoint=%d",
-                            this.name, this.id, this.levelBienHinh, this.select.point));
                     return;
                 }
                 setCharge(true);
@@ -3256,15 +3705,9 @@ public class Player {
                             this.pointBienHinh = (byte) this.select.point;
                             this.timeBienHinh = getBienHinhDurationSeconds(baseCooldown);
                             this.select.coolDown = !lastLevel && baseCooldown > 0 ? Math.max(1, baseCooldown * 5 / 100) : baseCooldown;
-                            logger.info(String.format("[BIEN_HINH_27] cast success player=%s id=%d newLevel=%d targetLevel=%d durationSeconds=%d baseCooldown=%d appliedCooldown=%d",
-                                    this.name, this.id, this.levelBienHinh, this.select.point, this.timeBienHinh,
-                                    baseCooldown, this.select.coolDown));
                             refreshBienHinhState(true);
                             service.updateCoolDown(this.skills);
                             broadcastBienHinhCastEffect();
-                        } else {
-                            logger.warn(String.format("[BIEN_HINH_27] cast canceled player=%s id=%d dead=%s zoneNull=%s",
-                                    this.name, this.id, this.isDead, zone == null));
                         }
                     } finally {
                         setCharge(false);
@@ -14076,8 +14519,16 @@ public class Player {
     }
 
     public void setStatusItemTime() {
+        if (itemTimes == null) {
+            SachDacBiet();
+            return;
+        }
+        ItemTime bienHinhItem = null;
         synchronized (itemTimes) {
             for (ItemTime item : itemTimes) {
+                if (item == null || item.seconds <= 0) {
+                    continue;
+                }
                 switch (item.id) {
 
                     case ItemTimeName.CUONG_NO:
@@ -14255,8 +14706,31 @@ public class Player {
                     case ItemTimeName.KIM_THACH:
                         setKimThach(true);
                         break;
+
+                    case ItemTimeName.BIEN_HINH_STAGE_1:
+                    case ItemTimeName.BIEN_HINH_STAGE_2:
+                    case ItemTimeName.BIEN_HINH_STAGE_3:
+                    case ItemTimeName.BIEN_HINH_STAGE_4:
+                    case ItemTimeName.BIEN_HINH_STAGE_5:
+                        bienHinhItem = item;
+                        break;
                 }
             }
+        }
+        if (bienHinhItem != null) {
+            this.isBienHinh = true;
+            this.levelBienHinh = (byte) (bienHinhItem.id - ItemTimeName.BIEN_HINH_STAGE_1 + 1);
+            this.pointBienHinh = resolveBienHinhPoint(bienHinhItem);
+            if (this.pointBienHinh < this.levelBienHinh) {
+                this.pointBienHinh = this.levelBienHinh;
+            }
+            this.timeBienHinh = Math.max(1, bienHinhItem.seconds);
+            bienHinhItem.icon = TransformSkill.getItemTimeIcon(this.gender, this.pointBienHinh);
+            bienHinhItem.isSave = true;
+            syncBienHinhSkillCooldown();
+            updateSkin();
+            setAuraEffect();
+            info.setInfo();
         }
         SachDacBiet();
     }
@@ -14470,9 +14944,13 @@ public class Player {
                 this.bag = -1;
             }
         }
-        info.setInfo();
-        service.loadPoint();
-        if (zone != null) {
+        if (info != null) {
+            info.setInfo();
+        }
+        if (service != null) {
+            service.loadPoint();
+        }
+        if (zone != null && zone.service != null) {
             zone.service.playerLoadBody(this);
             zone.service.updateBag(this);
         }
@@ -16625,22 +17103,11 @@ public class Player {
         if (id == SkillName.BIEN_HINH_3_HANH_TINH) {
             if (foundSkill) {
                 boolean changed = !sameSelection;
-                if (changed) {
-                    logger.info(String.format("[BIEN_HINH_27] selected player=%s id=%d point=%d cooldown=%d",
-                            this.name, this.id, this.select.point, this.select.coolDown));
-                } else {
-                    logger.info(String.format("[BIEN_HINH_27] select repeated player=%s id=%d fallback=skill_not_focus_type_6",
-                            this.name, this.id));
+                if (!changed) {
                     if (this.zone != null) {
                         skillNotFocus((byte) 6);
-                    } else {
-                        logger.warn(String.format("[BIEN_HINH_27] fallback skipped player=%s id=%d reason=zone_null",
-                                this.name, this.id));
                     }
                 }
-            } else {
-                logger.warn(String.format("[BIEN_HINH_27] select failed player=%s id=%d reason=skill_not_found",
-                        this.name, this.id));
             }
         }
     }
@@ -16650,11 +17117,11 @@ public class Player {
     }
 
     public boolean isKhongChe() {
-        return isFreeze || isSleep || isHeld || isStone || isBlind;
+        return isFreeze || isSleep || isHeld || isStone || isBlind || isMaPhongBa;
     }
 
     public boolean meCanAttack() {
-        return !isDead && !isFreeze && !isSleep && !isHeld && select != null && !isStone;
+        return !isDead && !isFreeze && !isSleep && !isHeld && select != null && !isStone && !isMaPhongBa;
     }
 
     public void attackNpc(Message ms) {
@@ -17215,6 +17682,11 @@ public class Player {
                     if (this.freezSeconds == 0) {
                         this.isFreeze = false;
                     }
+                }
+                try {
+                    updateMaPhongBaEffect();
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
                 try {
                     updateItemTime();
@@ -17921,6 +18393,20 @@ public class Player {
                                         zone.service.playerLoadBody(this);
                                         zone.service.updateBody((byte) 0, this);
                                     }
+                                    break;
+
+                                case ItemTimeName.MA_PHONG_BA_STAGE_1:
+                                case ItemTimeName.MA_PHONG_BA_STAGE_2:
+                                case ItemTimeName.MA_PHONG_BA_STAGE_3:
+                                    removeMaPhongBa(false);
+                                    break;
+
+                                case ItemTimeName.BIEN_HINH_STAGE_1:
+                                case ItemTimeName.BIEN_HINH_STAGE_2:
+                                case ItemTimeName.BIEN_HINH_STAGE_3:
+                                case ItemTimeName.BIEN_HINH_STAGE_4:
+                                case ItemTimeName.BIEN_HINH_STAGE_5:
+                                    timeOutBienHinh();
                                     break;
 
                                 case ItemTimeName.MO_GIOI_HAN_SUC_MANH:
@@ -19366,6 +19852,9 @@ public class Player {
         setTimeForItemtime(4, 0);
         setTimeForItemtime(5, 0);
         setTimeForItemtime(14, 0);
+        setTimeForItemtime(ItemTimeName.MA_PHONG_BA_STAGE_1, 0);
+        setTimeForItemtime(ItemTimeName.MA_PHONG_BA_STAGE_2, 0);
+        setTimeForItemtime(ItemTimeName.MA_PHONG_BA_STAGE_3, 0);
         if (zone != null) {
             zone.service.setEffect(null, this.id, Skill.REMOVE_ALL_EFFECT, Skill.CHARACTER, (short) -1);
         }
@@ -19997,6 +20486,7 @@ public class Player {
                     obj.put("id", skill.template.id);
                     obj.put("level", skill.point);
                     obj.put("last_time_use", skill.lastTimeUseThisSkill);
+                    obj.put("cool_down", skill.coolDown);
                     skills.put(obj);
                 } catch (JSONException ex) {
                     
@@ -20220,6 +20710,16 @@ public class Player {
             map.enterZone(this, zoneId);
         } else {
             enterMapSingle(map);
+        }
+        if (zone != null && this.service != null) {
+            if (this.idAuraEff != -1) {
+                zone.service.setIDAuraEff(this.id, this.idAuraEff);
+            }
+            for (Player _c : zone.getListChar(Zone.TYPE_ALL)) {
+                if (_c != null && _c != this && _c.getIdAuraEff() != -1) {
+                    this.service.setIDAuraEff(_c.id, _c.getIdAuraEff());
+                }
+            }
         }
         if (this.isMask) {
             zone.service.updateBody((byte) 0, this);

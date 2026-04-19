@@ -226,6 +226,42 @@ public class Skills {
         books.add(new KeyValue(1338, new SkillBook(27, 3, 4 * 24 * 60 * 60 * 1000L)));
         books.add(new KeyValue(1339, new SkillBook(27, 4, 7 * 24 * 60 * 60 * 1000L)));
         books.add(new KeyValue(1340, new SkillBook(27, 5, 10 * 24 * 60 * 60 * 1000L)));
+
+        // sách Super Kamejoko
+        books.add(new KeyValue(1444, new SkillBook(24, 1, 24 * 60 * 60 * 1000L)));
+        books.add(new KeyValue(1445, new SkillBook(24, 2, 2 * 24 * 60 * 60 * 1000L)));
+        books.add(new KeyValue(1446, new SkillBook(24, 3, 4 * 24 * 60 * 60 * 1000L)));
+        books.add(new KeyValue(1447, new SkillBook(24, 4, 7 * 24 * 60 * 60 * 1000L)));
+        books.add(new KeyValue(1448, new SkillBook(24, 5, 10 * 24 * 60 * 60 * 1000L)));
+        books.add(new KeyValue(1449, new SkillBook(24, 6, 14 * 24 * 60 * 60 * 1000L)));
+        books.add(new KeyValue(1450, new SkillBook(24, 7, 20 * 24 * 60 * 60 * 1000L)));
+        books.add(new KeyValue(1451, new SkillBook(24, 8, 28 * 24 * 60 * 60 * 1000L)));
+        books.add(new KeyValue(1452, new SkillBook(24, 9, 36 * 24 * 60 * 60 * 1000L)));
+        books.add(new KeyValue(1453, new SkillBook(24, 10, 45 * 24 * 60 * 60 * 1000L)));
+
+        // sách Ma phong ba
+        books.add(new KeyValue(1454, new SkillBook(26, 1, 24 * 60 * 60 * 1000L)));
+        books.add(new KeyValue(1455, new SkillBook(26, 2, 2 * 24 * 60 * 60 * 1000L)));
+        books.add(new KeyValue(1456, new SkillBook(26, 3, 4 * 24 * 60 * 60 * 1000L)));
+        books.add(new KeyValue(1457, new SkillBook(26, 4, 7 * 24 * 60 * 60 * 1000L)));
+        books.add(new KeyValue(1458, new SkillBook(26, 5, 10 * 24 * 60 * 60 * 1000L)));
+        books.add(new KeyValue(1459, new SkillBook(26, 6, 14 * 24 * 60 * 60 * 1000L)));
+        books.add(new KeyValue(1460, new SkillBook(26, 7, 20 * 24 * 60 * 60 * 1000L)));
+        books.add(new KeyValue(1461, new SkillBook(26, 8, 28 * 24 * 60 * 60 * 1000L)));
+        books.add(new KeyValue(1462, new SkillBook(26, 9, 36 * 24 * 60 * 60 * 1000L)));
+        books.add(new KeyValue(1463, new SkillBook(26, 10, 45 * 24 * 60 * 60 * 1000L)));
+
+        // sách Cađíc liên hoàn chưởng
+        books.add(new KeyValue(1464, new SkillBook(25, 1, 24 * 60 * 60 * 1000L)));
+        books.add(new KeyValue(1465, new SkillBook(25, 2, 2 * 24 * 60 * 60 * 1000L)));
+        books.add(new KeyValue(1466, new SkillBook(25, 3, 4 * 24 * 60 * 60 * 1000L)));
+        books.add(new KeyValue(1467, new SkillBook(25, 4, 7 * 24 * 60 * 60 * 1000L)));
+        books.add(new KeyValue(1468, new SkillBook(25, 5, 10 * 24 * 60 * 60 * 1000L)));
+        books.add(new KeyValue(1469, new SkillBook(25, 6, 14 * 24 * 60 * 60 * 1000L)));
+        books.add(new KeyValue(1470, new SkillBook(25, 7, 20 * 24 * 60 * 60 * 1000L)));
+        books.add(new KeyValue(1471, new SkillBook(25, 8, 28 * 24 * 60 * 60 * 1000L)));
+        books.add(new KeyValue(1472, new SkillBook(25, 9, 36 * 24 * 60 * 60 * 1000L)));
+        books.add(new KeyValue(1473, new SkillBook(25, 10, 45 * 24 * 60 * 60 * 1000L)));
     }
 
     public static SkillBook getSkillBook(int key) {

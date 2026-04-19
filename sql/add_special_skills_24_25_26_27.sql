@@ -97,6 +97,119 @@ ON DUPLICATE KEY UPDATE
     `mount_id` = VALUES(`mount_id`),
     `lock` = VALUES(`lock`);
 
+-- Skill 24/25/26: Super Kamejoko, Cađíc liên hoàn chưởng, Ma phong ba
+
+INSERT INTO `nr_skill` (
+    `skill_id`, `class`, `name`, `description`, `max_point`,
+    `mana_use_type`, `type`, `icon`, `info`, `skills`
+)
+SELECT
+    24,
+    0,
+    'Super Kamejoko',
+    'Đánh xa nhờ năng lượng',
+    10,
+    1,
+    4,
+    11162,
+    'Tăng sức đánh: #%',
+    '[{"power_require":60000000000,"damage":550,"dx":190,"dy":25,"price":9999,"max_fight":1,"mana_use":80,"cool_down":170000,"id":186,"point":1,"more_info":"Chưởng 1"},{"power_require":60000000000,"damage":600,"dx":200,"dy":30,"price":9999,"max_fight":1,"mana_use":75,"cool_down":160000,"id":187,"point":2,"more_info":"Chưởng 2"},{"power_require":60000000000,"damage":650,"dx":210,"dy":35,"price":9999,"max_fight":1,"mana_use":70,"cool_down":150000,"id":188,"point":3,"more_info":"Chưởng 3"},{"power_require":60000000000,"damage":700,"dx":230,"dy":40,"price":9999,"max_fight":1,"mana_use":65,"cool_down":140000,"id":189,"point":4,"more_info":"Chưởng 4"},{"power_require":60000000000,"damage":750,"dx":250,"dy":45,"price":9999,"max_fight":1,"mana_use":60,"cool_down":130000,"id":190,"point":5,"more_info":"Chưởng 5"},{"power_require":60000000000,"damage":800,"dx":270,"dy":50,"price":9999,"max_fight":1,"mana_use":55,"cool_down":120000,"id":191,"point":6,"more_info":"Chưởng 6"},{"power_require":60000000000,"damage":850,"dx":290,"dy":55,"price":9999,"max_fight":1,"mana_use":50,"cool_down":110000,"id":192,"point":7,"more_info":"Chưởng 7"},{"power_require":60000000000,"damage":900,"dx":310,"dy":60,"price":9999,"max_fight":1,"mana_use":45,"cool_down":100000,"id":193,"point":8,"more_info":"Chưởng 8"},{"power_require":60000000000,"damage":950,"dx":330,"dy":65,"price":9999,"max_fight":1,"mana_use":40,"cool_down":90000,"id":194,"point":9,"more_info":"Chưởng 9"},{"power_require":60000000000,"damage":1000,"dx":350,"dy":70,"price":9999,"max_fight":1,"mana_use":35,"cool_down":80000,"id":195,"point":10,"more_info":"Chưởng 10"}]'
+WHERE NOT EXISTS (
+    SELECT 1 FROM `nr_skill` WHERE `skill_id` = 24 AND `class` = 0
+);
+
+INSERT INTO `nr_skill` (
+    `skill_id`, `class`, `name`, `description`, `max_point`,
+    `mana_use_type`, `type`, `icon`, `info`, `skills`
+)
+SELECT
+    26,
+    1,
+    'Ma phong ba',
+    'Nhốt đối thủ vào bình chứa',
+    10,
+    1,
+    4,
+    11194,
+    'Gây sát thương chuẩn mỗi giây bằng #% max HP bản thân',
+    '[{"power_require":60000000000,"damage":1,"dx":120,"dy":120,"price":9999,"max_fight":1,"mana_use":80,"cool_down":170000,"id":176,"point":1,"more_info":"Chưởng 1"},{"power_require":60000000000,"damage":2,"dx":130,"dy":130,"price":9999,"max_fight":1,"mana_use":75,"cool_down":160000,"id":177,"point":2,"more_info":"Chưởng 2"},{"power_require":60000000000,"damage":3,"dx":140,"dy":140,"price":9999,"max_fight":1,"mana_use":70,"cool_down":150000,"id":178,"point":3,"more_info":"Chưởng 3"},{"power_require":60000000000,"damage":4,"dx":150,"dy":150,"price":9999,"max_fight":1,"mana_use":65,"cool_down":140000,"id":179,"point":4,"more_info":"Chưởng 4"},{"power_require":60000000000,"damage":5,"dx":160,"dy":160,"price":9999,"max_fight":1,"mana_use":60,"cool_down":130000,"id":180,"point":5,"more_info":"Chưởng 5"},{"power_require":60000000000,"damage":6,"dx":170,"dy":170,"price":9999,"max_fight":1,"mana_use":55,"cool_down":120000,"id":181,"point":6,"more_info":"Chưởng 6"},{"power_require":60000000000,"damage":7,"dx":180,"dy":180,"price":9999,"max_fight":1,"mana_use":50,"cool_down":110000,"id":182,"point":7,"more_info":"Chưởng 7"},{"power_require":60000000000,"damage":8,"dx":190,"dy":190,"price":9999,"max_fight":1,"mana_use":45,"cool_down":100000,"id":183,"point":8,"more_info":"Chưởng 8"},{"power_require":60000000000,"damage":9,"dx":200,"dy":200,"price":9999,"max_fight":1,"mana_use":40,"cool_down":90000,"id":184,"point":9,"more_info":"Chưởng 9"},{"power_require":60000000000,"damage":10,"dx":210,"dy":210,"price":9999,"max_fight":1,"mana_use":35,"cool_down":80000,"id":185,"point":10,"more_info":"Chưởng 10"}]'
+WHERE NOT EXISTS (
+    SELECT 1 FROM `nr_skill` WHERE `skill_id` = 26 AND `class` = 1
+);
+
+INSERT INTO `nr_skill` (
+    `skill_id`, `class`, `name`, `description`, `max_point`,
+    `mana_use_type`, `type`, `icon`, `info`, `skills`
+)
+SELECT
+    25,
+    2,
+    'Cađíc liên hoàn chưởng',
+    'Đánh xa nhờ năng lượng',
+    10,
+    1,
+    4,
+    11193,
+    'Tăng sức đánh: #%',
+    '[{"power_require":60000000000,"damage":550,"dx":83,"dy":83,"price":9999,"max_fight":1,"mana_use":80,"cool_down":170000,"id":166,"point":1,"more_info":"Chưởng 1"},{"power_require":60000000000,"damage":600,"dx":95,"dy":95,"price":9999,"max_fight":1,"mana_use":75,"cool_down":160000,"id":167,"point":2,"more_info":"Chưởng 2"},{"power_require":60000000000,"damage":650,"dx":107,"dy":107,"price":9999,"max_fight":1,"mana_use":70,"cool_down":150000,"id":168,"point":3,"more_info":"Chưởng 3"},{"power_require":60000000000,"damage":700,"dx":119,"dy":119,"price":9999,"max_fight":1,"mana_use":65,"cool_down":140000,"id":169,"point":4,"more_info":"Chưởng 4"},{"power_require":60000000000,"damage":750,"dx":130,"dy":130,"price":9999,"max_fight":1,"mana_use":60,"cool_down":130000,"id":170,"point":5,"more_info":"Chưởng 5"},{"power_require":60000000000,"damage":800,"dx":142,"dy":142,"price":9999,"max_fight":1,"mana_use":55,"cool_down":120000,"id":171,"point":6,"more_info":"Chưởng 6"},{"power_require":60000000000,"damage":850,"dx":154,"dy":154,"price":9999,"max_fight":1,"mana_use":50,"cool_down":110000,"id":172,"point":7,"more_info":"Chưởng 7"},{"power_require":60000000000,"damage":900,"dx":165,"dy":165,"price":9999,"max_fight":1,"mana_use":45,"cool_down":100000,"id":173,"point":8,"more_info":"Chưởng 8"},{"power_require":60000000000,"damage":950,"dx":177,"dy":177,"price":9999,"max_fight":1,"mana_use":40,"cool_down":90000,"id":174,"point":9,"more_info":"Chưởng 9"},{"power_require":60000000000,"damage":1000,"dx":188,"dy":188,"price":9999,"max_fight":1,"mana_use":35,"cool_down":80000,"id":175,"point":10,"more_info":"Chưởng 10"}]'
+WHERE NOT EXISTS (
+    SELECT 1 FROM `nr_skill` WHERE `skill_id` = 25 AND `class` = 2
+);
+
+INSERT INTO `nr_item` (
+    `id`, `name`, `type`, `gender`, `description`, `level`, `require`,
+    `resale_price`, `icon`, `part`, `is_up_to_up`, `head`, `body`, `leg`,
+    `options`, `mount_id`, `lock`
+)
+VALUES
+    (1444, 'Sách Super Kamejoko lv1', 7, 0, 'Học tuyệt kỹ Super Kamejoko', 1, 150000000, -1, 11195, -1, 1, -1, -1, -1, '[]', -1, 1),
+    (1445, 'Sách Super Kamejoko lv2', 7, 0, 'Nâng Super Kamejoko lên cấp 2', 2, 150000000, -1, 11195, -1, 1, -1, -1, -1, '[]', -1, 1),
+    (1446, 'Sách Super Kamejoko lv3', 7, 0, 'Nâng Super Kamejoko lên cấp 3', 3, 150000000, -1, 11195, -1, 1, -1, -1, -1, '[]', -1, 1),
+    (1447, 'Sách Super Kamejoko lv4', 7, 0, 'Nâng Super Kamejoko lên cấp 4', 4, 150000000, -1, 11195, -1, 1, -1, -1, -1, '[]', -1, 1),
+    (1448, 'Sách Super Kamejoko lv5', 7, 0, 'Nâng Super Kamejoko lên cấp 5', 5, 150000000, -1, 11195, -1, 1, -1, -1, -1, '[]', -1, 1),
+    (1449, 'Sách Super Kamejoko lv6', 7, 0, 'Nâng Super Kamejoko lên cấp 6', 6, 150000000, -1, 11195, -1, 1, -1, -1, -1, '[]', -1, 1),
+    (1450, 'Sách Super Kamejoko lv7', 7, 0, 'Nâng Super Kamejoko lên cấp 7', 7, 150000000, -1, 11195, -1, 1, -1, -1, -1, '[]', -1, 1),
+    (1451, 'Sách Super Kamejoko lv8', 7, 0, 'Nâng Super Kamejoko lên cấp 8', 8, 150000000, -1, 11195, -1, 1, -1, -1, -1, '[]', -1, 1),
+    (1452, 'Sách Super Kamejoko lv9', 7, 0, 'Nâng Super Kamejoko lên cấp 9', 9, 150000000, -1, 11195, -1, 1, -1, -1, -1, '[]', -1, 1),
+    (1453, 'Sách Super Kamejoko lv10', 7, 0, 'Nâng Super Kamejoko lên cấp 10', 10, 150000000, -1, 11195, -1, 1, -1, -1, -1, '[]', -1, 1),
+    (1454, 'Sách Ma phong ba lv1', 7, 1, 'Học tuyệt kỹ Ma phong ba', 1, 150000000, -1, 11194, -1, 1, -1, -1, -1, '[]', -1, 1),
+    (1455, 'Sách Ma phong ba lv2', 7, 1, 'Nâng Ma phong ba lên cấp 2', 2, 150000000, -1, 11194, -1, 1, -1, -1, -1, '[]', -1, 1),
+    (1456, 'Sách Ma phong ba lv3', 7, 1, 'Nâng Ma phong ba lên cấp 3', 3, 150000000, -1, 11194, -1, 1, -1, -1, -1, '[]', -1, 1),
+    (1457, 'Sách Ma phong ba lv4', 7, 1, 'Nâng Ma phong ba lên cấp 4', 4, 150000000, -1, 11194, -1, 1, -1, -1, -1, '[]', -1, 1),
+    (1458, 'Sách Ma phong ba lv5', 7, 1, 'Nâng Ma phong ba lên cấp 5', 5, 150000000, -1, 11194, -1, 1, -1, -1, -1, '[]', -1, 1),
+    (1459, 'Sách Ma phong ba lv6', 7, 1, 'Nâng Ma phong ba lên cấp 6', 6, 150000000, -1, 11194, -1, 1, -1, -1, -1, '[]', -1, 1),
+    (1460, 'Sách Ma phong ba lv7', 7, 1, 'Nâng Ma phong ba lên cấp 7', 7, 150000000, -1, 11194, -1, 1, -1, -1, -1, '[]', -1, 1),
+    (1461, 'Sách Ma phong ba lv8', 7, 1, 'Nâng Ma phong ba lên cấp 8', 8, 150000000, -1, 11194, -1, 1, -1, -1, -1, '[]', -1, 1),
+    (1462, 'Sách Ma phong ba lv9', 7, 1, 'Nâng Ma phong ba lên cấp 9', 9, 150000000, -1, 11194, -1, 1, -1, -1, -1, '[]', -1, 1),
+    (1463, 'Sách Ma phong ba lv10', 7, 1, 'Nâng Ma phong ba lên cấp 10', 10, 150000000, -1, 11194, -1, 1, -1, -1, -1, '[]', -1, 1),
+    (1464, 'Sách Cađíc liên hoàn chưởng lv1', 7, 2, 'Học tuyệt kỹ Cađíc liên hoàn chưởng', 1, 150000000, -1, 11193, -1, 1, -1, -1, -1, '[]', -1, 1),
+    (1465, 'Sách Cađíc liên hoàn chưởng lv2', 7, 2, 'Nâng Cađíc liên hoàn chưởng lên cấp 2', 2, 150000000, -1, 11193, -1, 1, -1, -1, -1, '[]', -1, 1),
+    (1466, 'Sách Cađíc liên hoàn chưởng lv3', 7, 2, 'Nâng Cađíc liên hoàn chưởng lên cấp 3', 3, 150000000, -1, 11193, -1, 1, -1, -1, -1, '[]', -1, 1),
+    (1467, 'Sách Cađíc liên hoàn chưởng lv4', 7, 2, 'Nâng Cađíc liên hoàn chưởng lên cấp 4', 4, 150000000, -1, 11193, -1, 1, -1, -1, -1, '[]', -1, 1),
+    (1468, 'Sách Cađíc liên hoàn chưởng lv5', 7, 2, 'Nâng Cađíc liên hoàn chưởng lên cấp 5', 5, 150000000, -1, 11193, -1, 1, -1, -1, -1, '[]', -1, 1),
+    (1469, 'Sách Cađíc liên hoàn chưởng lv6', 7, 2, 'Nâng Cađíc liên hoàn chưởng lên cấp 6', 6, 150000000, -1, 11193, -1, 1, -1, -1, -1, '[]', -1, 1),
+    (1470, 'Sách Cađíc liên hoàn chưởng lv7', 7, 2, 'Nâng Cađíc liên hoàn chưởng lên cấp 7', 7, 150000000, -1, 11193, -1, 1, -1, -1, -1, '[]', -1, 1),
+    (1471, 'Sách Cađíc liên hoàn chưởng lv8', 7, 2, 'Nâng Cađíc liên hoàn chưởng lên cấp 8', 8, 150000000, -1, 11193, -1, 1, -1, -1, -1, '[]', -1, 1),
+    (1472, 'Sách Cađíc liên hoàn chưởng lv9', 7, 2, 'Nâng Cađíc liên hoàn chưởng lên cấp 9', 9, 150000000, -1, 11193, -1, 1, -1, -1, -1, '[]', -1, 1),
+    (1473, 'Sách Cađíc liên hoàn chưởng lv10', 7, 2, 'Nâng Cađíc liên hoàn chưởng lên cấp 10', 10, 150000000, -1, 11193, -1, 1, -1, -1, -1, '[]', -1, 1)
+ON DUPLICATE KEY UPDATE
+    `name` = VALUES(`name`),
+    `type` = VALUES(`type`),
+    `gender` = VALUES(`gender`),
+    `description` = VALUES(`description`),
+    `level` = VALUES(`level`),
+    `require` = VALUES(`require`),
+    `resale_price` = VALUES(`resale_price`),
+    `icon` = VALUES(`icon`),
+    `part` = VALUES(`part`),
+    `is_up_to_up` = VALUES(`is_up_to_up`),
+    `head` = VALUES(`head`),
+    `body` = VALUES(`body`),
+    `leg` = VALUES(`leg`),
+    `options` = VALUES(`options`),
+    `mount_id` = VALUES(`mount_id`),
+    `lock` = VALUES(`lock`);
+
 INSERT INTO `nr_image_by_name` (`filename`, `n_frame`)
 SELECT 'aura_13_0.png', 4
 WHERE NOT EXISTS (

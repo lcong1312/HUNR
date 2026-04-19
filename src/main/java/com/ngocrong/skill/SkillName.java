@@ -21,6 +21,9 @@ public class SkillName {
     public static final int CHIEU_ANTOMIC = 5;
     public static final int TAI_TAO_NANG_LUONG = 8;
     public static final int BIEN_HINH = 13;
+    public static final int SUPER_KAMEJOKO = 24;
+    public static final int CADIC_LIEN_HOAN_CHUONG = 25;
+    public static final int MA_PHONG_BA = 26;
     public static final int BIEN_HINH_3_HANH_TINH = 27;
     public static final int TU_PHAT_NO = 14;
     public static final int HUYT_SAO = 21;

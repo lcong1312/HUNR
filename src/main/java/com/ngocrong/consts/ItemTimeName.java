@@ -135,4 +135,7 @@ public class ItemTimeName {
     public static final short BIEN_HINH_STAGE_3 = 127;
     public static final short BIEN_HINH_STAGE_4 = 128;
     public static final short BIEN_HINH_STAGE_5 = 129;
+    public static final short MA_PHONG_BA_STAGE_1 = 130;
+    public static final short MA_PHONG_BA_STAGE_2 = 131;
+    public static final short MA_PHONG_BA_STAGE_3 = 132;
 }

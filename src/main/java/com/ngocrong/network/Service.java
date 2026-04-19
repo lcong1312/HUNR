@@ -27,6 +27,7 @@ import com.ngocrong.server.*;
 import com.ngocrong.shop.Shop;
 import com.ngocrong.shop.Tab;
 import com.ngocrong.skill.Skill;
+import com.ngocrong.skill.SkillName;
 import com.ngocrong.skill.SpecialSkill;
 import com.ngocrong.skill.SpecialSkillTemplate;
 import com.ngocrong.user.Player;
@@ -436,6 +437,76 @@ public class Service implements IService {
             mss.cleanup();
         } catch (Exception e) {
             
+            logger.error("failed!", e);
+        }
+    }
+
+    private byte getSpecialSkillTypeFrame(Player source) {
+        switch (source.gender) {
+            case 0:
+                return 1;
+            case 1:
+                return 3;
+            default:
+                return 2;
+        }
+    }
+
+    public void specialSkillNotFocusStart(Player source, short skillTemplateId, byte dir, int timePre, byte typePaint) {
+        try {
+            Message mss = new Message(Cmd.SKILL_NOT_FOCUS);
+            FastDataOutputStream ds = mss.writer();
+            ds.writeByte(20);
+            ds.writeInt(source.id);
+            ds.writeShort(skillTemplateId);
+            ds.writeByte(getSpecialSkillTypeFrame(source));
+            ds.writeByte(dir);
+            ds.writeShort(timePre);
+            ds.writeByte(0);
+            ds.writeByte(typePaint);
+            ds.writeByte(0);
+            ds.flush();
+            sendMessage(mss);
+            mss.cleanup();
+        } catch (Exception e) {
+            logger.error("failed!", e);
+        }
+    }
+
+    public void specialSkillNotFocusEnd(Player source, short skillTemplateId, int x, int time, int range,
+                                        ArrayList<Object> hits, byte typePaint) {
+        try {
+            Message mss = new Message(Cmd.SKILL_NOT_FOCUS);
+            FastDataOutputStream ds = mss.writer();
+            ds.writeByte(21);
+            ds.writeInt(source.id);
+            ds.writeShort(skillTemplateId);
+            ds.writeShort(x);
+            ds.writeShort(source.getY());
+            ds.writeShort(time);
+            ds.writeShort(range);
+            ds.writeByte(typePaint);
+            if (skillTemplateId == SkillName.MA_PHONG_BA && hits != null) {
+                ds.writeByte(hits.size());
+                for (Object hit : hits) {
+                    if (hit instanceof Mob) {
+                        Mob mob = (Mob) hit;
+                        ds.writeByte(0);
+                        ds.writeByte(mob.mobId);
+                    } else if (hit instanceof Player) {
+                        Player target = (Player) hit;
+                        ds.writeByte(1);
+                        ds.writeInt(target.id);
+                    }
+                }
+            } else {
+                ds.writeByte(0);
+            }
+            ds.writeByte(0);
+            ds.flush();
+            sendMessage(mss);
+            mss.cleanup();
+        } catch (Exception e) {
             logger.error("failed!", e);
         }
     }

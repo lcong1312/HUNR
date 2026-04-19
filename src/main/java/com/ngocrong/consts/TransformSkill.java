@@ -36,4 +36,15 @@ public final class TransformSkill {
         int stageIndex = Math.max(0, Math.min(ITEM_TIME_ICON[genderIndex].length - 1, level - 1));
         return ITEM_TIME_ICON[genderIndex][stageIndex];
     }
+
+    public static int getItemTimeLevel(int gender, int icon) {
+        int genderIndex = Math.max(0, Math.min(ITEM_TIME_ICON.length - 1, gender));
+        short[] icons = ITEM_TIME_ICON[genderIndex];
+        for (int i = 0; i < icons.length; i++) {
+            if (icons[i] == icon) {
+                return i + 1;
+            }
+        }
+        return 0;
+    }
 }

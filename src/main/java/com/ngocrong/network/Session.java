@@ -905,6 +905,7 @@ public class Session implements ISession {
                 Skill skill = Skills.getSkill(_player.classId, templateId, level);
                 if (skill != null) {
                     Skill skill2 = skill.clone();
+                    skill2.coolDown = Math.max(0, obj.optInt("cool_down", skill2.coolDown));
                     if (data.id != 1) {
                         skill2.lastTimeUseThisSkill = lastTimeUseThisSkill;
                     }
@@ -1215,6 +1216,7 @@ public class Session implements ISession {
                     Skill skill = Skills.getSkill((byte) templateId, (byte) level);
                     if (skill != null) {
                         Skill skill2 = skill.clone();
+                        skill2.coolDown = Math.max(0, obj.optInt("cool_down", skill2.coolDown));
                         skill2.lastTimeUseThisSkill = lastTimeUseThisSkill;
                         deTu.addSkill(skill2);
                     }

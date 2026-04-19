@@ -135,6 +135,11 @@ public class Mob {
     public boolean isChangeBody;
     public short body;
     public int dameDown;
+    public boolean isMaPhongBa;
+    public int maPhongBaLevel;
+    public long lastTimeMaPhongBa;
+    public long lastTimeMaPhongBaDamage;
+    public Player playerUseMaPhongBa;
 
     public void addItemTime(ItemTime item) {
         synchronized (this.vItemTime) {
@@ -910,6 +915,12 @@ public class Mob {
     public void respawn() {
         this.status = 4;
         this.items.clear();
+        this.isMaPhongBa = false;
+        this.maPhongBaLevel = 0;
+        this.lastTimeMaPhongBa = 0;
+        this.lastTimeMaPhongBaDamage = 0;
+        this.playerUseMaPhongBa = null;
+        this.clearBody();
         setLevelBoss();
         this.hp = this.maxHp;
     }
@@ -1310,7 +1321,67 @@ public class Mob {
     }
 
     public boolean meCantAttack() {
-        return (!this.isFreeze && !this.isSleep && !isHeld && !this.isBlind);
+        return (!this.isFreeze && !this.isSleep && !isHeld && !this.isBlind && !this.isMaPhongBa);
+    }
+
+    public short getMaPhongBaBody() {
+        if (this.maPhongBaLevel < 3) {
+            return 11183;
+        }
+        if (this.maPhongBaLevel <= 5) {
+            return 11192;
+        }
+        return 11174;
+    }
+
+    public void applyMaPhongBa(Player caster, int point) {
+        this.playerUseMaPhongBa = caster;
+        this.isMaPhongBa = true;
+        this.maPhongBaLevel = point;
+        this.lastTimeMaPhongBa = System.currentTimeMillis();
+        this.lastTimeMaPhongBaDamage = 0;
+        this.setBody(getMaPhongBaBody());
+        if (zone != null) {
+            zone.service.changeBodyMob(this, (byte) 1);
+        }
+    }
+
+    public void removeMaPhongBa(boolean notify) {
+        this.playerUseMaPhongBa = null;
+        this.isMaPhongBa = false;
+        this.maPhongBaLevel = 0;
+        this.lastTimeMaPhongBa = 0;
+        this.lastTimeMaPhongBaDamage = 0;
+        this.clearBody();
+        if (notify && zone != null) {
+            zone.service.changeBodyMob(this, (byte) 0);
+        }
+    }
+
+    private void updateMaPhongBa() {
+        if (!this.isMaPhongBa) {
+            return;
+        }
+        long now = System.currentTimeMillis();
+        if (this.isDead() || this.zone == null) {
+            removeMaPhongBa(false);
+            return;
+        }
+        if (this.lastTimeMaPhongBa > 0 && now - this.lastTimeMaPhongBa >= 30_000L) {
+            removeMaPhongBa(true);
+            return;
+        }
+        if (this.playerUseMaPhongBa == null || now - this.lastTimeMaPhongBaDamage < 1000L) {
+            return;
+        }
+        this.lastTimeMaPhongBaDamage = now;
+        long dame = Math.max(1L, Utils.percentOf(this.playerUseMaPhongBa.info.hpFull, this.maPhongBaLevel));
+        this.hp -= dame;
+        zone.service.attackNpc(dame, false, this, (byte) -1);
+        if (this.hp <= 0) {
+            this.playerUseMaPhongBa.kill(this);
+            this.startDie(dame, false, this.playerUseMaPhongBa);
+        }
     }
 
     public void setTimeForItemtime(int id, int seconds) {
@@ -1334,6 +1405,7 @@ public class Mob {
     }
 
     public void update() {
+        updateMaPhongBa();
         if (this.seconds > 0) {
             this.seconds--;
             if (this.seconds == 0) {
