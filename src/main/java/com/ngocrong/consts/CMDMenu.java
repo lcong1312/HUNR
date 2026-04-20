@@ -15,6 +15,7 @@ public class CMDMenu {
     public static final int TELEPORT_DAO_KAME = 7;
 
     public static final int TIEM_HOT_TOC = 101;
+    public static final int SANTA_SPECIAL_SHOP = 2928;
     public static final int BUY_FROM_PLAYER = 121;
 
     public static final int STORE_BUA = 200;

@@ -6005,6 +6005,7 @@ public class Player {
 
                     case NpcName.SANTA:
                         menus.add(new KeyValue(CMDMenu.STORE, "Cửa hàng"));
+                        menus.add(new KeyValue(CMDMenu.SANTA_SPECIAL_SHOP, "Shop\nĐặc biệt"));
                         menus.add(new KeyValue(CMDMenu.TIEM_HOT_TOC, "Tiệm\nHớt tóc"));
                         service.openUIConfirm(npc.templateId,
                                 "Xin chào,ta có một số vật phẩm đặc biệt cậu có muốn xem không?", npc.avatar, menus);
@@ -6437,6 +6438,14 @@ public class Player {
 
             case CMDMenu.TIEM_HOT_TOC:
                 this.shop = Shop.getShop(-2);
+                if (shop != null) {
+                    shop.setNpc(npc);
+                    service.viewShop(shop);
+                }
+                break;
+
+            case CMDMenu.SANTA_SPECIAL_SHOP:
+                this.shop = Shop.getShop(NpcName.BUNMA_TET);
                 if (shop != null) {
                     shop.setNpc(npc);
                     service.viewShop(shop);
