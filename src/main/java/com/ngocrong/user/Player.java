@@ -4851,6 +4851,9 @@ public class Player {
     }
 
     public void update(int type) {
+        if (type == Item.TYPE_THU_CUOI_1 || type == Item.TYPE_THU_CUOI_2) {
+            setMount();
+        }
         if (zone != null) {
             switch (type) {
                 case 0:
