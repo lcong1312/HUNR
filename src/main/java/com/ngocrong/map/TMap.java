@@ -65,7 +65,7 @@ public class TMap {
     public MobCoordinate[] mobs;
     public BgItem[] positionBgItems;
     public KeyValue[] effects;
-    public ArrayList<Zone> zones;
+    public ArrayList<Zone> zones = new ArrayList<>();
     public int tmw, tmh, width, height;
     public int[] maps, types;
     public boolean[] blocks;
@@ -189,6 +189,14 @@ public class TMap {
         return mapID == MapName.DONG_HAI_TAC || mapID == MapName.CANG_HAI_TAC || mapID == MapName.HANG_BACH_TUOC || mapID == MapName.DONG_KHO_BAU;
     }
 
+    public boolean isKhiGas() {
+        return mapID == MapName.THANH_PHO_SANTA_2
+                || mapID == MapName.SA_MAC
+                || mapID == MapName.VUNG_DAT_BANG_GIA
+                || mapID == MapName.HANH_TINH_BONG_TOI
+                || mapID == MapName.LAU_DAI_LYCHEE;
+    }
+
     public boolean isClanTerritory() {
         return mapID == MapName.LANH_DIA_BANG_HOI;
     }
@@ -202,23 +210,23 @@ public class TMap {
     }
 
     public boolean isMapSpecial() {
-        return isBarrack() || isBaseBabidi() || isTreasure() || isClanTerritory() || isBlackDragonBall() || isNguHanhSon() || isDauTruong();
+        return isBarrack() || isBaseBabidi() || isTreasure() || isKhiGas() || isClanTerritory() || isBlackDragonBall() || isNguHanhSon() || isDauTruong();
     }
 
     public boolean isCantChangeZone() {
-        return isMapSingle() || isBarrack() || isBaseBabidi() || isTreasure() || isClanTerritory() || isDauTruong() || mapID == 127 || mapID == 126;
+        return isMapSingle() || isBarrack() || isBaseBabidi() || isTreasure() || isKhiGas() || isClanTerritory() || isDauTruong() || mapID == 127 || mapID == 126;
     }
 
     public boolean isUnableToTeleport() {
-        return isMapSingle() || isBarrack() || isBaseBabidi() || isTreasure() || isClanTerritory() || isBlackDragonBall() || isDauTruong();
+        return isMapSingle() || isBarrack() || isBaseBabidi() || isTreasure() || isKhiGas() || isClanTerritory() || isBlackDragonBall() || isDauTruong();
     }
 
     public boolean isCantGoBack() {
-        return isBarrack() || isBaseBabidi() || isTreasure() || isClanTerritory() || isDauTruong();
+        return isBarrack() || isBaseBabidi() || isTreasure() || isKhiGas() || isClanTerritory() || isDauTruong();
     }
 
     public boolean isCantOffline() {
-        return isBarrack() || isBaseBabidi() || isTreasure() || isClanTerritory() || isBlackDragonBall() || isNguHanhSon() || isDauTruong();
+        return isBarrack() || isBaseBabidi() || isTreasure() || isKhiGas() || isClanTerritory() || isBlackDragonBall() || isNguHanhSon() || isDauTruong();
     }
 
     public boolean isDauTruong() {
@@ -228,6 +236,9 @@ public class TMap {
     public void addZone(Zone z) {
         lock.writeLock().lock();
         try {
+            if (zones == null) {
+                zones = new ArrayList<>();
+            }
             zones.add(z);
         } finally {
             lock.writeLock().unlock();

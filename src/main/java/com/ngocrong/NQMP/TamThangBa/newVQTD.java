@@ -40,23 +40,7 @@ public class newVQTD {
                 return true;
             }
 
-            // 2. Tôm chiên giòn - 1%
-            cumulativeProbability += 100;
-            if (randomValue < cumulativeProbability) {
-                Item item = createTomChienGion();
-                player.boxCrackBall.add(item);
-                return true;
-            }
-
-            // 3. Cải trang Vegeta Hủy Diệt - 3%
-            cumulativeProbability += 300;
-            if (randomValue < cumulativeProbability) {
-                Item item = createCaiTrangVegeta();
-                player.boxCrackBall.add(item);
-                return true;
-            }
-
-            // 4. Rương cải trang - 5%
+            // 2. Rương cải trang - 5%
             cumulativeProbability += 500;
             if (randomValue < cumulativeProbability) {
                 Item item = createRuongCaiTrang();
@@ -64,7 +48,7 @@ public class newVQTD {
                 return true;
             }
 
-            // 5. Ngọc rồng 5-7 sao - 20%
+            // 3. Ngọc rồng 5-7 sao - 17%
             cumulativeProbability += 1700;
             if (randomValue < cumulativeProbability) {
                 Item item = createNR57();
@@ -72,31 +56,7 @@ public class newVQTD {
                 return true;
             }
 
-            // 6. Đeo lưng - 3%
-            cumulativeProbability += 300;
-            if (randomValue < cumulativeProbability) {
-                Item item = createDeoLung();
-                player.boxCrackBall.add(item);
-                return true;
-            }
-
-            // 7. Pet Mèo Hoàng Thượng - 3%
-            cumulativeProbability += 300;
-            if (randomValue < cumulativeProbability) {
-                Item item = createPetMeoHoangThuong();
-                player.boxCrackBall.add(item);
-                return true;
-            }
-
-            // 8. Đùi gà nướng - 3%
-            cumulativeProbability += 300;
-            if (randomValue < cumulativeProbability) {
-                Item item = createDuiGaNuong();
-                player.boxCrackBall.add(item);
-                return true;
-            }
-
-            // 9. Mảnh sổ sưu tầm - 16%
+            // 4. Mảnh sổ sưu tầm - 16%
             cumulativeProbability += 1600;
             if (randomValue < cumulativeProbability) {
                 Item item = createManhSuuTam();
@@ -104,29 +64,29 @@ public class newVQTD {
                 return true;
             }
 
-            // 10. Đá bảo vệ x1 - 3%
+            // 5. Đá bảo vệ x1 - 3%
             cumulativeProbability += 300;
             if (randomValue < cumulativeProbability) {
                 Item item = createDaBaoVe();
                 player.boxCrackBall.add(item);
                 return true;
             }
-            // 10. SPL - 2%
+            // 6. SPL - 2%
             cumulativeProbability += 200;
             if (randomValue < cumulativeProbability) {
                 Item item = createSPL();
                 player.boxCrackBall.add(item);
                 return true;
             }
-            // 11. Cục vàng 5tr-20tr - 14%
-            cumulativeProbability += 1400;
+            // 7. Cục vàng 5tr-20tr - 30%
+            cumulativeProbability += 3000;
             if (randomValue < cumulativeProbability) {
                 Item item = createGold();
                 player.boxCrackBall.add(item);
                 return true;
             }
 
-            // 12. Ngọc rồng 4 sao - 7%
+            // 8. Ngọc rồng 4 sao - 7%
             cumulativeProbability += 700;
             if (randomValue < cumulativeProbability) {
                 Item item = createNR4();
@@ -134,16 +94,10 @@ public class newVQTD {
                 return true;
             }
 
+            // 9. Ngọc rồng 3 sao - 1%
             cumulativeProbability += 100;
             if (randomValue < cumulativeProbability) {
                 Item item = createNR3();
-                player.boxCrackBall.add(item);
-                return true;
-            }
-
-            cumulativeProbability += 300;
-            if (randomValue < cumulativeProbability) {
-                Item item = createCaiTrangVegetaThoiTrang();
                 player.boxCrackBall.add(item);
                 return true;
             }

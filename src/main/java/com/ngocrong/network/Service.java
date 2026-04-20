@@ -2745,7 +2745,17 @@ public class Service implements IService {
     public void requestMapTemplate2(int mapId) {
         try {
             TMap map = MapManager.getInstance().getMap(mapId);
+            if (map == null) {
+                logger.warn("requestMapTemplate2: map not found id=" + mapId);
+                return;
+            }
             byte[] ab = map.mapData;
+            if (ab == null || ab.length == 0) {
+                ab = Utils.getFile("resources/map/" + map.mapID);
+                if (ab != null) {
+                    map.mapData = ab;
+                }
+            }
             if (ab != null) {
                 Message mss = messageNotMap(11);
                 FastDataOutputStream ds = mss.writer();
@@ -2766,7 +2776,21 @@ public class Service implements IService {
                 -> {
             try {
                 TMap map = MapManager.getInstance().getMap(mapId);
+                if (map == null) {
+                    logger.warn("requestMapTemplate: map not found id=" + mapId);
+                    return;
+                }
                 byte[] ab = map.mapData;
+                if (ab == null || ab.length == 0) {
+                    ab = Utils.getFile("resources/map/" + map.mapID);
+                    if (ab != null) {
+                        map.mapData = ab;
+                    }
+                }
+                if (ab == null) {
+                    logger.warn("requestMapTemplate: map template data missing for map=" + mapId);
+                    return;
+                }
                 Message mss = messageNotMap(Cmd.REQUEST_MAPTEMPLATE);
                 FastDataOutputStream ds = mss.writer();
                 ds.write(ab);

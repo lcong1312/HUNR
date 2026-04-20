@@ -77,6 +77,7 @@ import com.ngocrong.NQMP.Tet2025.EventTet2025;
 import com.ngocrong.NQMP.Tet2025.VongQuayTet;
 import _HunrProvision.HoangAnhDz;
 import static  _HunrProvision.HoangAnhDz.lastCreateBot;
+import com.ngocrong.NQMP.Whis.RewardWhis;
 import com.ngocrong.NQMP.Whis.WhisInSingleMap;
 import _HunrProvision.boss.Boss;
 import com.ngocrong.bot.BotCold;
@@ -2218,6 +2219,31 @@ public class Player {
             if (way != null) {
                 int mapID = way.next;
                 boolean flag = false;
+                if (zone.map.isKhiGas()) {
+                    TMap map = MapManager.getInstance().getMap(mapID);
+                    if (map == null || clan == null || clan.khiGas == null || !clan.khiGas.running) {
+                        goHome();
+                        return;
+                    }
+                    if (!map.isKhiGas() || !clan.khiGas.canMove(zone.map.mapID, mapID)) {
+                        way = map.getWaypointByNextID(zone.map.mapID);
+                        if (way != null) {
+                            this.x = way.x;
+                            this.y = way.y;
+                        } else {
+                            this.x = this.preX;
+                            this.y = this.preY;
+                        }
+                        service.resetPoint();
+                        service.sendThongBao("Chưa hạ hết đối thủ");
+                        return;
+                    }
+                    zone.leave(this);
+                    this.x = way.x;
+                    this.y = way.y;
+                    clan.khiGas.enterMap(mapID, this);
+                    return;
+                }
                 if (zone.map.isBarrack() || zone.map.isTreasure()) {
                     List<Mob> list2 = zone.getListMob();
                     for (Mob mob : list2) {
@@ -6151,12 +6177,40 @@ public class Player {
                     }
                     break;
 
-                    case NpcName.MR_POPO:
-                        menus.add(new KeyValue(1190, "Cửa hàng\nbùa 10p"));
-                        menus.add(new KeyValue(458, "Về nhà"));
-                        service.openUIConfirm(npc.templateId, "Bạn muốn làm gì", npc.avatar, menus);
+                    case NpcName.MR_POPO: {
+                        StringBuilder sb = new StringBuilder();
+                        if (zone.map.mapID == MapName.HANH_TINH_NGUC_TU || zone.map.isMapDeTu()) {
+                            sb.append("Ta có bùa hỗ trợ đệ tử, con muốn mua chứ?");
+                            menus.add(new KeyValue(1190, "Mua bùa\nđệ tử"));
+                            menus.add(new KeyValue(458, "Về nhà"));
+                        } else if (zone.map.mapID == MapName.LANG_ARU) {
+                            sb.append("Khí gas hủy diệt đang chờ bang hội chinh phục").append("\n");
+                            if (clan == null) {
+                                sb.append("Con cần tham gia bang hội để mở hoặc tham gia");
+                            } else {
+                                KhiGas khiGas = clan.khiGas;
+                                if (khiGas == null || !khiGas.running) {
+                                    sb.append("Bang hội của con có thể chọn cấp độ từ 1 đến 110");
+                                    menus.add(new KeyValue(CMDMenu.KHI_GAS_CHON_CAP_DO, "Mở\nKhí gas"));
+                                } else {
+                                    sb.append(String.format("Bang hội đang ở Khí gas cấp %d", khiGas.getLevel()))
+                                            .append("\n")
+                                            .append("Con có muốn đi cùng họ không?");
+                                    menus.add(new KeyValue(CMDMenu.KHI_GAS, "Tham gia"));
+                                }
+                            }
+                            menus.add(new KeyValue(CMDMenu.KHI_GAS_HUONG_DAN, "Hướng dẫn\nKhí gas"));
+                            //menus.add(new KeyValue(1190, "Cửa hàng\nbùa 10p"));
+                            menus.add(new KeyValue(458, "Về nhà"));
+                        } else {
+                            sb.append("Bạn muốn làm gì");
+                            menus.add(new KeyValue(1190, "Cửa hàng\nbùa 10p"));
+                            menus.add(new KeyValue(458, "Về nhà"));
+                        }
+                        service.openUIConfirm(npc.templateId, sb.toString(), npc.avatar, menus);
+                    }
 
-                        break;
+                    break;
                     case NpcName.TAPION:
                         if (this.zone.map.mapID == 126 && mapPhuHo != 126) {
                             menus.add(new KeyValue(1108, "Phù Hộ"));
@@ -6198,8 +6252,12 @@ public class Player {
                     case NpcName.WHIS:
                         if (zone.map.mapID == MapName.HANH_TINH_BILL) {
                             menus.add(new KeyValue(1150, "Khiêu chiến\n Lv." + currentLevelBossWhis));
-                            menus.add(new KeyValue(1151, "BXH"));
-                            menus.add(new KeyValue(1167, "BXH Lần trước"));
+                            if (Top.getTop(Top.TOP_WHIS) != null) {
+                                menus.add(new KeyValue(1151, "BXH"));
+                            }
+                            if (Top.getTop(Top.TOP_WHIS_Reward) != null) {
+                                menus.add(new KeyValue(1167, "BXH Lần trước"));
+                            }
                             menus.add(new KeyValue(1162, "Shop hỗ trợ"));
                             menus.add(new KeyValue(1166, "Phần thưởng\nkhiêu chiến"));
 
@@ -6209,15 +6267,22 @@ public class Player {
                         }
                         break;
                     case NpcName.BILL:
-                        menus.add(new KeyValue(CMDMenu.FOOD_SHOP_BILL, "Cửa hàng\n Hủy Diệt"));
+                        if (zone.map.mapID == MapName.HANH_TINH_BILL) {
+                            menus.add(new KeyValue(MapName.HANH_TINH_NGUC_TU, "Hành tinh\nngục tù"));
+                            menus.add(new KeyValue(CMDMenu.CANCEL, "Từ chối"));
+                            service.openUIConfirm(npc.templateId, "Ngươi muốn đến Hành tinh ngục tù sao?", npc.avatar,
+                                    menus);
+                        } else {
+                            menus.add(new KeyValue(CMDMenu.FOOD_SHOP_BILL, "Cửa hàng\n Hủy Diệt"));
 //                        menus.add(new KeyValue(CMDMenu.FOOD_SHOP_PUDDING, "Cửa hàng\nPudding"));
 //                        menus.add(new KeyValue(CMDMenu.FOOD_SHOP_MI_LY, "Cửa hàng\nMì Ly"));
 //                        menus.add(new KeyValue(CMDMenu.FOOD_SHOP_XUC_XICH, "Cửa hàng\nXúc xích"));
 //                        menus.add(new KeyValue(CMDMenu.FOOD_SHOP_KEM_DAU, "Cửa hàng\nKem dâu"));
 //                        menus.add(new KeyValue(CMDMenu.FOOD_SHOP_SU_SHI, "Cửa hàng\nSushi"));
-                        service.openUIConfirm(npc.templateId, "Cửa hàng hủy diệt\n"
-                                + "Ngươi sẽ cần x99 đồ ăn và 1 món đồ thần linh tương ứng để có thể mua đồ hủy diệt", npc.avatar, menus);
-                        // service.dialogMessage("Chức năng đang được phát triển.");
+                            service.openUIConfirm(npc.templateId, "Cửa hàng hủy diệt\n"
+                                    + "Ngươi sẽ cần x99 đồ ăn và 1 món đồ thần linh tương ứng để có thể mua đồ hủy diệt", npc.avatar, menus);
+                            // service.dialogMessage("Chức năng đang được phát triển.");
+                        }
                         break;
                     case NpcName.NOI_BANH:
                         // StringBuilder content = new StringBuilder();
@@ -6409,6 +6474,10 @@ public class Player {
 
             case CMDMenu.TELEPORT_DAO_KAME:
                 teleport(MapName.DAO_KAME);
+                break;
+
+            case MapName.HANH_TINH_NGUC_TU:
+                teleport(MapName.HANH_TINH_NGUC_TU);
                 break;
 
             case CMDMenu.STORE:
@@ -7280,7 +7349,6 @@ public class Player {
                 }
                 menus.add(new KeyValue(5200, "Bắt đầu"));
                 menus.add(new KeyValue(522, "BXH\nVòng Quay"));
-                menus.add(new KeyValue(523, "Nhận\nThưởng Mốc"));
                 // menus.add(new KeyValue(521, "Vòng quay\nĐặc biệt"));
                 if (boxCrackBall.size() > 0) {
                     menus.add(new KeyValue(524, String.format("Rương phụ\nĐang có %d món", boxCrackBall.size())));
@@ -8303,6 +8371,97 @@ public class Player {
                     teleport(156);
                 }
                 break;
+
+            case CMDMenu.KHI_GAS_HUONG_DAN: {
+                StringBuilder sb = new StringBuilder();
+                sb.append("Khí gas hủy diệt là phó bản dành cho bang hội").append("\b");
+                sb.append("Con cần vượt lần lượt từng khu và hạ toàn bộ kẻ địch").append("\b");
+                sb.append("Khi hạ Dr Lychee, mọi người có 30 giây trước khi bị đưa về làng").append("\n");
+                sb.append("Yêu cầu tham gia: sức mạnh từ ")
+                        .append(Utils.formatNumber(KhiGas.POWER_CAN_JOIN))
+                        .append(" trở lên");
+                service.openUISay(npc.templateId, sb.toString(), npc.avatar);
+            }
+            break;
+
+            case CMDMenu.KHI_GAS_CHON_CAP_DO: {
+                if (clan == null) {
+                    service.sendThongBao("Hãy tham gia bang hội để mở Khí gas hủy diệt");
+                    return;
+                }
+                ClanMember mem = clan.getMember(this.id);
+                if (mem == null || !mem.isLeader()) {
+                    service.sendThongBao("Chỉ bang chủ mới có thể mở Khí gas hủy diệt");
+                    return;
+                }
+                if (this.info.power < KhiGas.POWER_CAN_JOIN) {
+                    service.sendThongBao(String.format("Yêu cầu %s sức mạnh trở lên",
+                            Utils.formatNumber(KhiGas.POWER_CAN_JOIN)));
+                    return;
+                }
+                if (clan.khiGas != null && clan.khiGas.running) {
+                    service.sendThongBao("Bang hội đang tham gia Khí gas, hãy chọn tham gia");
+                    return;
+                }
+                inputDlg = new InputDialog(CMDTextBox.KHI_GAS, "Hãy chọn cấp độ khí gas từ 1-110",
+                        new TextField("Cấp độ", TextField.INPUT_TYPE_NUMERIC));
+                inputDlg.setService(service);
+                inputDlg.show();
+            }
+            break;
+
+            case CMDMenu.KHI_GAS: {
+                if (clan == null) {
+                    service.sendThongBao("Hãy tham gia bang hội để tham gia Khí gas hủy diệt");
+                    return;
+                }
+                if (this.info.power < KhiGas.POWER_CAN_JOIN) {
+                    service.sendThongBao(String.format("Yêu cầu %s sức mạnh trở lên",
+                            Utils.formatNumber(KhiGas.POWER_CAN_JOIN)));
+                    return;
+                }
+                KhiGas khiGas = clan.khiGas;
+                if (khiGas == null || !khiGas.running) {
+                    service.sendThongBao("Bang hội chưa mở Khí gas hủy diệt");
+                    return;
+                }
+                zone.leave(this);
+                khiGas.enter(this);
+            }
+            break;
+
+            case CMDMenu.KHI_GAS_XAC_NHAN: {
+                if (clan == null) {
+                    service.sendThongBao("Hãy tham gia bang hội để mở Khí gas hủy diệt");
+                    return;
+                }
+                ClanMember mem = clan.getMember(this.id);
+                if (mem == null || !mem.isLeader()) {
+                    service.sendThongBao("Chỉ bang chủ mới có thể mở Khí gas hủy diệt");
+                    return;
+                }
+                if (this.info.power < KhiGas.POWER_CAN_JOIN) {
+                    service.sendThongBao(String.format("Yêu cầu %s sức mạnh trở lên",
+                            Utils.formatNumber(KhiGas.POWER_CAN_JOIN)));
+                    return;
+                }
+                int level = ((Integer) keyValue.elements[0]).intValue();
+                if (level <= 0 || level > 110) {
+                    service.sendThongBao("Cấp độ khí gas phải từ 1 đến 110");
+                    return;
+                }
+                if (clan.khiGas != null && clan.khiGas.running) {
+                    service.sendThongBao("Bang hội đang tham gia Khí gas, không thể mở thêm");
+                    return;
+                }
+                KhiGas khiGas = new KhiGas((short) level, clan, this.name);
+                MapManager.getInstance().addObj(khiGas);
+                clan.khiGas = khiGas;
+                zone.leave(this);
+                khiGas.enter(this);
+            }
+            break;
+
             case 606: {
                 if (clan == null) {
                     service.sendThongBao("Hãy tham gia bang hội để sử dụng bản đồ kho báu");
@@ -8871,7 +9030,10 @@ public class Player {
                 break;
             case 1151:
                 Top topWhis = Top.getTop(Top.TOP_WHIS);
-                assert topWhis != null;
+                if (topWhis == null) {
+                    service.sendThongBao("BXH Whis chưa được khởi tạo");
+                    break;
+                }
                 topWhis.update();
                 topWhis.show(this);
                 break;
@@ -8957,11 +9119,29 @@ public class Player {
                 ItemCMS_Service.ShowCMSItem(this, npc);
                 break;
             case 1166:
-                service.dialogMessage("Tính năng đang phát triển...");
+                refreshWhisRewardBonus(true);
+                StringBuilder whisReward = new StringBuilder();
+                whisReward.append("Phần thưởng khiêu chiến Whis hiện tại:\n");
+                whisReward.append("Top 1: +5% SD, HP, KI\n");
+                whisReward.append("Top 2: +3% SD, HP, KI\n");
+                whisReward.append("Top 3: +2% SD, HP, KI\n");
+                whisReward.append("Top 4-10: +1% SD, HP, KI\n");
+                whisReward.append("Chỉ có hiệu lực khi còn ở trong top.");
+                if (this.whisRewardBonusPercent > 0) {
+                    whisReward.append("\n\nHiện tại con đang ở Top ")
+                            .append(this.whisRewardRank)
+                            .append(": +")
+                            .append(this.whisRewardBonusPercent)
+                            .append("% SD, HP, KI");
+                }
+                service.openUISay(npc.templateId, whisReward.toString(), npc.avatar);
                 break;
             case 1167:
                 Top topWhisRw = Top.getTop(Top.TOP_WHIS_Reward);
-                assert topWhisRw != null;
+                if (topWhisRw == null) {
+                    service.sendThongBao("BXH Whis lần trước chưa được khởi tạo");
+                    break;
+                }
                 topWhisRw.update();
                 topWhisRw.show(this);
                 break;
@@ -11033,6 +11213,9 @@ public class Player {
                     case CMDTextBox.TREASURE:
                         treasure();
                         break;
+                    case CMDTextBox.KHI_GAS:
+                        khiGas();
+                        break;
                     case CMDTextBox.RENAME_CLAN:
                         renameClan(inputDlg.getText());
                         break;
@@ -11406,6 +11589,25 @@ public class Player {
         } catch (Exception e) {
             
             //System.err.println("Error at 92");
+            service.sendThongBao("Có lỗi xảy ra!");
+        }
+    }
+
+    public void khiGas() {
+        try {
+            int level = inputDlg.getInt();
+            if (level <= 0 || level > 110) {
+                service.sendThongBao("Cấp độ khí gas phải từ 1 đến 110");
+                return;
+            }
+            StringBuilder sb = new StringBuilder();
+            sb.append("Con có chắc muốn mở").append("\n");
+            sb.append(String.format("khí gas hủy diệt cấp độ %d?", level));
+            menus.add(new KeyValue(CMDMenu.KHI_GAS_XAC_NHAN, "Đồng ý", level));
+            menus.add(new KeyValue(CMDMenu.CANCEL, "Từ chối"));
+            service.openUIConfirm(NpcName.MR_POPO, sb.toString(), head, menus);
+        } catch (Exception e) {
+
             service.sendThongBao("Có lỗi xảy ra!");
         }
     }
@@ -23104,6 +23306,9 @@ public class Player {
     }
 
     public int currentLevelBossWhis;
+    public int whisRewardRank;
+    public int whisRewardBonusPercent;
+    public long lastRefreshWhisRewardBonus;
 
     public void joinMap(int mapid) {
         if (!checkCanEnter(mapid)) {
@@ -23159,8 +23364,33 @@ public class Player {
                 GameRepository.getInstance().whisDataRepository.save(data);
             }
             Top topWhis = Top.getTop(Top.TOP_WHIS);
-            assert topWhis != null;
-            topWhis.load();
+            if (topWhis != null) {
+                topWhis.load();
+            } else {
+                logger.warn("Top Whis chưa được khởi tạo, bỏ qua cập nhật BXH Whis");
+            }
+        }
+        refreshWhisRewardBonus(true);
+    }
+
+    public void refreshWhisRewardBonus(boolean force) {
+        long now = System.currentTimeMillis();
+        if (!force && now - lastRefreshWhisRewardBonus < 15000L) {
+            return;
+        }
+        lastRefreshWhisRewardBonus = now;
+        if (this.id <= 0 || this.currentLevelBossWhis <= 0) {
+            this.whisRewardRank = 0;
+            this.whisRewardBonusPercent = 0;
+            return;
+        }
+        try {
+            this.whisRewardRank = RewardWhis.getCurrentRank(this.id);
+            this.whisRewardBonusPercent = RewardWhis.getBonusPercentByRank(this.whisRewardRank);
+        } catch (Exception e) {
+            this.whisRewardRank = 0;
+            this.whisRewardBonusPercent = 0;
+            logger.error("failed to refresh whis reward bonus", e);
         }
     }
 

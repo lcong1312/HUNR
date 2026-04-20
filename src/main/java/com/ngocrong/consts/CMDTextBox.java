@@ -31,5 +31,6 @@ public class CMDTextBox {
     public static final byte SET_RATIO_CAITRANG = 126;
     public static final byte SET_RATIO_TRANGBI = 127;
     public static final byte SALE_LOCKED_GOLD_BAR = -127;
+    public static final byte KHI_GAS = -126;
     public static final byte SELL_LOCKED_GOLD_BAR = -128;
 }

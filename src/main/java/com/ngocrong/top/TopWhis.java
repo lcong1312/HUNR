@@ -20,9 +20,10 @@ public class TopWhis extends Top {
         elements.clear();
         try {
             PreparedStatement ps = MySQLConnect.getConnection().prepareStatement("SELECT np.id, np.name , np.head2 , np.body , np.leg, neo.current_level as point from nr_player np\n"
-                    + "left join nr_whis neo\n"
+                    + "join nr_whis neo\n"
                     + "on np.id  = neo.player_id\n"
-                    + "order by point desc limit 20;");
+                    + "where neo.current_level > 0\n"
+                    + "order by neo.current_level desc, neo.create_date asc, np.id asc limit 20;");
             ResultSet rs = ps.executeQuery();
             try {
                 int i = 0;

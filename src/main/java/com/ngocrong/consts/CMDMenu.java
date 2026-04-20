@@ -258,6 +258,12 @@ public class CMDMenu {
     public static final int BO_MONG_LEGACY_ACHIEVEMENT = 3011;
     public static final int BO_MONG_LEGACY_TOP = 3012;
     public static final int BO_MONG_LEGACY_EASY = 3013;
+
+    // Khi Gas
+    public static final int KHI_GAS = 3200;
+    public static final int KHI_GAS_CHON_CAP_DO = 3201;
+    public static final int KHI_GAS_XAC_NHAN = 3202;
+    public static final int KHI_GAS_HUONG_DAN = 3203;
     public static final int BO_MONG_LEGACY_NORMAL = 3014;
     public static final int BO_MONG_LEGACY_HARD = 3015;
     public static final int BO_MONG_LEGACY_VERY_HARD = 3016;

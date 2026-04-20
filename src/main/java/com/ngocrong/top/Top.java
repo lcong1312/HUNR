@@ -68,13 +68,13 @@ public abstract class Top {
             addTop(new TopTask(TOP_TASK, TYPE_NONE, "Nhiệm Vụ", (byte) 100));
             addTop(new TopNangDong(TOP_NANG_DONG, TYPE_NONE, "Top Năng Động", (byte) 100));
 //            addTop(new TopUseGoldbar(Top.TOP_USING_GOLBAR, TYPE_NONE, "Top sử dụng thỏi vàng", (byte) 100));
-            addTop(new TopDisciplePower(Top.TOP_DISCIPLE_POWER, TYPE_NONE, "Top Sức Mạnh đệ tử", (byte) 100));
+        addTop(new TopDisciplePower(Top.TOP_DISCIPLE_POWER, TYPE_NONE, "Top Sức Mạnh đệ tử", (byte) 100));
 //            startFastUpdate();
         
 //        addTop(new TopExchange(TOP_EXCHANGE, TYPE_NONE, "Đổi Vật phẩm", (byte) 100));
         addTop(new TopDHVTSieuHang(Top.TOP_DHVT_SIEU_HANG, TYPE_THACH_DAU, "Top DHVT Siêu Hạng", (byte) 100));
 //        addTop(new TopVQTD(Top.TOP_VQTD, TYPE_NONE, "Top Vòng Quay Thượng Đế", (byte) 50));
-//        addTop(new TopWhis(Top.TOP_WHIS, TYPE_NONE, "Top WHIS", (byte) 20));
+        addTop(new TopWhis(Top.TOP_WHIS, TYPE_NONE, "Top WHIS", (byte) 20));
 //        addTop(new TopWhisReward(Top.TOP_WHIS_Reward, TYPE_NONE, "Top WHIS Lần trước", (byte) 20));
 //
 //        addTop(new TopKillRaiti(Top.TOP_RAITI, TYPE_NONE, "Top Boss Raiti", (byte) 100));

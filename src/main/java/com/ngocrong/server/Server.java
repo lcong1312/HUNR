@@ -11,6 +11,7 @@ import com.ngocrong.item.ItemOption;
 import com.ngocrong.item.ItemOptionTemplate;
 import com.ngocrong.lucky.*;
 import com.ngocrong.map.MapManager;
+import com.ngocrong.map.KhiGasMapData;
 import com.ngocrong.map.expansion.blackdragon.MBlackDragonBall;
 import com.ngocrong.mob.MobCoordinate;
 import com.ngocrong.model.*;

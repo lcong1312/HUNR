@@ -23,16 +23,64 @@ public class RewardWhis {
     private static final String FULL_BAG_MESSAGE = "Bạn không đủ ô trống để nhận quà từ top Whis, hãy làm trống hành trang và thoát game vào lại";
     private static final String REWARD_MESSAGE = "Bạn vừa nhận được phần thưởng từ top Whis, hãy kiểm tra hành trang";
 
+    public static int getBonusPercentByRank(int rank) {
+        if (rank == 1) {
+            return 5;
+        }
+        if (rank == 2) {
+            return 3;
+        }
+        if (rank == 3) {
+            return 2;
+        }
+        if (rank >= 4 && rank <= 10) {
+            return 1;
+        }
+        return 0;
+    }
+
+    public static int getCurrentRank(int playerId) {
+        if (playerId <= 0) {
+            return 0;
+        }
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        try {
+            conn = MySQLConnect.getConnection();
+            ps = conn.prepareStatement("SELECT ranked.rank_pos FROM ("
+                    + " SELECT player_id, ROW_NUMBER() OVER (ORDER BY current_level DESC, create_date ASC, player_id ASC) AS rank_pos"
+                    + " FROM nr_whis"
+                    + " WHERE current_level > 0"
+                    + " ) ranked WHERE ranked.player_id = ? LIMIT 1");
+            ps.setInt(1, playerId);
+            rs = ps.executeQuery();
+            if (rs.next()) {
+                return rs.getInt("rank_pos");
+            }
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Error resolving Whis rank", e);
+        } finally {
+            closeResources(rs, ps, null);
+        }
+        return 0;
+    }
+
     public static void reward() {
         Top topWhis = Top.getTop(Top.TOP_WHIS);
         if (topWhis == null) {
             LOGGER.warning("Top Whis is null");
             return;
         }
+        Top topWhisReward = Top.getTop(Top.TOP_WHIS_Reward);
+        if (topWhisReward == null) {
+            LOGGER.warning("Top Whis Reward is null");
+            return;
+        }
 
         var newTop = new ArrayList<>(topWhis.getElements());
         var claimTop = new ArrayList<TopInfo>();
-        Top.getTop(Top.TOP_WHIS_Reward).elements = new ArrayList<>(topWhis.elements);
+        topWhisReward.elements = new ArrayList<>(topWhis.elements);
         for (TopInfo info : newTop) {
             if (info.rank > MAX_REWARD_RANK || info.rank < 1) {
                 continue;

@@ -2,6 +2,7 @@ package com.ngocrong.clan;
 
 import com.google.gson.Gson;
 import com.ngocrong.data.ClanData;
+import com.ngocrong.map.KhiGas;
 import com.ngocrong.map.Treasure;
 import com.ngocrong.repository.GameRepository;
 import com.ngocrong.user.Player;
@@ -42,6 +43,7 @@ public class Clan {
     public ArrayList<ClanMessage> messages;
     public Barrack barrack;
     public Treasure treasure;
+    public KhiGas khiGas;
     public ClanTerritory clanTerritory;
     public int remainingTimesCanEnterTreasure;
     public long lastTimeEnterTreasure = -1;

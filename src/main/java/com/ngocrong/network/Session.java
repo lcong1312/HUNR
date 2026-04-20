@@ -850,6 +850,7 @@ public class Session implements ISession {
             }
 
             _player.id = data.id;
+            _player.refreshWhisRewardBonus(true);
             _player.name = data.name;
             _player.gold = Math.max(data.gold, 0);
             _player.diamond = Math.max(data.diamond, 0);

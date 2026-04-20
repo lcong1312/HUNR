@@ -887,7 +887,16 @@ public class Info {
 
     void checkWhis() {
         var pl = this._player;
-        if (pl == null || pl.zone == null) {
+        if (pl == null) {
+            return;
+        }
+        pl.refreshWhisRewardBonus(false);
+        if (pl.getWhisRewardBonusPercent() > 0) {
+            this.hpFullTemp += Utils.percentOf(this.hpFullTemp, pl.getWhisRewardBonusPercent());
+            this.mpFullTemp += Utils.percentOf(this.mpFullTemp, pl.getWhisRewardBonusPercent());
+            this.damageFull += Utils.percentOf(this.damageFull, pl.getWhisRewardBonusPercent());
+        }
+        if (pl.zone == null) {
             return;
         }
         if (_player.zone.map.isMapDeTu() && _player.exitsItemTime(ItemTimeName.BUA_MA_THUAT)) {
