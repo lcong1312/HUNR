@@ -689,6 +689,64 @@ public class Player {
         }
     }
 
+    private void refreshAppearanceOnEnter() {
+        if (this.service == null) {
+            return;
+        }
+        this.service.setItemBody();
+        if (this.zone == null || this.zone.service == null) {
+            return;
+        }
+        if (this.isMask) {
+            this.zone.service.updateBody((byte) 0, this);
+        } else {
+            this.zone.service.updateBody((byte) -1, this);
+        }
+        if (this.idAuraEff != -1) {
+            this.zone.service.setIDAuraEff(this.id, this.idAuraEff);
+        }
+    }
+
+    private void syncMiniDiscipleOnEnter() {
+        if (this.zone == null || this.itemBody == null) {
+            return;
+        }
+        Item petItem = this.itemBody[10];
+        if (petItem == null) {
+            if (this.miniDisciple != null) {
+                if (this.miniDisciple.zone != null) {
+                    this.miniDisciple.zone.leave(this.miniDisciple);
+                }
+                this.miniDisciple = null;
+                if (this.info != null) {
+                    this.info.setInfo();
+                }
+                if (this.service != null) {
+                    this.service.loadPoint();
+                }
+            }
+            return;
+        }
+        if (this.miniDisciple == null || this.miniDisciple.item != petItem) {
+            if (this.miniDisciple != null && this.miniDisciple.zone != null) {
+                this.miniDisciple.zone.leave(this.miniDisciple);
+            }
+            this.miniDisciple = new MiniDisciple(petItem, this);
+        } else if (this.miniDisciple.zone != null && this.miniDisciple.zone != this.zone) {
+            this.miniDisciple.zone.leave(this.miniDisciple);
+        }
+        if (this.miniDisciple.zone == null) {
+            this.zone.enter(this.miniDisciple);
+        }
+        this.miniDisciple.move();
+        if (this.info != null) {
+            this.info.setInfo();
+        }
+        if (this.service != null) {
+            this.service.loadPoint();
+        }
+    }
+
     private void refreshBienHinhState(boolean recoverAll) {
         short oldAura = this.idAuraEff;
         this.updateSkin();
@@ -10973,6 +11031,9 @@ public class Player {
                         sellGoldBar(inputDlg.getLong());
                         break;
                     case CMDTextBox.SELL_LOCKED_GOLD_BAR:
+                        useLockedGoldBar(inputDlg.getLong());
+                        break;
+                    case CMDTextBox.SALE_LOCKED_GOLD_BAR:
                         sellLockedGoldBar(inputDlg.getLong());
                         break;
                     case CMDTextBox.CSMM_1_SO:
@@ -13129,7 +13190,7 @@ public class Player {
         return number;
     }
 
-    private void sellGoldBarItem(int itemId, long number, String itemName) {
+    private void processGoldBarItem(int itemId, long number, String itemName, String actionName, long goldPerItem) {
         if (number <= 0) {
             service.sendThongBao("Vui lòng nhập đúng số lượng");
             return;
@@ -13157,22 +13218,25 @@ public class Player {
             return;
         }
         removeItem(index, (int) number);
-        long gold = 500_000_000;
-        gold *= number;
+        long gold = goldPerItem * number;
         addGold(gold);
         service.setItemBag();
         this.saveData();
-        service.sendThongBao(String.format("Đã dùng %d %s và nhận %s vàng", number, itemName, Utils.currencyFormat(gold)));
+        service.sendThongBao(String.format("Đã %s %d %s và nhận %s vàng", actionName, number, itemName, Utils.currencyFormat(gold)));
 //        pointThoiVang += (int) number;
 //        isChangePoint = true;
     }
 
     public void sellGoldBar(long number) {
-        sellGoldBarItem(ItemName.THOI_VANG, number, "thỏi vàng");
+        processGoldBarItem(ItemName.THOI_VANG, number, "thỏi vàng", "bán", 500_000_000L);
+    }
+
+    public void useLockedGoldBar(long number) {
+        processGoldBarItem(ItemName.THOI_VANG_KHOA, number, "thỏi vàng khóa", "dùng", 500_000_000L);
     }
 
     public void sellLockedGoldBar(long number) {
-        sellGoldBarItem(ItemName.THOI_VANG_KHOA, number, "thỏi vàng khóa");
+        processGoldBarItem(ItemName.THOI_VANG_KHOA, number, "thỏi vàng khóa", "bán", 1L);
     }
 
     public void saleItem(Message ms) {
@@ -13211,16 +13275,19 @@ public class Player {
             // service.sendThongBao("Không thể bán vật phẩm này");
             // return;
             // }
-            if (item.id == 457) {
-                menus.clear();
-                menus.add(new KeyValue(20230, "Bán theo số lượng"));
-                menus.add(new KeyValue(CMDMenu.CANCEL, "Từ chối"));
-                service.openUIConfirm(NpcName.CON_MEO, "Bạn có muốn bán nhiều không", getPetAvatar(), menus);
+            if (action == 0 && item.id == ItemName.THOI_VANG) {
+                inputDlg = new InputDialog(CMDTextBox.SELL_GOLD_BAR, "Nhập số lượng thỏi vàng muốn bán",
+                        new TextField("Vui lòng nhập số lượng"));
+                inputDlg.setService(service);
+                inputDlg.show();
                 return;
-                // quantity = 1;
             }
-            if (item.id != 457) {
-                gold = 1;
+            if (action == 0 && item.id == ItemName.THOI_VANG_KHOA) {
+                inputDlg = new InputDialog(CMDTextBox.SALE_LOCKED_GOLD_BAR, "Nhập số lượng thỏi vàng khóa muốn bán",
+                        new TextField("Vui lòng nhập số lượng"));
+                inputDlg.setService(service);
+                inputDlg.show();
+                return;
             }
             if (action == 0) {
                 Message mss = new Message(Cmd.ITEM_SALE);
@@ -15439,10 +15506,7 @@ public class Player {
                 this.HopQuaTanThu2(item);
                 break;
             case ItemName.THOI_VANG:
-                inputDlg = new InputDialog(CMDTextBox.SELL_GOLD_BAR, "Nhập số lượng thỏi vàng muốn dùng",
-                        new TextField("Nhập Số lượng , 1 thỏi vàng sẽ được 500tr vàng"));
-                inputDlg.setService(service);
-                inputDlg.show();
+                service.sendThongBao("Thỏi vàng chỉ có thể bán, không thể dùng trực tiếp");
                 break;
             case ItemName.THOI_VANG_KHOA:
                 inputDlg = new InputDialog(CMDTextBox.SELL_LOCKED_GOLD_BAR, "Nhập số lượng thỏi vàng khóa muốn dùng",
@@ -17397,8 +17461,25 @@ public class Player {
     }
 
     public void updatePetTheoSau(boolean isUpdate) {
+        if (this.itemBody != null && this.itemBody[11] != null) {
+            short smallId = (short) (this.itemBody[11].template.iconID - 1);
+            if (this.petFollow == null) {
+                this.petFollow = new PetFollow();
+            }
+            this.petFollow.setSmallID(smallId);
+            this.petFollow.setImg((byte) 1);
+            this.petFollow.setFrame(new byte[]{0, 1, 2, 3, 4, 5, 6, 7});
+            short size = (short) (smallId == 15067 ? 65 : 75);
+            this.petFollow.setW(size);
+            this.petFollow.setH(size);
+        } else {
+            this.petFollow = null;
+        }
         if (isUpdate) {
-            if (this.itemBody != null && this.itemBody[11] != null) {
+            if (this.zone == null || this.service == null) {
+                return;
+            }
+            if (this.petFollow != null) {
                 this.service.sendPetFollow(this, (short) (this.itemBody[11].template.iconID - 1));
             } else {
                 this.service.sendPetFollow(this, (short) 0);
@@ -20667,6 +20748,8 @@ public class Player {
         } else {
             enterMapSingle(map);
         }
+        syncMiniDiscipleOnEnter();
+        updatePetTheoSau(true);
         if (zone != null && this.service != null) {
             if (this.idAuraEff != -1) {
                 zone.service.setIDAuraEff(this.id, this.idAuraEff);
@@ -20677,9 +20760,7 @@ public class Player {
                 }
             }
         }
-        if (this.isMask) {
-            zone.service.updateBody((byte) 0, this);
-        }
+        refreshAppearanceOnEnter();
         service.gameInfo();
         String subName = taskMain.subNames[taskMain.index];
         service.sendThongBao(subName);
@@ -20712,6 +20793,11 @@ public class Player {
             this.sort();
             updatePetTheoSau(true);
         }, 1000);
+        Utils.setTimeout(() -> {
+            if (!this.isLoggedOut && this.zone != null) {
+                refreshAppearanceOnEnter();
+            }
+        }, 500);
         setListAccessMap();
     }
 

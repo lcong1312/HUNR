@@ -1,6 +1,7 @@
 package com.ngocrong.user;
 
 import _HunrProvision.ConfigStudio;
+import com.ngocrong.consts.ItemName;
 import com.ngocrong.data.PlayerData;
 import com.ngocrong.data.UserData;
 import com.ngocrong.model.Achievement;
@@ -12,7 +13,6 @@ import com.ngocrong.model.MagicTree;
 import com.ngocrong.util.Utils;
 import com.google.common.base.CharMatcher;
 import com.google.gson.Gson;
-import com.ngocrong.item.ItemOption;
 import lombok.Data;
 import org.apache.log4j.Logger;
 
@@ -135,6 +135,9 @@ public class User {
         try {
             Server server = DragonBall.getInstance().getServer();
             Config config = server.getConfig();
+            if (!GameRepository.getInstance().player.findByUserId(getId()).isEmpty()) {
+                return 6;
+            }
             int lent = name.length();
             if (lent < 5 || lent > 15) {
                 return 1;
@@ -213,11 +216,10 @@ public class User {
             item.setDefaultOptions();
             itemBoxs.add(item);
 
-            Item tv = new Item(457);
+            Item tv = new Item(ItemName.THOI_VANG_KHOA);
             tv.indexUI = 1;
             tv.quantity = 10;
             tv.setDefaultOptions();
-            tv.addItemOption(new ItemOption(30, 0));
             itemBoxs.add(tv);
 
             Item pean = new Item(595);
@@ -293,7 +295,9 @@ public class User {
             GameRepository.getInstance().player.save(data);
             return 0;
         } catch (Exception ex) {
-            
+            if (!GameRepository.getInstance().player.findByUserId(getId()).isEmpty()) {
+                return 6;
+            }
             System.err.println("Error at 5");
             logger.error("failed!", ex);
 

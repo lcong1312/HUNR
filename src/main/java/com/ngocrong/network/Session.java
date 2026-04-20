@@ -1400,6 +1400,13 @@ public class Session implements ISession {
                 sv.dialogMessage("Tên nhân vật đã tồn tại.");
             } else if (status == 5) {
                 sv.dialogMessage("Tên nhân vật không được chứa các từ này.");
+            } else if (status == 6) {
+                if (loadChar() && _player != null) {
+                    enter();
+                    checkOnTOP();
+                } else {
+                    sv.dialogMessage("Tài khoản này đã có nhân vật.");
+                }
             }
         } catch (IOException ex) {
             
