@@ -1972,6 +1972,17 @@ public class Server {
     }
 
     private void overrideTransformHeadAvatars() {
+        // Legacy Santa special-shop costumes keep their own large head avatars.
+        // Do not map them to the item icon ids, otherwise the portrait becomes too small.
+        putHeadAvatar(2150, 29463);
+        putHeadAvatar(2153, 26349);
+        putHeadAvatar(2156, 16065);
+        putHeadAvatar(2159, 25803);
+        putHeadAvatar(2162, 29627);
+        putHeadAvatar(2165, 29008);
+        putHeadAvatar(2168, 32015);
+        putHeadAvatar(2171, 15868);
+
         putHeadAvatar(1400, 31126);
         putHeadAvatar(1401, 31133);
         putHeadAvatar(1402, 31140);

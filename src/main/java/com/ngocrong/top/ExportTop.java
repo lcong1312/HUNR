@@ -1022,9 +1022,13 @@ public class ExportTop {
                 item.options.add(new ItemOption(103, 8));
                 item.options.add(new ItemOption(50, 8));
                 break;
-            case 2268:
+            case ItemName.GIAP_TAP_LUYEN_CAP_4:
                 item.options.add(new ItemOption(77, 10));
                 item.options.add(new ItemOption(103, 10));
+                break;
+            case ItemName.GIAP_TAP_LUYEN_CAP_5:
+                item.options.add(new ItemOption(77, 20));
+                item.options.add(new ItemOption(103, 20));
                 break;
             case 2353:
                 item.options.add(new ItemOption(77, 5));

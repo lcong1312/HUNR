@@ -2808,8 +2808,10 @@ public class Service implements IService {
         String[] paths = {
                 String.format("resources_extra/image/%d/small/Small%d.png", zoom, id),
                 String.format("resources_extra/image/%d/small/%d.png", zoom, id),
+                String.format("resources_extra/image/%d/icon/%d.png", zoom, id),
                 String.format("resources/image/%d/small/Small%d.png", zoom, id),
-                String.format("resources/image/%d/small/%d.png", zoom, id)
+                String.format("resources/image/%d/small/%d.png", zoom, id),
+                String.format("resources/image/%d/icon/%d.png", zoom, id)
         };
         for (String path : paths) {
             byte[] data = Utils.getFile(path);
@@ -3745,7 +3747,7 @@ public class Service implements IService {
         if (linhThu == null) {
             return;
         }
-        short smallId = (short) (linhThu.template.iconID - 1);
+        short smallId = Player.getPetFollowSmallId(linhThu);
         Message msg;
         try {
             msg = new Message(31);

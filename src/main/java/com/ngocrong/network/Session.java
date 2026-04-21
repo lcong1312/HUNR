@@ -218,11 +218,7 @@ public class Session implements ISession {
                     return;
                 }
                 Service sv = (Service) service;
-                String folder = "resources/data/" + zoomLevel;
-                ArrayList<String> datas = new ArrayList<>();
-                File file = new File(folder);
-
-                addPath(datas, file);
+                ArrayList<String> datas = ResourceCache.getInstance().getResourcePaths(zoomLevel);
 
                 sv.size(datas.size());
 
@@ -973,7 +969,7 @@ public class Session implements ISession {
                                 try {
                                     Item it1 = _player.itemBody[11];
                                     if (it1 != null && _player.service != null) {
-                                        _player.service.sendPetFollow(_player, (short) (it1.template.iconID - 1));
+                                        _player.service.sendPetFollow(_player, Player.getPetFollowSmallId(it1));
                                     }
                                 } catch (Exception e) {
                                     

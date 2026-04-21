@@ -377,15 +377,15 @@ public class Utils {
 
     private static File resolveResourceFile(String url) {
         File primary = new File(url);
-        if (primary.exists()) {
-            return primary;
-        }
         String normalized = url.replace('\\', '/');
         if (normalized.startsWith("resources/")) {
             File overlay = new File("resources_extra/" + normalized.substring("resources/".length()));
             if (overlay.exists()) {
                 return overlay;
             }
+        }
+        if (primary.exists()) {
+            return primary;
         }
         return primary;
     }

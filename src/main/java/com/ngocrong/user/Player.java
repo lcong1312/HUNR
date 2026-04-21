@@ -12928,7 +12928,8 @@ public class Player {
                                 + "Hoàn thành nhiệm vụ Xên tại Thị trấn Ginder");
                         return;
                     }
-                    if (item.id == 2268 && this.taskMain.id < 21) {
+                    if ((item.id == ItemName.GIAP_TAP_LUYEN_CAP_4 || item.id == ItemName.GIAP_TAP_LUYEN_CAP_5)
+                            && this.taskMain.id < 21) {
                         service.dialogMessage("Bạn chưa thể mua lúc này , hãy tiếp tục hoàn thành nhiệm vụ\n"
                                 + "Hoàn thành nhiệm vụ Tiểu đội Sát thủ");
                         return;
@@ -17674,9 +17675,20 @@ public class Player {
         }
     }
 
+    public static short getPetFollowSmallId(Item item) {
+        if (item == null || item.template == null) {
+            return 0;
+        }
+        // Demon Dia nguc uses a dedicated follow sprite while keeping a separate item icon.
+        if (item.template.id == 2486) {
+            return 15238;
+        }
+        return (short) (item.template.iconID - 1);
+    }
+
     public void updatePetTheoSau(boolean isUpdate) {
         if (this.itemBody != null && this.itemBody[11] != null) {
-            short smallId = (short) (this.itemBody[11].template.iconID - 1);
+            short smallId = getPetFollowSmallId(this.itemBody[11]);
             if (this.petFollow == null) {
                 this.petFollow = new PetFollow();
             }
@@ -17694,7 +17706,7 @@ public class Player {
                 return;
             }
             if (this.petFollow != null) {
-                this.service.sendPetFollow(this, (short) (this.itemBody[11].template.iconID - 1));
+                this.service.sendPetFollow(this, getPetFollowSmallId(this.itemBody[11]));
             } else {
                 this.service.sendPetFollow(this, (short) 0);
             }
@@ -18244,9 +18256,20 @@ public class Player {
 
                                         case 531:
                                         case 536:
-                                        case 2268:
                                             if (option.param > 10000) {
                                                 option.param = 10000;
+                                            }
+                                            break;
+
+                                        case ItemName.GIAP_TAP_LUYEN_CAP_4:
+                                            if (option.param > 100000) {
+                                                option.param = 100000;
+                                            }
+                                            break;
+
+                                        case ItemName.GIAP_TAP_LUYEN_CAP_5:
+                                            if (option.param > 1000000) {
+                                                option.param = 1000000;
                                             }
                                             break;
 

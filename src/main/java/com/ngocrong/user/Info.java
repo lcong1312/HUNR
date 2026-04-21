@@ -557,8 +557,11 @@ public class Info {
             case 536:
                 dameAdd = 30;
                 break;
-            case 2268:
+            case ItemName.GIAP_TAP_LUYEN_CAP_4:
                 dameAdd = 40;
+                break;
+            case ItemName.GIAP_TAP_LUYEN_CAP_5:
+                dameAdd = 50;
                 break;
         }
         if (isMacGiapLuyenTap) {

@@ -2,8 +2,9 @@ package com.ngocrong.network;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -28,13 +29,15 @@ public class ResourceCache {
      */
     public ArrayList<String> getResourcePaths(int zoomLevel) {
         String folder = "resources/data/" + zoomLevel;
+        String overlayFolder = "resources_extra/data/" + zoomLevel;
         File folderFile = new File(folder);
-        
-        if (!folderFile.exists()) {
+        File overlayFolderFile = new File(overlayFolder);
+
+        if (!folderFile.exists() && !overlayFolderFile.exists()) {
             return new ArrayList<>();
         }
 
-        long currentModified = folderFile.lastModified();
+        long currentModified = folderFile.lastModified() ^ (overlayFolderFile.lastModified() << 1);
         Long cachedModified = lastModified.get(zoomLevel);
 
         // Kiểm tra cache có hợp lệ không
@@ -43,26 +46,33 @@ public class ResourceCache {
         }
 
         // Build cache mới
-        ArrayList<String> paths = new ArrayList<>();
-        addPath(paths, folderFile);
-        
+        Set<String> pathSet = new LinkedHashSet<>();
+        addPath(pathSet, folderFile, folderFile.getPath(), folderFile.getPath());
+        addPath(pathSet, overlayFolderFile, overlayFolderFile.getPath(), folderFile.getPath());
+
+        ArrayList<String> paths = new ArrayList<>(pathSet);
         resourceCache.put(zoomLevel, new ArrayList<>(paths));
         lastModified.put(zoomLevel, currentModified);
-        
+
         return paths;
     }
 
     /**
      * Đệ quy thêm path vào danh sách
      */
-    private void addPath(ArrayList<String> paths, File file) {
+    private void addPath(Set<String> paths, File file, String rootPath, String canonicalRootPath) {
+        if (file == null || !file.exists()) {
+            return;
+        }
         if (file.isFile()) {
-            paths.add(file.getPath());
+            String relativePath = file.getPath().substring(rootPath.length()).replace('\\', '/');
+            String canonicalPath = canonicalRootPath.replace('\\', '/') + relativePath;
+            paths.add(canonicalPath);
         } else if (file.isDirectory()) {
             File[] files = file.listFiles();
             if (files != null) {
                 for (File f : files) {
-                    addPath(paths, f);
+                    addPath(paths, f, rootPath, canonicalRootPath);
                 }
             }
         }
