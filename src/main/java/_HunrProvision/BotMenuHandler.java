@@ -217,15 +217,50 @@ public class BotMenuHandler {
         player.service.openUIConfirm(NpcName.CON_MEO, "Chọn số lượng Bot muốn xóa", player.getPetAvatar(), player.menus);
     }
 
+    private BotConfigData createDefaultBotConfig() {
+        BotConfigData config = new BotConfigData();
+        config.setBotnameJson("[]");
+        config.setCaitrangIdJson("[]");
+        config.setRatioCaitrang(30);
+        config.setRatioTrangbi(70);
+        config.setIsUsed(false);
+        config.setUsedBotnames("[]");
+        return GameRepository.getInstance().botConfig.save(config);
+    }
+
+    private List<BotConfigData> getAllBotConfigsOrCreateDefault() {
+        if (GameRepository.getInstance().botConfig == null) {
+            return new ArrayList<>();
+        }
+        List<BotConfigData> allConfigs = GameRepository.getInstance().botConfig.findAll();
+        if (allConfigs.isEmpty()) {
+            allConfigs = new ArrayList<>();
+            allConfigs.add(createDefaultBotConfig());
+        }
+        return allConfigs;
+    }
+
+    private BotConfigData getOrCreateEditableConfig() {
+        if (GameRepository.getInstance().botConfig == null) {
+            return null;
+        }
+        List<BotConfigData> allConfigs = GameRepository.getInstance().botConfig.findByIsUsedFalse();
+        if (allConfigs.isEmpty()) {
+            return createDefaultBotConfig();
+        }
+        return allConfigs.get(0);
+    }
+
     public void createBots(Player player, int quantity) {
         int created = 0;
         int totalAvailableNames = 0;
+        int totalConfiguredNames = 0;
 
-        List<BotConfigData> allConfigs = GameRepository.getInstance().botConfig.findAll();
-        if (allConfigs.isEmpty()) {
-            player.service.sendThongBao("Không tìm thấy config bot trong database");
+        if (GameRepository.getInstance().botConfig == null) {
+            player.service.sendThongBao("Lỗi: BotConfig repository chưa được khởi tạo");
             return;
         }
+        List<BotConfigData> allConfigs = getAllBotConfigsOrCreateDefault();
 
         for (BotConfigData config : allConfigs) {
             if (config.getBotnameJson() == null || config.getBotnameJson().isEmpty()) {
@@ -249,6 +284,7 @@ public class BotMenuHandler {
                     player.service.sendThongBao("Lỗi parse botnameJson (id=" + config.getId() + "): " + e.getMessage());
                     continue;
                 }
+                totalConfiguredNames += botnameArray.length();
                 
                 JSONArray usedNamesArray = new JSONArray();
                 if (config.getUsedBotnames() != null && !config.getUsedBotnames().isEmpty()) {
@@ -312,7 +348,9 @@ public class BotMenuHandler {
         if (created > 0) {
             player.service.sendThongBao("Đã tạo " + created + " Bot");
         } else {
-            if (totalAvailableNames == 0) {
+            if (totalConfiguredNames == 0) {
+                player.service.sendThongBao("Chưa có tên bot trong config. Hãy dùng menu Thêm tên Bot trước");
+            } else if (totalAvailableNames == 0) {
                 player.service.sendThongBao("Tất cả tên bot đã được sử dụng. Dùng lệnh Clear Name Bot để tái sử dụng");
             } else {
                 player.service.sendThongBao("Không tạo được bot. Tổng tên có sẵn: " + totalAvailableNames);
@@ -429,7 +467,7 @@ public class BotMenuHandler {
                                 topInfo.isReward = false;
                                 botList.add(topInfo);
                                 
-                                if (botList.size() >= 50) {
+                                if (botList.size() >= 1000) {
                                     break;
                                 }
                             } catch (Exception e) {
@@ -438,11 +476,11 @@ public class BotMenuHandler {
                         }
                     }
                 }
-                if (botList.size() >= 50) {
+                if (botList.size() >= 1000) {
                     break;
                 }
             }
-            if (botList.size() >= 50) {
+            if (botList.size() >= 1000) {
                 break;
             }
         }
@@ -512,20 +550,10 @@ public class BotMenuHandler {
             }
 
             String[] names = namesStr.split(",");
-            List<BotConfigData> allConfigs = GameRepository.getInstance().botConfig.findByIsUsedFalse();
-            
-            BotConfigData config;
-            if (allConfigs.isEmpty()) {
-                config = new BotConfigData();
-                config.setBotnameJson("[]");
-                config.setCaitrangIdJson("[]");
-                config.setRatioCaitrang(30);
-                config.setRatioTrangbi(70);
-                config.setIsUsed(false);
-                config.setUsedBotnames("[]");
-                config = GameRepository.getInstance().botConfig.save(config);
-            } else {
-                config = allConfigs.get(0);
+            BotConfigData config = getOrCreateEditableConfig();
+            if (config == null) {
+                player.service.sendThongBao("Lỗi: BotConfig repository chưa được khởi tạo");
+                return;
             }
 
             JSONArray botnameArray = new JSONArray();
@@ -583,20 +611,10 @@ public class BotMenuHandler {
             }
 
             String[] ids = idsStr.split(",");
-            List<BotConfigData> allConfigs = GameRepository.getInstance().botConfig.findByIsUsedFalse();
-            
-            BotConfigData config;
-            if (allConfigs.isEmpty()) {
-                config = new BotConfigData();
-                config.setBotnameJson("[]");
-                config.setCaitrangIdJson("[]");
-                config.setRatioCaitrang(30);
-                config.setRatioTrangbi(70);
-                config.setIsUsed(false);
-                config.setUsedBotnames("[]");
-                config = GameRepository.getInstance().botConfig.save(config);
-            } else {
-                config = allConfigs.get(0);
+            BotConfigData config = getOrCreateEditableConfig();
+            if (config == null) {
+                player.service.sendThongBao("Lỗi: BotConfig repository chưa được khởi tạo");
+                return;
             }
             JSONArray caitrangArray = new JSONArray();
             
@@ -666,23 +684,13 @@ public class BotMenuHandler {
 
     public void setRatioCaitrang(Player player, int ratio) {
         try {
-            List<BotConfigData> allConfigs = GameRepository.getInstance().botConfig.findByIsUsedFalse();
-            
-            BotConfigData config;
-            if (allConfigs.isEmpty()) {
-                config = new BotConfigData();
-                config.setBotnameJson("[]");
-                config.setCaitrangIdJson("[]");
-                config.setRatioCaitrang(ratio);
-                config.setRatioTrangbi(70);
-                config.setIsUsed(false);
-                config.setUsedBotnames("[]");
-                config = GameRepository.getInstance().botConfig.save(config);
-            } else {
-                config = allConfigs.get(0);
-                config.setRatioCaitrang(ratio);
-                GameRepository.getInstance().botConfig.save(config);
+            BotConfigData config = getOrCreateEditableConfig();
+            if (config == null) {
+                player.service.sendThongBao("Lỗi: BotConfig repository chưa được khởi tạo");
+                return;
             }
+            config.setRatioCaitrang(ratio);
+            GameRepository.getInstance().botConfig.save(config);
 
             player.service.sendThongBao("Đã set tỉ lệ cải trang: " + ratio);
         } catch (Exception e) {
@@ -692,23 +700,13 @@ public class BotMenuHandler {
 
     public void setRatioTrangbi(Player player, int ratio) {
         try {
-            List<BotConfigData> allConfigs = GameRepository.getInstance().botConfig.findByIsUsedFalse();
-            
-            BotConfigData config;
-            if (allConfigs.isEmpty()) {
-                config = new BotConfigData();
-                config.setBotnameJson("[]");
-                config.setCaitrangIdJson("[]");
-                config.setRatioCaitrang(30);
-                config.setRatioTrangbi(ratio);
-                config.setIsUsed(false);
-                config.setUsedBotnames("[]");
-                config = GameRepository.getInstance().botConfig.save(config);
-            } else {
-                config = allConfigs.get(0);
-                config.setRatioTrangbi(ratio);
-                GameRepository.getInstance().botConfig.save(config);
+            BotConfigData config = getOrCreateEditableConfig();
+            if (config == null) {
+                player.service.sendThongBao("Lỗi: BotConfig repository chưa được khởi tạo");
+                return;
             }
+            config.setRatioTrangbi(ratio);
+            GameRepository.getInstance().botConfig.save(config);
 
             player.service.sendThongBao("Đã set tỉ lệ trang bị: " + ratio);
         } catch (Exception e) {

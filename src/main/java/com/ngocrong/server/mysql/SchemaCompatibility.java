@@ -25,6 +25,7 @@ public final class SchemaCompatibility {
             ensureNrSuperRankEventColumn(connection);
             ensureOsinLixiTable(connection);
             ensureBoMongSchema(connection);
+            ensureVirtualBotSoSinhTable(connection);
         } catch (SQLException ex) {
             logger.warn("Skip schema compatibility bootstrap: " + ex.getMessage());
         }
@@ -67,6 +68,29 @@ public final class SchemaCompatibility {
             return;
         }
         ensureColumn(connection, "nr_bo_mong_nhiem_vu", "expired_at", "BIGINT DEFAULT NULL");
+    }
+
+    private static void ensureVirtualBotSoSinhTable(Connection connection) throws SQLException {
+        if (!tableExists(connection, "nr_virtual_bot_sosinh")) {
+            execute(connection,
+                    "CREATE TABLE `nr_virtual_bot_sosinh` ("
+                            + "`id` BIGINT NOT NULL AUTO_INCREMENT,"
+                            + "`bot_name` VARCHAR(100) NOT NULL,"
+                            + "`state_json` LONGTEXT NOT NULL,"
+                            + "`last_seen` BIGINT NOT NULL DEFAULT 0,"
+                            + "`created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,"
+                            + "`updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,"
+                            + "PRIMARY KEY (`id`),"
+                            + "UNIQUE KEY `uk_nr_virtual_bot_sosinh_name` (`bot_name`)"
+                            + ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci");
+            logger.info("Created missing table nr_virtual_bot_sosinh");
+            return;
+        }
+        ensureColumn(connection, "nr_virtual_bot_sosinh", "bot_name", "VARCHAR(100) NOT NULL");
+        ensureColumn(connection, "nr_virtual_bot_sosinh", "state_json", "LONGTEXT NOT NULL");
+        ensureColumn(connection, "nr_virtual_bot_sosinh", "last_seen", "BIGINT NOT NULL DEFAULT 0");
+        ensureColumn(connection, "nr_virtual_bot_sosinh", "created_at", "TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP");
+        ensureColumn(connection, "nr_virtual_bot_sosinh", "updated_at", "TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP");
     }
 
     private static void ensureColumn(Connection connection, String tableName, String columnName, String ddl) throws SQLException {

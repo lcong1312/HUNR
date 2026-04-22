@@ -11,6 +11,7 @@ import com.ngocrong.map.MapManager;
 import com.ngocrong.map.TMap;
 import com.ngocrong.map.tzone.Zone;
 import com.ngocrong.mob.Mob;
+import com.ngocrong.network.Session;
 import com.ngocrong.network.Service;
 import com.ngocrong.skill.Skills;
 import com.ngocrong.user.Info;
@@ -35,6 +36,9 @@ public class VirtualBot extends Boss {
         this.name = name;
         this.id = Utils.nextInt(1000000, 9999999);
         this.itemBag = new Item[0];
+        Session botSession = Session.createBotSession();
+        botSession._player = this;
+        this.setSession(botSession);
     }
     public static int TotalBot;
 
@@ -59,6 +63,9 @@ public class VirtualBot extends Boss {
         setBag1();
         service = new Service(this);
         this.id = Utils.nextInt(1000000, 9999999);
+        Session botSession = Session.createBotSession();
+        botSession._player = this;
+        this.setSession(botSession);
     }
 
     @Override

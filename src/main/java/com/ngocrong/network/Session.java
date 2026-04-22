@@ -133,6 +133,33 @@ public class Session implements ISession {
 
     public VerificationResult resultKey = null;
 
+    private Session(boolean botSession) {
+        this.sender = new Sender();
+        this.id = -1;
+        this.ip = "virtual-bot";
+        this.isConnected = false;
+        this.isSetClientInfo = true;
+        this.isEnter = true;
+        long now = System.currentTimeMillis();
+        this.lastReceiveTime = now;
+        this.lastSendTime = now;
+        this.lastConfirm = now;
+        this.lastCreateSession = now;
+        this.deviceInfo = "virtual-bot";
+        this.matrixVerified = true;
+        this.eccVerified = true;
+    }
+
+    public static Session createBotSession() {
+        Session session = new Session(true);
+        User botUser = new User("@bot.virtual", "", session);
+        botUser.setId(-1);
+        botUser.setRole(0);
+        botUser.setActivated(1);
+        session.user = botUser;
+        return session;
+    }
+
     public Session(Socket socket, String ip, int id) throws IOException {
         this.socket = socket;
         this.id = id;

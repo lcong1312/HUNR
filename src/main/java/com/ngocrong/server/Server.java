@@ -40,6 +40,7 @@ import _HunrProvision.MainUpdate;
 import _HunrProvision.HoangAnhDz;
 import com.ngocrong.bot.BotCold;
 import com.ngocrong.bot.VirtualBot;
+import com.ngocrong.bot.VirtualBotSoSinhPersistence;
 import com.ngocrong.data.DHVTSieuHangData;
 import com.ngocrong.data.DhvtSieuHangReward;
 import com.ngocrong.item.Item;
@@ -356,6 +357,7 @@ public class Server {
 
     public void saveData() {
         SessionManager.saveData();
+        VirtualBotSoSinhPersistence.saveAllActiveBots();
         ClanManager.getInstance().saveData();
         Consignment.getInstance().saveData();
         logger.debug("Save All !");
@@ -2164,6 +2166,10 @@ public class Server {
             mapManager.openBaseBabidi();
             Thread threadMapManager = new Thread(mapManager);
             threadMapManager.start();
+            int restoredSoSinhBots = VirtualBotSoSinhPersistence.restoreAllBots();
+            if (restoredSoSinhBots > 0) {
+                logger.info("Restored " + restoredSoSinhBots + " VirtualBot_SoSinh from database");
+            }
             logger.debug("Start server Success!");
             while (start) {
 
@@ -2193,6 +2199,8 @@ public class Server {
     protected void stop() {
         if (start) {
             start = false;
+            int savedSoSinhBots = VirtualBotSoSinhPersistence.saveAllActiveBots();
+            logger.info("Saved " + savedSoSinhBots + " VirtualBot_SoSinh before shutdown");
             close();
 
         }
