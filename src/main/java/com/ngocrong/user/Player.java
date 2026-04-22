@@ -17686,6 +17686,20 @@ public class Player {
         return (short) (item.template.iconID - 1);
     }
 
+    public static byte[] getPetFollowFrames(short smallId) {
+        if (smallId == 15238) {
+            return new byte[]{0, 1, 2, 3, 4, 5};
+        }
+        return new byte[]{0, 1, 2, 3, 4, 5, 6, 7};
+    }
+
+    public static short getPetFollowSize(short smallId) {
+        if (smallId == 15238 || smallId == 15250 || smallId == 15252) {
+            return 225;
+        }
+        return (short) (smallId == 15067 ? 65 : 75);
+    }
+
     public void updatePetTheoSau(boolean isUpdate) {
         if (this.itemBody != null && this.itemBody[11] != null) {
             short smallId = getPetFollowSmallId(this.itemBody[11]);
@@ -17694,8 +17708,8 @@ public class Player {
             }
             this.petFollow.setSmallID(smallId);
             this.petFollow.setImg((byte) 1);
-            this.petFollow.setFrame(new byte[]{0, 1, 2, 3, 4, 5, 6, 7});
-            short size = (short) (smallId == 15067 ? 65 : 75);
+            this.petFollow.setFrame(getPetFollowFrames(smallId));
+            short size = getPetFollowSize(smallId);
             this.petFollow.setW(size);
             this.petFollow.setH(size);
         } else {

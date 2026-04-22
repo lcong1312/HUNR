@@ -3697,13 +3697,14 @@ public class Service implements IService {
                 msg.writer().writeByte(1);
                 msg.writer().writeShort(smallId);
                 msg.writer().writeByte(1);
-                int[] fr = new int[]{0, 1, 2, 3, 4, 5, 6, 7};
+                byte[] fr = Player.getPetFollowFrames(smallId);
                 msg.writer().writeByte(fr.length);
-                for (int i = 0; i < fr.length; i++) {
-                    msg.writer().writeByte(fr[i]);
+                for (byte frame : fr) {
+                    msg.writer().writeByte(frame);
                 }
-                msg.writer().writeShort(smallId == 15067 ? 65 : 75);
-                msg.writer().writeShort(smallId == 15067 ? 65 : 75);
+                short size = Player.getPetFollowSize(smallId);
+                msg.writer().writeShort(size);
+                msg.writer().writeShort(size);
             }
             sendMessAllPlayerInMap(player.zone, msg);
             msg.cleanup();
@@ -3725,13 +3726,14 @@ public class Service implements IService {
                 msg.writer().writeByte(1);
                 msg.writer().writeShort(smallId);
                 msg.writer().writeByte(1);
-                int[] fr = new int[]{0, 1, 2, 3, 4, 5, 6, 7};
+                byte[] fr = Player.getPetFollowFrames(smallId);
                 msg.writer().writeByte(fr.length);
-                for (int i = 0; i < fr.length; i++) {
-                    msg.writer().writeByte(fr[i]);
+                for (byte value : fr) {
+                    msg.writer().writeByte(value);
                 }
-                msg.writer().writeShort(smallId == 15067 ? 65 : 75);
-                msg.writer().writeShort(smallId == 15067 ? 65 : 75);
+                short size = Player.getPetFollowSize(smallId);
+                msg.writer().writeShort(size);
+                msg.writer().writeShort(size);
             }
             sendMessAllPlayerInMap(player.zone, msg);
             msg.cleanup();
@@ -3755,13 +3757,14 @@ public class Service implements IService {
             msg.writer().writeByte(1);
             msg.writer().writeShort(smallId);
             msg.writer().writeByte(1);
-            int[] fr = new int[]{0, 1, 2, 3, 4, 5, 6, 7};
+            byte[] fr = Player.getPetFollowFrames(smallId);
             msg.writer().writeByte(fr.length);
-            for (int i = 0; i < fr.length; i++) {
-                msg.writer().writeByte(fr[i]);
+            for (byte frame : fr) {
+                msg.writer().writeByte(frame);
             }
-            msg.writer().writeShort(smallId == 15067 ? 65 : 75);
-            msg.writer().writeShort(smallId == 15067 ? 65 : 75);
+            short size = Player.getPetFollowSize(smallId);
+            msg.writer().writeShort(size);
+            msg.writer().writeShort(size);
             me.service.sendMessage(msg);
             msg.cleanup();
         } catch (Exception e) {

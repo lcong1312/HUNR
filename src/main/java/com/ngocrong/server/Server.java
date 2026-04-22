@@ -325,7 +325,9 @@ public class Server {
 
         System.err.println("Calculating checksums...");
         partSum = HoangAnhDz.getTableChecksum("nr_part");
-        itemSum = HoangAnhDz.getTableChecksum("nr_item") + HoangAnhDz.getTableChecksum("nr_item_option_template");
+        itemSum = HoangAnhDz.getTableChecksum("nr_item")
+                + HoangAnhDz.getTableChecksum("nr_item_option_template")
+                + getTeamobiMountItemCacheVersion();
         System.err.println("init MultiLayerCryptoSystem...");
         MultiLayerCryptoSystem.init();
 
@@ -868,6 +870,7 @@ public class Server {
                 img.init();
                 ImgByName.addImage(img);
             }
+            ensureTeamobiMountAliases();
             res.close();
             stmt.close();
         } catch (SQLException ex) {
@@ -897,6 +900,33 @@ public class Server {
         } catch (IOException ex) {
             
             logger.error("failed!", ex);
+        }
+    }
+
+    private void ensureTeamobiMountAliases() {
+        addImgByNameAlias("mount_30_0.png", 4);
+        addImgByNameAlias("mount_30_1.png", 4);
+        addImgByNameAlias("mount_31_0.png", 4);
+        addImgByNameAlias("mount_31_1.png", 4);
+        addImgByNameAlias("mount_32_0.png", 4);
+        addImgByNameAlias("mount_32_1.png", 4);
+        addImgByNameAlias("mount_33_0.png", 4);
+        addImgByNameAlias("mount_33_1.png", 4);
+    }
+
+    private void addImgByNameAlias(String filename, int nFrame) {
+        if (ImgByName.getMount(Utils.cutPng(filename)) != null) {
+            return;
+        }
+        ImgByName img = new ImgByName();
+        img.filename = filename;
+        img.nFrame = nFrame;
+        img.init();
+        for (byte[] data : img.imageData) {
+            if (data != null) {
+                ImgByName.addImage(img);
+                return;
+            }
         }
     }
 
@@ -1807,6 +1837,7 @@ public class Server {
             }
             res2.close();
             stmt2.close();
+            overrideTeamobiMountMappings();
         } catch (SQLException ex) {
             
             logger.error("failed!", ex);
@@ -1981,7 +2012,7 @@ public class Server {
         putHeadAvatar(2162, 29627);
         putHeadAvatar(2165, 29008);
         putHeadAvatar(2168, 32015);
-        putHeadAvatar(2171, 15868);
+        putHeadAvatar(2171, 15904);
 
         putHeadAvatar(1400, 31126);
         putHeadAvatar(1401, 31133);
@@ -1998,6 +2029,28 @@ public class Server {
         putHeadAvatar(1412, 31136);
         putHeadAvatar(1413, 31137);
         putHeadAvatar(1414, 31138);
+    }
+
+    private void overrideTeamobiMountMappings() {
+        // Keep Teamobi mount part aligned with its mount range.
+        // If the item still uses part 18, the client falls back to the old golden dragon when flying.
+        remapTeamobiMount(32711, 30030, 30);
+        remapTeamobiMount(32712, 30031, 31);
+        remapTeamobiMount(32713, 30032, 32);
+        remapTeamobiMount(32714, 30033, 33);
+    }
+
+    private void remapTeamobiMount(int itemId, int mountId, int part) {
+        ItemTemplate template = iTemplates.get(itemId);
+        if (template != null) {
+            template.mountID = mountId;
+            template.part = (short) part;
+        }
+    }
+
+    private long getTeamobiMountItemCacheVersion() {
+        // Force clients to refresh cached item templates after the runtime part remap above.
+        return 1L;
     }
 
     private void putHeadAvatar(int head, int avatar) {
