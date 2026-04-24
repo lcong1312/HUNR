@@ -79,6 +79,12 @@ public class CombineFactory {
                 return new XoaChiSoLinhThu();
             case NANG_CAP_CHAN_THIEN_TU:
                 return new NangCapChanThienTu();
+            case GIAM_DINH_SACH:
+            case TAY_SACH:
+            case NANG_CAP_SACH_TUYET_KY:
+            case PHUC_HOI_SACH:
+            case PHAN_RA_SACH:
+                return new SachTuyetKyCombine(combineType);
             default:
                 throw new IllegalArgumentException("This combine type is unsupported");
         }

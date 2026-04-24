@@ -10,6 +10,7 @@ import com.ngocrong.consts.TransformSkill;
 import com.ngocrong.effect.AmbientEffect;
 import com.ngocrong.item.Item;
 import com.ngocrong.item.ItemOption;
+import com.ngocrong.item.ItemOptionTemplate;
 //import com.ngocrong.map.tzone.GravityRoom;
 import com.ngocrong.model.Caption;
 import com.ngocrong.model.PowerLimitMark;
@@ -221,7 +222,13 @@ public class Info {
 
     public void setInfo() {
         Server server = DragonBall.getInstance().getServer();
-        this.options = new int[server.iOptionTemplates.size()];
+        int optionCapacity = 0;
+        for (ItemOptionTemplate template : server.iOptionTemplates) {
+            if (template != null && template.id >= optionCapacity) {
+                optionCapacity = template.id + 1;
+            }
+        }
+        this.options = new int[optionCapacity];
         if (optionDamage == null) {
             optionDamage = new ArrayList<>();
         } else {

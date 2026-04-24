@@ -950,7 +950,7 @@ public class Session implements ISession {
             }
             History history = new History(_player.id, History.LOGIN);
             history.setExtras(this.ip);
-            _player.itemBody = new Item[15];
+            _player.itemBody = new Item[Player.BODY_SLOT_COUNT];
             try {
                 JSONArray itemBody = new JSONArray(data.itemBody);
                 int lent = itemBody.length();
@@ -965,28 +965,9 @@ public class Session implements ISession {
                             logger.warn(String.format("Skip itemBody for player=%s id=%d: missing template", _player.name, item.id));
                             continue;
                         }
-                        int typeItem = item.template.type;
-                        if (typeItem == 32) {
-                            typeItem = 6;
-                        } else if (typeItem == 23 || typeItem == 24) {
-                            typeItem = 7;
-                        } else if (typeItem == 11) {
-                            typeItem = 8;
-                        } else if (typeItem == 37) {
-                            typeItem = 9;
-                        } else if (typeItem == Item.TYPE_PET_THEO_SAU) {
-                            typeItem = 10;
-                        } else if (typeItem == Item.TYPE_PET_BAY || typeItem == Item.TYPE_PET_BAY_BAC_1 || typeItem == Item.TYPE_PET_BAY_BAC_2) {
-                            typeItem = 11;
-                        } else if (typeItem == Item.TYPE_DANH_HIEU) {
-                            typeItem = 12;
-                        } else if (typeItem == Item.TYPE_NGOC_BOI) {
-                            typeItem = 13;
-                        } else if (typeItem == Item.TYPE_HAO_QUANG) {
-                            typeItem = 14;
-                        }
-                        if (typeItem > 35) {
-                            typeItem = 17;
+                        int typeItem = Player.getBodySlotByItemType(item.template.type);
+                        if (typeItem < 0 || typeItem >= _player.itemBody.length) {
+                            continue;
                         }
                         if (_player.itemBody[10] != null) {
                             _player.setMiniDisciple(_player.itemBody[10]);
@@ -1208,6 +1189,7 @@ public class Session implements ISession {
             _player.info.setChar(this._player);
             _player.setStatusItemTime();
             _player.myDisciple = loadDisciple(-_player.id);
+            _player.removeDisallowedDiscipleBodyItems();
             _player.baiSu_id = BaiSu.getBaisuId(_player.id);
             //System.err.println("loadMabuEgg");
             _player.mabuEgg = MabuEgg.load(_player);
@@ -1255,33 +1237,19 @@ public class Session implements ISession {
                     }
                 }
                 deTu.skillOpened = (byte) deTu.skills.size();
-                deTu.itemBody = new Item[15];
+                deTu.itemBody = new Item[Player.BODY_SLOT_COUNT];
                 JSONArray itemBody = new JSONArray(discipleData.itemBody);
                 int lent = itemBody.length();
                 for (int i = 0; i < lent; i++) {
                     try {
                         Item item = new Item();
                         item.load(itemBody.getJSONObject(i));
-                        int index = item.template.type;
-                        if (index == 32) {
-                            index = 6;
-                        } else if (index == 23 || index == 24) {
-                            index = 7;
-                        } else if (index == 11) {
-                            index = 8;
-                        } else if (index == 36) {
-                            index = 9;
-                        } else if (index == 35) {
-                            index = 10;
-                        } else if (index == Item.TYPE_DANH_HIEU) {
-                            index = 11;
-                        } else if (index == 18 && item.template.isDeTu()) {
-                            index = 12;
-                        } else if (index == 26 && item.template.isDeTu()) {
-                            index = 13;
+                        if (item.template == null) {
+                            continue;
                         }
-                        if (index > 15) {
-                            index = 15;
+                        int index = Player.getBodySlotByItemType(item.template.type);
+                        if (index < 0 || index >= deTu.itemBody.length) {
+                            continue;
                         }
                         deTu.itemBody[index] = item;
                         if (!iconList.contains(item.template.iconID)) {

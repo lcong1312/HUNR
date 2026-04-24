@@ -16,7 +16,7 @@ public class ItemOption {
         this.param = param;
         this.id = optionTemplateId;
         Server server = DragonBall.getInstance().getServer();
-        this.optionTemplate = server.iOptionTemplates.get(optionTemplateId);
+        this.optionTemplate = server.getItemOptionTemplate(optionTemplateId);
     }
 
     public String getOptionString() {

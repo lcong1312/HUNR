@@ -1144,6 +1144,7 @@ public class ItemName {
     public static final int CA_MAP_SIEU_VIET = 2315;
     public static final int DANH_HIEU_THAN_THOAI = 2316;
     public static final int HAO_QUANG_2230 = 2230;
+    public static final int HOP_MU_BE_BA = 2231;
 
     public static final int CAI_TRANG_VEGETA_THOITRANG = 2317;
 
@@ -1305,4 +1306,17 @@ public class ItemName {
     public static final int PET_MEOWTH = 2469;
     public static final int HOA_LUAN = 2470;
     public static final int THOI_VANG_KHOA = 2471;
+    public static final int DANH_HIEU_GIO_TO_HUNG_VUONG = 2487;
+
+    public static final int BIA_SACH = 2600;
+    public static final int KIM_BAM_GIAY = 2601;
+    public static final int BUA_GIAM_DINH = 2602;
+    public static final int CUON_SACH_CU = 2603;
+    public static final int SACH_TUYET_KY_1_TRAI_DAT = 2604;
+    public static final int SACH_TUYET_KY_2_TRAI_DAT = 2605;
+    public static final int SACH_TUYET_KY_1_NAMEC = 2606;
+    public static final int SACH_TUYET_KY_2_NAMEC = 2607;
+    public static final int SACH_TUYET_KY_1_XAYDA = 2608;
+    public static final int SACH_TUYET_KY_2_XAYDA = 2609;
+    public static final int TRANG_SACH_CU = 2610;
 }

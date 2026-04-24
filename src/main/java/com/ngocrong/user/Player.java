@@ -805,7 +805,37 @@ public class Player {
     }
 
     private byte getSpecialSkillTypePaint() {
+        Item book = getEquippedSachTuyetKy();
+        if (book != null) {
+            return (byte) (SachTuyetKy.isLevelOneBook(book.id) ? 2 : 3);
+        }
         return 1;
+    }
+
+    private Item getEquippedSachTuyetKy() {
+        if (this.itemBody == null || this.itemBody.length <= BODY_SLOT_SACH_TUYET_KY) {
+            return null;
+        }
+        Item item = this.itemBody[BODY_SLOT_SACH_TUYET_KY];
+        if (item == null || item.template == null || item.template.type != Item.TYPE_SACH_TUYET_KY) {
+            return null;
+        }
+        return SachTuyetKy.isSachTuyetKy(item.id) ? item : null;
+    }
+
+    private void consumeSachTuyetKyDurability() {
+        Item book = getEquippedSachTuyetKy();
+        if (book == null || book.options == null) {
+            return;
+        }
+        ItemOption durability = book.getItemOption(SachTuyetKy.OPTION_DO_BEN);
+        if (durability == null || durability.param <= 0) {
+            return;
+        }
+        durability.param--;
+        if (this.service != null) {
+            this.service.setItemBody();
+        }
     }
 
     private long getSkillManaUse(Skill skill) {
@@ -1055,6 +1085,7 @@ public class Player {
 
     private void finishSpecialBeamSkill(Zone castZone, Skill skill, byte dir) {
         int rangeX = this.x + (dir == 1 ? skill.dx : -skill.dx);
+        consumeSachTuyetKyDurability();
         castZone.service.specialSkillNotFocusEnd(this, (short) skill.template.id, rangeX,
                 getSpecialSkillDamageTime(), 50, null, getSpecialSkillTypePaint());
         new Thread(() -> {
@@ -1101,6 +1132,7 @@ public class Player {
             }
             hits.add(target);
         }
+        consumeSachTuyetKyDurability();
         castZone.service.specialSkillNotFocusEnd(this, (short) skill.template.id, distanceX,
                 getSpecialSkillDamageTime(), maxDistance, hits, getSpecialSkillTypePaint());
         new Thread(() -> {
@@ -1160,6 +1192,7 @@ public class Player {
         setCharge(true);
         setSkillSpecial(true);
         this.seconds = getSpecialSkillPrepareTime();
+        consumeSachTuyetKyDurability();
         castZone.service.specialSkillNotFocusStart(this, skillTemplateId, dir, this.seconds, getSpecialSkillTypePaint());
         Utils.setTimeout(() -> {
             boolean keepSpecialState = false;
@@ -4037,7 +4070,44 @@ public class Player {
         return dameInput;
     }
 
-    public static short[] listTypeBody = new short[]{35, 36, 37, 21, 38};
+    public static short[] listTypeBody = new short[]{35, 36, 37, 21, 38, 40};
+    public static final int BODY_SLOT_COUNT = 16;
+    public static final byte BODY_SLOT_SACH_TUYET_KY = 15;
+    private static final byte MAX_DISCIPLE_EQUIP_SLOT = 6;
+
+    public static byte getBodySlotByItemType(int type) {
+        if (type == 32) {
+            return 6;
+        }
+        if (type == 23 || type == 24) {
+            return 7;
+        }
+        if (type == 11) {
+            return 8;
+        }
+        if (type == 37) {
+            return 9;
+        }
+        if (type == Item.TYPE_PET_THEO_SAU) {
+            return 10;
+        }
+        if (type == Item.TYPE_PET_BAY || type == Item.TYPE_PET_BAY_BAC_1 || type == Item.TYPE_PET_BAY_BAC_2) {
+            return 11;
+        }
+        if (type == Item.TYPE_DANH_HIEU) {
+            return 12;
+        }
+        if (type == Item.TYPE_NGOC_BOI) {
+            return 13;
+        }
+        if (type == Item.TYPE_HAO_QUANG) {
+            return 14;
+        }
+        if (type == Item.TYPE_SACH_TUYET_KY) {
+            return BODY_SLOT_SACH_TUYET_KY;
+        }
+        return (byte) type;
+    }
 
     public void itemBagToPet(int index) {
         if (myDisciple == null) {
@@ -4091,6 +4161,10 @@ public class Player {
             } else if (type == 26 && item.template.isDeTu()) {
                 type = 13;
             }
+            if (type < 0 || type > MAX_DISCIPLE_EQUIP_SLOT) {
+                service.sendThongBao("Đệ tử không thể mặc trang bị này.");
+                return;
+            }
             if (type >= this.itemBody.length - 1) {
                 return;
             }
@@ -4122,6 +4196,60 @@ public class Player {
             zone.service.playerLoadBody(myDisciple);
             myDisciple.update(item.template.type);
         }
+    }
+
+    public int removeDisallowedDiscipleBodyItems() {
+        if (this.myDisciple == null || this.myDisciple.itemBody == null) {
+            return 0;
+        }
+        int moved = 0;
+        for (int i = MAX_DISCIPLE_EQUIP_SLOT + 1; i < this.myDisciple.itemBody.length; i++) {
+            Item item = this.myDisciple.itemBody[i];
+            if (item == null) {
+                continue;
+            }
+            if (moveItemToFirstEmptyStorageSlot(item)) {
+                this.myDisciple.itemBody[i] = null;
+                moved++;
+            }
+        }
+        if (moved > 0) {
+            if (this.myDisciple.info != null) {
+                this.myDisciple.info.setInfo();
+            }
+            if (this.service != null) {
+                service.setItemBag();
+                service.setItemBox();
+                service.petInfo((byte) 2);
+                service.sendThongBao("Đã tháo trang bị đệ tử ngoài ô 0 đến 6.");
+            }
+        }
+        return moved;
+    }
+
+    private boolean moveItemToFirstEmptyStorageSlot(Item item) {
+        if (item == null) {
+            return false;
+        }
+        if (this.itemBag != null) {
+            for (int i = 0; i < this.itemBag.length; i++) {
+                if (this.itemBag[i] == null) {
+                    this.itemBag[i] = item;
+                    item.indexUI = i;
+                    return true;
+                }
+            }
+        }
+        if (this.itemBox != null) {
+            for (int i = 0; i < this.itemBox.length; i++) {
+                if (this.itemBox[i] == null) {
+                    this.itemBox[i] = item;
+                    item.indexUI = i;
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     public void itemPetToBag(int index) {
@@ -4305,27 +4433,9 @@ public class Player {
                 service.sendThongBao("Sức mạnh không đạt yêu cầu.");
                 return;
             }
-            byte indexBody = item.template.type;
-            if (indexBody == 32) {
-                indexBody = 6;
-            } else if (indexBody == 23 || indexBody == 24) {
-                indexBody = 7;
-            } else if (indexBody == 11) {
-                indexBody = 8;
-            } else if (indexBody == 37) {
-                indexBody = 9;
-            } else if (indexBody == Item.TYPE_PET_THEO_SAU) {
-                indexBody = 10;
+            byte indexBody = getBodySlotByItemType(item.template.type);
+            if (item.template.type == Item.TYPE_PET_THEO_SAU) {
                 setMiniDisciple(item);
-            } else if (indexBody == Item.TYPE_PET_BAY || indexBody == Item.TYPE_PET_BAY_BAC_1 || indexBody == Item.TYPE_PET_BAY_BAC_2) {
-                indexBody = 11;
-            } else if (indexBody == Item.TYPE_DANH_HIEU) {
-                indexBody = 12;
-
-            } else if (indexBody == Item.TYPE_NGOC_BOI) {
-                indexBody = 13;
-            } else if (indexBody == Item.TYPE_HAO_QUANG) {
-                indexBody = 14;
             }
             if (indexBody >= this.itemBody.length) {
                 return;
@@ -4413,7 +4523,7 @@ public class Player {
         }
         Item item = this.itemBox[index];
         if (item != null) {
-            byte type = item.template.type;
+            byte type = getBodySlotByItemType(item.template.type);
             if (type >= this.itemBody.length) {
                 return;
             }
@@ -5709,25 +5819,27 @@ public class Player {
                     case NpcName.BA_HAT_MIT:
                         if (mapId == MapName.VACH_NUI_ARU_2 || mapId == MapName.VACH_NUI_MOORI_2
                                 || mapId == MapName.VACH_NUI_KAKAROT || mapId == MapName.SIEU_THI) {
+                            menus.add(new KeyValue(CMDMenu.SACH_TUYET_KY, "Sách\nTuyệt kỹ"));
                             menus.add(new KeyValue(CMDMenu.STORE_BUA, "Cửa hàng\nBùa"));
                             menus.add(new KeyValue(CMDMenu.UPGRADE_ITEM, "Nâng cấp\nvật phẩm"));
                             // menus.add(new KeyValue(CMDMenu.NANG_CAP_2, "Nâng cấp\nvật phẩm 2"));
                             menus.add(new KeyValue(CMDMenu.NHAP_NGOC_RONG, "Nhập Ngọc\nRồng"));
                             Item item = getItemInBag(ItemName.BONG_TAI_PORATA_CAP_2);
 
+                            menus.add(new KeyValue(CMDMenu.NANG_CAP_PORATA, "Nâng cấp\nBông tai\nPorata C2"));
                             StringBuilder sb = new StringBuilder();
                             sb.append("Mở chỉ số").append("\n");
                             sb.append("Bông tai").append("\n");
                             sb.append("Porate cấp 2");
                             menus.add(new KeyValue(CMDMenu.MO_CHI_SO_PORATA2, sb.toString()));
 
-//                            menus.add(new KeyValue(CMDMenu.NANG_CAP_PORATA, "Nâng cấp\nBông tai\nPorata"));
-//                            menus.add(new KeyValue(CMDMenu.NANG_CAP_PORATA3, "Nâng cấp\nBông tai\nPorata C3"));
-//                            StringBuilder sb3 = new StringBuilder();
-//                            sb3.append("Mở chỉ số").append("\n");
-//                            sb3.append("Bông tai").append("\n");
-//                            sb3.append("Porate cấp 3");
-//                            menus.add(new KeyValue(CMDMenu.MO_CHI_SO_PORATA3, sb3.toString()));
+                            
+                            menus.add(new KeyValue(CMDMenu.NANG_CAP_PORATA3, "Nâng cấp\nBông tai\nPorata C3"));
+                            StringBuilder sb3 = new StringBuilder();
+                            sb3.append("Mở chỉ số").append("\n");
+                            sb3.append("Bông tai").append("\n");
+                            sb3.append("Porate cấp 3");
+                            menus.add(new KeyValue(CMDMenu.MO_CHI_SO_PORATA3, sb3.toString()));
 
                         }
                         if (mapId == MapName.SAN_SAU_SIEU_THI) {
@@ -6720,6 +6832,36 @@ public class Player {
                 service.openUIConfirm(NpcName.CON_MEO, info, getPetAvatar(), menus);
             }
             break;
+            case CMDMenu.SACH_TUYET_KY:
+                openSachTuyetKyMenu(npc);
+                break;
+            case CMDMenu.DONG_THANH_SACH_CU:
+                openDongThanhSachCu(npc);
+                break;
+            case CMDMenu.DONG_THANH_SACH_CU_CONFIRM:
+                dongThanhSachCu();
+                break;
+            case CMDMenu.DOI_SACH_TUYET_KY:
+                openDoiSachTuyetKy(npc);
+                break;
+            case CMDMenu.DOI_SACH_TUYET_KY_CONFIRM:
+                doiSachTuyetKy();
+                break;
+            case CMDMenu.GIAM_DINH_SACH:
+                openSachTuyetKyCombine(npc, CombineType.GIAM_DINH_SACH);
+                break;
+            case CMDMenu.TAY_SACH:
+                openSachTuyetKyCombine(npc, CombineType.TAY_SACH);
+                break;
+            case CMDMenu.NANG_CAP_SACH_TUYET_KY:
+                openSachTuyetKyCombine(npc, CombineType.NANG_CAP_SACH_TUYET_KY);
+                break;
+            case CMDMenu.PHUC_HOI_SACH:
+                openSachTuyetKyCombine(npc, CombineType.PHUC_HOI_SACH);
+                break;
+            case CMDMenu.PHAN_RA_SACH:
+                openSachTuyetKyCombine(npc, CombineType.PHAN_RA_SACH);
+                break;
             case CMDMenu.UPGRADE_ITEM:
                 combine = CombineFactory.getCombine(CombineType.NANG_CAP);
                 combine.setNpc(npc);
@@ -13618,6 +13760,129 @@ public class Player {
         return index;
     }
 
+    private void openSachTuyetKyMenu(Npc npc) {
+        menus.clear();
+        menus.add(new KeyValue(CMDMenu.DONG_THANH_SACH_CU, "Đóng thành\nSách cũ"));
+        menus.add(new KeyValue(CMDMenu.DOI_SACH_TUYET_KY, "Đổi Sách\nTuyệt kỹ"));
+        menus.add(new KeyValue(CMDMenu.GIAM_DINH_SACH, "Giám định\nSách"));
+        menus.add(new KeyValue(CMDMenu.TAY_SACH, "Tẩy\nSách"));
+        menus.add(new KeyValue(CMDMenu.NANG_CAP_SACH_TUYET_KY, "Nâng cấp\nSách\nTuyệt kỹ"));
+        menus.add(new KeyValue(CMDMenu.PHUC_HOI_SACH, "Hồi phục\nSách"));
+        menus.add(new KeyValue(CMDMenu.PHAN_RA_SACH, "Phân rã\nSách"));
+        service.openUIConfirm(npc.templateId, "Ta giữ bí thuật đóng và nâng cấp Sách tuyệt kỹ.", npc.avatar, menus);
+    }
+
+    private void openSachTuyetKyCombine(Npc npc, CombineType type) {
+        combine = CombineFactory.getCombine(type);
+        combine.setNpc(npc);
+        combine.setPlayer(this);
+        combine.showTab();
+    }
+
+    private void openDongThanhSachCu(Npc npc) {
+        Item trangSachCu = getItemInBag(ItemName.TRANG_SACH_CU);
+        Item biaSach = getItemInBag(ItemName.BIA_SACH);
+        boolean enough = trangSachCu != null && trangSachCu.quantity >= 9999 && biaSach != null && biaSach.quantity >= 1;
+        StringBuilder info = new StringBuilder("|2|Chế tạo Cuốn sách cũ\n");
+        info.append(enough && trangSachCu != null ? "|1|" : "|7|")
+                .append("Trang sách cũ ")
+                .append(trangSachCu == null ? 0 : trangSachCu.quantity)
+                .append("/9999\n");
+        info.append(enough && biaSach != null ? "|1|" : "|7|")
+                .append("Bìa sách ")
+                .append(biaSach == null ? 0 : biaSach.quantity)
+                .append("/1\n");
+        info.append(enough ? "|1|" : "|7|").append("Tỉ lệ thành công: 20%\n");
+        info.append(enough ? "|1|" : "|7|").append("Thất bại mất 99 trang sách và 1 bìa sách");
+        menus.clear();
+        if (enough) {
+            menus.add(new KeyValue(CMDMenu.DONG_THANH_SACH_CU_CONFIRM, "Đồng ý"));
+        }
+        menus.add(new KeyValue(CMDMenu.CANCEL, "Từ chối"));
+        service.openUIConfirm(npc.templateId, info.toString(), npc.avatar, menus);
+    }
+
+    private void dongThanhSachCu() {
+        Item trangSachCu = getItemInBag(ItemName.TRANG_SACH_CU);
+        Item biaSach = getItemInBag(ItemName.BIA_SACH);
+        if (trangSachCu == null || trangSachCu.quantity < 9999 || biaSach == null || biaSach.quantity < 1) {
+            service.sendThongBao("Không đủ vật phẩm");
+            return;
+        }
+        boolean success = Utils.isTrue(20, 100);
+        if (success) {
+            Item cuonSachCu = new Item(ItemName.CUON_SACH_CU);
+            cuonSachCu.quantity = 1;
+            cuonSachCu.addItemOption(new ItemOption(30, 0));
+            removeItem(trangSachCu.indexUI, 9999);
+            removeItem(biaSach.indexUI, 1);
+            if (addItem(cuonSachCu)) {
+                service.sendThongBao("Đóng thành Cuốn sách cũ thành công");
+            }
+        } else {
+            removeItem(trangSachCu.indexUI, 99);
+            removeItem(biaSach.indexUI, 1);
+            service.sendThongBao("Đóng sách thất bại");
+        }
+        service.setItemBag();
+    }
+
+    private void openDoiSachTuyetKy(Npc npc) {
+        Item cuonSachCu = getItemInBag(ItemName.CUON_SACH_CU);
+        Item kimBam = getItemInBag(ItemName.KIM_BAM_GIAY);
+        boolean enough = cuonSachCu != null && cuonSachCu.quantity >= 10 && kimBam != null && kimBam.quantity >= 1;
+        StringBuilder info = new StringBuilder("|2|Đổi sách Tuyệt kỹ 1\n");
+        info.append(enough && cuonSachCu != null ? "|1|" : "|7|")
+                .append("Cuốn sách cũ ")
+                .append(cuonSachCu == null ? 0 : cuonSachCu.quantity)
+                .append("/10\n");
+        info.append(enough && kimBam != null ? "|1|" : "|7|")
+                .append("Kìm bấm giấy ")
+                .append(kimBam == null ? 0 : kimBam.quantity)
+                .append("/1\n");
+        info.append(enough ? "|1|" : "|7|").append("Tỉ lệ thành công: 20%");
+        menus.clear();
+        if (enough) {
+            menus.add(new KeyValue(CMDMenu.DOI_SACH_TUYET_KY_CONFIRM, "Đồng ý"));
+        }
+        menus.add(new KeyValue(CMDMenu.CANCEL, "Từ chối"));
+        service.openUIConfirm(npc.templateId, info.toString(), npc.avatar, menus);
+    }
+
+    private void doiSachTuyetKy() {
+        Item cuonSachCu = getItemInBag(ItemName.CUON_SACH_CU);
+        Item kimBam = getItemInBag(ItemName.KIM_BAM_GIAY);
+        if (cuonSachCu == null || cuonSachCu.quantity < 10 || kimBam == null || kimBam.quantity < 1) {
+            service.sendThongBao("Không đủ vật phẩm");
+            return;
+        }
+        if (getCountEmptyBag() == 0) {
+            service.sendThongBao("Hành trang đã đầy");
+            return;
+        }
+        boolean success = Utils.isTrue(20, 100);
+        if (success) {
+            Item sachTuyetKy = new Item(SachTuyetKy.getBookLevelOneByGender(this.gender));
+            sachTuyetKy.quantity = 1;
+            sachTuyetKy.addItemOption(new ItemOption(SachTuyetKy.OPTION_CHUA_GIAM_DINH, 0));
+            sachTuyetKy.addItemOption(new ItemOption(21, 40));
+            sachTuyetKy.addItemOption(new ItemOption(30, 0));
+            sachTuyetKy.addItemOption(new ItemOption(87, 1));
+            sachTuyetKy.addItemOption(new ItemOption(SachTuyetKy.OPTION_LUOT_TAY, 5));
+            sachTuyetKy.addItemOption(new ItemOption(SachTuyetKy.OPTION_DO_BEN, 1000));
+            removeItem(cuonSachCu.indexUI, 10);
+            removeItem(kimBam.indexUI, 1);
+            if (addItem(sachTuyetKy)) {
+                service.sendThongBao("Đổi Sách tuyệt kỹ thành công");
+            }
+        } else {
+            removeItem(cuonSachCu.indexUI, 5);
+            removeItem(kimBam.indexUI, 1);
+            service.sendThongBao("Đổi Sách tuyệt kỹ thất bại");
+        }
+        service.setItemBag();
+    }
+
     private void doiChanThienTu(int quantity, boolean vinhVien) {
         if (this.gold < 1_000_000_000) {
             service.sendThongBao("Cần thêm 1 tỷ vàng");
@@ -14392,6 +14657,10 @@ public class Player {
         }
         if (item != null) {
             if (type == 0) {
+                if (item.template.id == ItemName.HOP_MU_BE_BA) {
+                    Event1.useHopMuBeBa(this, item);
+                    return;
+                }
                 if (ConfigStudio.EVENT_TAM_THANG_BA && Event1.useItem(this, item)) {
                     return;
                 }
@@ -15515,7 +15784,7 @@ public class Player {
                         disciple.petBonus = 0;
                     }
                 }
-                disciple.itemBody = new Item[15];
+                disciple.itemBody = new Item[BODY_SLOT_COUNT];
                 if (gender >= 0) {
                     disciple.gender = disciple.classId = (byte) gender;
                 } else {
@@ -17037,7 +17306,7 @@ public class Player {
                 disciple.typeDisciple = (byte) type;
                 disciple.id = -this.id;
                 disciple.name = "Đệ tử";
-                disciple.itemBody = new Item[15];
+                disciple.itemBody = new Item[BODY_SLOT_COUNT];
                 disciple.gender = disciple.classId = (byte) Utils.nextInt(3);
                 if (type != 0) {
                     disciple.gender = disciple.classId = this.gender;
@@ -17080,7 +17349,7 @@ public class Player {
                 disciple.typeDisciple = (byte) type;
                 disciple.id = -this.id;
                 disciple.name = "Đệ tử";
-                disciple.itemBody = new Item[15];
+                disciple.itemBody = new Item[BODY_SLOT_COUNT];
                 disciple.gender = disciple.classId = (byte) Utils.nextInt(3);
                 if (type != 0) {
                     disciple.gender = disciple.classId = this.gender;

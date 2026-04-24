@@ -91,7 +91,7 @@ public class VirtualBot_SoSinh extends VirtualBot {
         this.numberCellBox = 30;
         this.itemBag = new Item[this.numberCellBag];
         this.itemBox = new Item[this.numberCellBox];
-        this.itemBody = new Item[15];
+        this.itemBody = new Item[BODY_SLOT_COUNT];
         setHeadByGender();
         initSkill();
         sortSkill();
@@ -522,15 +522,17 @@ public class VirtualBot_SoSinh extends VirtualBot {
             return bossZone;
         }
 
-        Zone anyBossZone = findZoneWithAnyBoss(map);
-        if (anyBossZone != null) {
-            return anyBossZone;
-        }
-
         if (mobTemplateId != -1) {
             Zone mobZone = findZoneWithMob(map, mobTemplateId);
             if (mobZone != null) {
                 return mobZone;
+            }
+        }
+
+        if (shouldChaseAnyBoss()) {
+            Zone anyBossZone = findZoneWithAnyBoss(map);
+            if (anyBossZone != null) {
+                return anyBossZone;
             }
         }
 
@@ -552,13 +554,13 @@ public class VirtualBot_SoSinh extends VirtualBot {
         if (findQuestBossTarget(zone) != null) {
             return zone;
         }
-        if (findAnyBossTarget(zone) != null) {
+        if (mobTemplateId != -1) {
+            return zoneHasAliveMob(zone, mobTemplateId) ? zone : null;
+        }
+        if (shouldChaseAnyBoss() && findAnyBossTarget(zone) != null) {
             return zone;
         }
-        if (mobTemplateId == -1 || zoneHasAliveMob(zone, mobTemplateId)) {
-            return zone;
-        }
-        return null;
+        return zone;
     }
 
     private Zone findZoneWithQuestBoss(TMap map) {
@@ -1161,15 +1163,23 @@ public class VirtualBot_SoSinh extends VirtualBot {
             attackPlayerTarget(questBoss);
             return;
         }
-        Player anyBoss = findAnyBossTarget(zone);
-        if (anyBoss != null) {
-            mobFocus = null;
-            attackPlayerTarget(anyBoss);
-            return;
-        }
         Mob preferredMob = findPreferredMob(zone);
         if (preferredMob != null) {
             mobFocus = preferredMob;
+            attack();
+            return;
+        }
+        if (getPreferredMobTemplateId() != -1) {
+            mobFocus = null;
+            return;
+        }
+        if (shouldChaseAnyBoss()) {
+            Player anyBoss = findAnyBossTarget(zone);
+            if (anyBoss != null) {
+                mobFocus = null;
+                attackPlayerTarget(anyBoss);
+                return;
+            }
         }
         attack();
     }
@@ -1335,6 +1345,45 @@ public class VirtualBot_SoSinh extends VirtualBot {
                 return taskMain.index == 4 ? MobName.XEN_CON_CAP__8 : -1;
             default:
                 return -1;
+        }
+    }
+
+    private boolean shouldChaseAnyBoss() {
+        if (taskMain == null) {
+            return true;
+        }
+        if (hasQuestBossObjective()) {
+            return false;
+        }
+        if (getPreferredMobTemplateId() != -1) {
+            return false;
+        }
+        return getCurrentTaskNpcId() == -1;
+    }
+
+    private boolean hasQuestBossObjective() {
+        if (taskMain == null) {
+            return false;
+        }
+        switch (taskMain.id) {
+            case 10:
+                return taskMain.index == 0 || taskMain.index == 1;
+            case 19:
+                return taskMain.index >= 0 && taskMain.index <= 2;
+            case 20:
+                return taskMain.index >= 1 && taskMain.index <= 5;
+            case 21:
+                return taskMain.index >= 1 && taskMain.index <= 3;
+            case 22:
+                return taskMain.index == 2 || taskMain.index == 3;
+            case 23:
+                return taskMain.index >= 1 && taskMain.index <= 3;
+            case 24:
+                return taskMain.index >= 1 && taskMain.index <= 3;
+            case 25:
+                return taskMain.index >= 1 && taskMain.index <= 3;
+            default:
+                return false;
         }
     }
 

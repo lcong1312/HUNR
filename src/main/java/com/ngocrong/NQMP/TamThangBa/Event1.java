@@ -754,21 +754,24 @@ public class Event1 {
             return false;
         }
 
-        // Kiểm tra xem có đủ chỗ trống trong túi đồ không
-        if (player.getCountEmptyBag() < 1) {
+        // Nếu hộp còn stack nhiều hơn 1, cần thêm một ô trống để chứa pet nhận được.
+        if (player.getCountEmptyBag() < 1 && item.quantity > 1) {
             player.service.sendThongBao("Hành trang không đủ chỗ trống!");
             return false;
         }
 
-        // Xóa vật phẩm Hộp Mù Bé Ba
-        player.removeItem(item.indexUI, 1);
-
         try {
-            // Ngẫu nhiên loại vật phẩm (pet hoặc thú cưỡi)
-            int randomValue = Utils.nextInt(100);
-            Item rewardItem = null;
-            rewardItem = createRandomPet();
-            player.addItemBag(rewardItem);
+            Item rewardItem = createRandomPet();
+            if (rewardItem == null || rewardItem.template == null) {
+                player.service.sendThongBao("Có lỗi xảy ra khi sử dụng vật phẩm!");
+                return false;
+            }
+
+            player.removeItem(item.indexUI, 1);
+            if (!player.addItemBag(rewardItem)) {
+                player.service.sendThongBao("Hành trang không đủ chỗ trống!");
+                return false;
+            }
             player.service.sendThongBao("Bạn đã nhận được " + rewardItem.template.name);
 
             return true;
@@ -788,7 +791,7 @@ public class Event1 {
         final int PET_BUNNY_BABY_ID = 2209;
         final int PET_BABY_RONG_XANH_ID = 2210;
         final int PET_PANDA_CHAN_1_ID = 2235;
-        final int PET_PANDA_CHAN_2_ID = 2236;
+        final int PET_PANDA_CHAN_2_ID = 2235;
         final int PET_BUNNY_BABY_SECRET_ID = 2234;
         final int PET_BEARCHU_SECRET_ID = 2233;
         final int PET_BABY_RONG_XANH_SECRET_ID = 2232;

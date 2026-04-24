@@ -51,6 +51,7 @@ public class DanhHieu {
         danhHieuMap.put(2436, new int[]{9427, 9});
         danhHieuMap.put(2481, new int[]{23500, 6});
         danhHieuMap.put(2482, new int[]{23501, 6});
+        danhHieuMap.put(2487, new int[]{32716, 5});
         
         danhHieuMap.put(2452, new int[]{19331, 6});
         logger.info("Đã load " + danhHieuMap.size() + " danh hiệu");

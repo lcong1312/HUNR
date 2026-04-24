@@ -47,6 +47,7 @@ public class Item {
     public static final int TYPE_THU_CUOI_2 = 24;
     public static final int TYPE_NGOC_BOI = 26;
     public static final int TYPE_HAO_QUANG = 35;
+    public static final int TYPE_SACH_TUYET_KY = 40;
     public static final int TYPE_DIAMOND_LOCK = 34;
 
     public static final byte BOX_BAG = 0;

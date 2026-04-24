@@ -270,4 +270,15 @@ public class CMDMenu {
     public static final int BO_MONG_LEGACY_HELL = 3017;
     public static final int BO_MONG_LEGACY_PAY = 3018;
     public static final int BO_MONG_LEGACY_CANCEL = 3019;
+
+    public static final int SACH_TUYET_KY = 3300;
+    public static final int DONG_THANH_SACH_CU = 3301;
+    public static final int DONG_THANH_SACH_CU_CONFIRM = 3302;
+    public static final int DOI_SACH_TUYET_KY = 3303;
+    public static final int DOI_SACH_TUYET_KY_CONFIRM = 3304;
+    public static final int GIAM_DINH_SACH = 3305;
+    public static final int TAY_SACH = 3306;
+    public static final int NANG_CAP_SACH_TUYET_KY = 3307;
+    public static final int PHUC_HOI_SACH = 3308;
+    public static final int PHAN_RA_SACH = 3309;
 }

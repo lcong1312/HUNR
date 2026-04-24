@@ -1849,6 +1849,21 @@ public class Server {
         }
     }
 
+    public ItemOptionTemplate getItemOptionTemplate(int id) {
+        if (id >= 0 && id < iOptionTemplates.size()) {
+            ItemOptionTemplate template = iOptionTemplates.get(id);
+            if (template != null && template.id == id) {
+                return template;
+            }
+        }
+        for (ItemOptionTemplate template : iOptionTemplates) {
+            if (template != null && template.id == id) {
+                return template;
+            }
+        }
+        return null;
+    }
+
     public void initTaskTemplate() {
         try {
             taskTemplates = new ArrayList<>();

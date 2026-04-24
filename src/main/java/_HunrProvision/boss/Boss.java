@@ -34,6 +34,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public abstract class Boss extends Player implements Bot {
 
@@ -51,7 +52,7 @@ public abstract class Boss extends Player implements Bot {
     public boolean isShow = true;
     public byte percentDame = -1;
     public boolean canDispose = false;
-    public static List<Boss> listBoss = new ArrayList<>();
+    public static List<Boss> listBoss = new CopyOnWriteArrayList<>();
 
     public static String strBoss(Player player) {
         String x = "";

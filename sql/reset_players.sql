@@ -28,7 +28,29 @@ INSERT IGNORE INTO _reset_tables (table_name) VALUES
 ('nr_clan_member'),
 ('history_receive_goldbar');
 
--- 3) Loại trừ các bảng cấu hình/static để không ảnh hưởng dữ liệu game gốc
+-- 3) Bổ sung các bảng log/lịch sử theo tên, kể cả bảng không có player_id
+INSERT IGNORE INTO _reset_tables (table_name)
+SELECT tb.TABLE_NAME
+FROM INFORMATION_SCHEMA.TABLES tb
+WHERE tb.TABLE_SCHEMA = DATABASE()
+  AND tb.TABLE_TYPE = 'BASE TABLE'
+  AND (
+      LOWER(tb.TABLE_NAME) LIKE '%history%'
+      OR LOWER(tb.TABLE_NAME) LIKE '%log%'
+  );
+
+-- 4) Bổ sung các bảng log/giao dịch/nạp/top theo người chơi không có cột định danh chuẩn
+INSERT IGNORE INTO _reset_tables (table_name) VALUES
+('bank_topup_orders'),
+('nr_goldbar_paid_daily'),
+('nr_history_trade'),
+('nr_rewardtop'),
+('nr_top_boss'),
+('nr_top_nap'),
+('nr_top_nrsd'),
+('nr_top_power');
+
+-- 5) Loại trừ các bảng cấu hình/static để không ảnh hưởng dữ liệu game gốc
 DELETE FROM _reset_tables
 WHERE table_name IN (
     'nr_achievement',
@@ -43,7 +65,10 @@ WHERE table_name IN (
     'nr_collection_book'
 );
 
--- 4) Chỉ giữ bảng tồn tại thật trong DB hiện tại
+DELETE FROM nr_infoclient;
+DELETE FROM nr_shop_amulet;
+
+-- 6) Chỉ giữ bảng tồn tại thật trong DB hiện tại
 DELETE t
 FROM _reset_tables t
 LEFT JOIN INFORMATION_SCHEMA.TABLES tb
@@ -52,7 +77,7 @@ LEFT JOIN INFORMATION_SCHEMA.TABLES tb
       AND tb.TABLE_TYPE = 'BASE TABLE'
 WHERE tb.TABLE_NAME IS NULL;
 
--- 5) TRUNCATE từng bảng (MariaDB không PREPARE được chuỗi nhiều lệnh)
+-- 7) TRUNCATE từng bảng (MariaDB không PREPARE được chuỗi nhiều lệnh)
 DROP PROCEDURE IF EXISTS _truncate_reset_tables;
 DELIMITER $$
 CREATE PROCEDURE _truncate_reset_tables()
