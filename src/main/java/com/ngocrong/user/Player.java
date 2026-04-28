@@ -836,6 +836,26 @@ public class Player {
         if (this.service != null) {
             this.service.setItemBody();
         }
+        if (this.isMask && this.zone != null && this.zone.service != null) {
+            this.zone.service.updateBody((byte) 0, this);
+        }
+    }
+
+    private void refreshBodyAfterSpecialSkill(Zone castZone) {
+        if (castZone == null || castZone.service == null || this.zone != castZone || this.isDead) {
+            return;
+        }
+        updateSkin();
+        if (this.service != null) {
+            this.service.setItemBody();
+        }
+        if (this.isMask) {
+            castZone.service.updateBody((byte) 0, this);
+            castZone.service.playerLoadBody(this);
+        } else {
+            castZone.service.updateBody((byte) -1, this);
+            castZone.service.playerLoadAll(this);
+        }
     }
 
     private long getSkillManaUse(Skill skill) {
@@ -1101,6 +1121,7 @@ public class Player {
             } catch (InterruptedException ignored) {
             } finally {
                 setSkillSpecial(false);
+                refreshBodyAfterSpecialSkill(castZone);
             }
         }).start();
     }
@@ -1154,6 +1175,7 @@ public class Player {
             } catch (InterruptedException ignored) {
             } finally {
                 setSkillSpecial(false);
+                refreshBodyAfterSpecialSkill(castZone);
             }
         }).start();
     }
@@ -1210,6 +1232,7 @@ public class Player {
                 seconds = 0;
                 if (!keepSpecialState) {
                     setSkillSpecial(false);
+                    refreshBodyAfterSpecialSkill(castZone);
                 }
             }
         }, this.seconds);
@@ -2489,10 +2512,10 @@ public class Player {
             }
         }
         if (itemBody != null && pet == null) {
-            if (itemBody[0] != null) {
+            if (itemBody[0] != null && itemBody[0].template != null && itemBody[0].template.part >= 0) {
                 this.body = itemBody[0].template.part;
             }
-            if (itemBody[1] != null) {
+            if (itemBody[1] != null && itemBody[1].template != null && itemBody[1].template.part >= 0) {
                 this.leg = itemBody[1].template.part;
             }
         }
@@ -2518,11 +2541,18 @@ public class Player {
             this.leg = 1378;
         } else if (isNhapThe && !isMonkey) {
             this.isMask = true;
-            if (itemBody != null && itemBody[5] != null && itemBody[5].template.part == -1 && itemBody[5].isNhapThe) {
+            if (itemBody != null && itemBody[5] != null && itemBody[5].template != null
+                    && itemBody[5].template.part == -1 && itemBody[5].isNhapThe) {
                 ItemTemplate template = itemBody[5].template;
-                this.head = template.head;
-                this.body = template.body;
-                this.leg = template.leg;
+                if (template.head >= 0) {
+                    this.head = template.head;
+                }
+                if (template.body >= 0) {
+                    this.body = template.body;
+                }
+                if (template.leg >= 0) {
+                    this.leg = template.leg;
+                }
             } else {
                 if (typePorata == 0) {
                     if (gender == 1) {
@@ -2580,14 +2610,22 @@ public class Player {
                 }
             }
         } else if (!this.isMonkey) {
-            if (itemBody != null && itemBody[5] != null && !itemBody[5].isNhapThe) {
-                this.head = itemBody[5].template.part;
+            if (itemBody != null && itemBody[5] != null && itemBody[5].template != null && !itemBody[5].isNhapThe) {
+                ItemTemplate template = itemBody[5].template;
+                this.head = template.part;
                 if (this.head == -1) {
                     this.isMask = true;
-                    ItemTemplate template = itemBody[5].template;
-                    this.head = template.head;
-                    this.body = template.body;
-                    this.leg = template.leg;
+                    if (template.head >= 0) {
+                        this.head = template.head;
+                    } else {
+                        this.head = this.headDefault;
+                    }
+                    if (template.body >= 0) {
+                        this.body = template.body;
+                    }
+                    if (template.leg >= 0) {
+                        this.leg = template.leg;
+                    }
                 }
             } else {
                 this.isMask = false;
@@ -6151,6 +6189,7 @@ public class Player {
                     case NpcName.SANTA:
                         menus.add(new KeyValue(CMDMenu.STORE, "Cửa hàng"));
                         menus.add(new KeyValue(CMDMenu.SANTA_SPECIAL_SHOP, "Shop\nĐặc biệt"));
+                        menus.add(new KeyValue(CMDMenu.SANTA_SKILL_SHOP, "Shop\nKỹ năng"));
                         menus.add(new KeyValue(CMDMenu.TIEM_HOT_TOC, "Tiệm\nHớt tóc"));
                         service.openUIConfirm(npc.templateId,
                                 "Xin chào,ta có một số vật phẩm đặc biệt cậu có muốn xem không?", npc.avatar, menus);
@@ -6637,6 +6676,16 @@ public class Player {
                 if (shop != null) {
                     shop.setNpc(npc);
                     service.viewShop(shop);
+                }
+                break;
+
+            case CMDMenu.SANTA_SKILL_SHOP:
+                this.shop = Shop.getShop(CMDMenu.SANTA_SKILL_SHOP);
+                if (shop != null) {
+                    shop.setNpc(npc);
+                    service.viewShop(shop);
+                } else {
+                    service.sendThongBao("Shop kỹ năng Santa chưa được cấu hình.");
                 }
                 break;
 

@@ -16,6 +16,7 @@ public class CMDMenu {
 
     public static final int TIEM_HOT_TOC = 101;
     public static final int SANTA_SPECIAL_SHOP = 2928;
+    public static final int SANTA_SKILL_SHOP = 2929;
     public static final int BUY_FROM_PLAYER = 121;
 
     public static final int STORE_BUA = 200;
