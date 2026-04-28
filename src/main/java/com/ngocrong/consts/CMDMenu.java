@@ -153,6 +153,8 @@ public class CMDMenu {
     public static final int OPEN_RUONG_KICH_HOAT_CUOI_SET = 1001014;
     public static final int OPEN_RUONG_NGOC_BOI_OPTION = 1001015;
     public static final int OPEN_RUONG_1_MON_7_SAO_PLANET = 1001016;
+    public static final int OPEN_RUONG_SET_SKH_TUY_CHON_PLANET = 1001017;
+    public static final int OPEN_RUONG_SET_SKH_TUY_CHON_SET = 1001018;
 
     
     public static final int GIAI_SIEU_HANG_HUONG_DAN = 700;

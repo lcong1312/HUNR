@@ -3041,6 +3041,10 @@ public class Player {
                         inputDlg.show();
                         return;
                     }
+                    if (text.matches("i\\d+")) {
+                        buffItemByChatCommand(text);
+                        return;
+                    }
                     if (text.equals("droprate")) {
                         inputDlg = new InputDialog(CMDTextBox.DROP_RATE, "Nhập tỉ lệ rơi đồ",
                                 new TextField("Mob (" + DropRateService.getMobRate() + ")", TextField.INPUT_TYPE_NUMERIC),
@@ -10676,6 +10680,27 @@ public class Player {
                 openSKHBySetAndItem(gender, skhId, itemIndex);
             }
             break;
+            case CMDMenu.OPEN_RUONG_SET_SKH_TUY_CHON_PLANET: {
+                int index1 = ((Number) keyValue.elements[0]).intValue();
+                int gender = ((Number) keyValue.elements[1]).intValue();
+                openRuongSetSkhTuyChonSetMenu(index1, gender);
+            }
+            break;
+            case CMDMenu.OPEN_RUONG_SET_SKH_TUY_CHON_SET: {
+                int index1 = ((Number) keyValue.elements[0]).intValue();
+                int gender = ((Number) keyValue.elements[1]).intValue();
+                int skhId = ((Number) keyValue.elements[2]).intValue();
+                Item chest = getItemBagByIndex(index1);
+                if (chest == null || chest.template.id != ItemName.RUONG_SET_SKH_TUY_CHON) {
+                    return;
+                }
+                if (!canReceiveSetSkh(chest)) {
+                    return;
+                }
+                removeItem(index1, 1);
+                ItemTop.instance.rewardSetKH(this, gender, skhId);
+            }
+            break;
             case CMDMenu.OPEN_SET_TL_TD_KH:
                 menus.clear();
                 menus.add(new KeyValue(CMDMenu.OPEN_SET_TL_TD_KH + 1, "Set Thiên Xin Hăng"));
@@ -11798,6 +11823,28 @@ public class Player {
         if (item.template.id == ItemName.THOI_VANG) {
             saveHistory(item.quantity, String.format("%s vừa nhận %d thỏi vàng từ lệnh CMD", this.name, item.quantity));
         }
+    }
+
+    private void buffItemByChatCommand(String text) {
+        int itemId;
+        try {
+            itemId = Integer.parseInt(text.substring(1));
+        } catch (NumberFormatException ex) {
+            service.sendThongBao("ID item không hợp lệ.");
+            return;
+        }
+        Item item = new Item(itemId);
+        if (item.template == null) {
+            service.sendThongBao("Không tìm thấy item ID " + itemId + " trong nr_item.");
+            return;
+        }
+        item.quantity = 1;
+        item.setDefaultOptions();
+        if (!addItem(item)) {
+            service.sendThongBao("Hành trang đã đầy hoặc không thể thêm item.");
+            return;
+        }
+        service.sendThongBao("Bạn vừa nhận được " + item.template.name);
     }
 
     public void useGiftCode() {
@@ -15546,6 +15593,18 @@ public class Player {
                 itemTime = new ItemTime(ItemTimeName.PHIEU_X2_TNSM, item.template.iconID, 20 * 60, true);
                 isUpdate = true;
                 break;
+            case ItemName.TNSM_X2:
+                itemTime = new ItemTime(ItemTimeName.TNSM_X2, item.template.iconID, 10 * 60, true);
+                isUpdate = true;
+                break;
+            case ItemName.TNSM_X5:
+                itemTime = new ItemTime(ItemTimeName.TNSM_X5, item.template.iconID, 10 * 60, true);
+                isUpdate = true;
+                break;
+            case ItemName.TNSM_X10:
+                itemTime = new ItemTime(ItemTimeName.TNSM_X10, item.template.iconID, 10 * 60, true);
+                isUpdate = true;
+                break;
             case ItemName.DU_DU:
                 itemTime = new ItemTime(ItemTimeName.DU_DU, item.template.iconID, 10 * 60, true);
                 isUpdate = true;
@@ -15804,7 +15863,7 @@ public class Player {
                 if (type == 1) {
                     disciple.info.power = 1500000L;
                 } else if (type == 2) {
-                    disciple.info.power = 15000000L;
+                    disciple.info.power = 1500000L;
                 } else {
                     disciple.info.power = 2000L;
                 }
@@ -15849,6 +15908,9 @@ public class Player {
         }
         ItemTop.instance.useItem(item, this);
         switch (item.id) {
+            case ItemName.THUOC_HOI_TRINH:
+                resetLearnedSkillCooldowns(item);
+                break;
             case ItemName.VE_DOI_SKILL_2:
                 //System.err.println("using");
                 if (this.myDisciple.updateSkill(1, 0)) {
@@ -16972,6 +17034,9 @@ public class Player {
                 menus.add(new KeyValue(CMDMenu.CANCEL, "Đóng"));
                 service.openUIConfirm(NpcName.CON_MEO, "Hãy chọn hành tinh bạn mong muốn ?", getPetAvatar(), menus);
                 break;
+            case ItemName.RUONG_SET_SKH_TUY_CHON:
+                openRuongSetSkhTuyChon(item);
+                break;
             case ItemName.RUONG_1_MON_SKH:
                 if (getSlotNullInBag() < 1) {
                     service.serverMessage("Bạn cần ít nhất 1 ô trống trong hành trang ");
@@ -17994,6 +18059,28 @@ public class Player {
                 this.service.sendPetFollow(this, (short) 0);
             }
         }
+    }
+
+    private void resetLearnedSkillCooldowns(Item item) {
+        if (skills == null || skills.isEmpty()) {
+            service.sendThongBao("Bạn chưa học kỹ năng nào.");
+            return;
+        }
+        long now = System.currentTimeMillis();
+        int resetCount = 0;
+        for (Skill skill : skills) {
+            if (skill != null && skill.coolDown > 0 && skill.isCooldown()) {
+                skill.lastTimeUseThisSkill = now - skill.coolDown;
+                resetCount++;
+            }
+        }
+        if (resetCount == 0) {
+            service.sendThongBao("Không có kỹ năng nào đang hồi chiêu.");
+            return;
+        }
+        removeItem(item.indexUI, 1);
+        service.updateCoolDown(skills);
+        service.sendThongBao("Đã hồi lại " + resetCount + " kỹ năng đang hồi chiêu.");
     }
 
     public void updateEveryOneSeconds() {
@@ -19379,6 +19466,60 @@ public class Player {
         return false;
     }
 
+    private int getBuaTriTueMultiplier() {
+        return 1 + getBuaTriTueBonusMultiplier();
+    }
+
+    private int getBuaTriTueBonusMultiplier() {
+        int bonus = 0;
+        if (isBuaTriTue) {
+            bonus += 1;
+        }
+        if (isBuaTriTue3) {
+            bonus += 2;
+        }
+        if (isBuaTriTue4) {
+            bonus += 3;
+        }
+        return bonus;
+    }
+
+    private int getBuaMabuMultiplier() {
+        return 1 + getBuaMabuBonusMultiplier();
+    }
+
+    private int getBuaMabuBonusMultiplier() {
+        int bonus = 0;
+        if (isBuaMabu2) {
+            bonus += 1;
+        }
+        if (isBuaMabu3) {
+            bonus += 2;
+        }
+        if (isBuaMabu4) {
+            bonus += 3;
+        }
+        return bonus;
+    }
+
+    private int getTimedTnsmMultiplier() {
+        return 1 + getTimedTnsmBonusMultiplier();
+    }
+
+    private int getTimedTnsmBonusMultiplier() {
+        int bonus = 0;
+        if (exitsItemTime(ItemTimeName.TNSM_X2)) {
+            bonus += 1;
+        }
+        if (exitsItemTime(ItemTimeName.TNSM_X5)) {
+            bonus += 4;
+        }
+        if (exitsItemTime(ItemTimeName.TNSM_X10)) {
+            bonus += 9;
+        }
+        return bonus;
+    }
+
     public void addExp(byte type, long exp) {
         info.addPowerOrPotential(type, exp);
         checkBoMongDatSM(type);
@@ -19393,6 +19534,7 @@ public class Player {
             exp = info.powerLimitMark.power - info.power;
         }
         long exp2 = 0;
+        int buaTriTueBonus = 0;
         if (canX2) {
             Server server = DragonBall.getInstance().getServer();
             Config config = server.getConfig();
@@ -19400,22 +19542,7 @@ public class Player {
             if (isDuoiKhi) {
                 exp *= 2;
             }
-            int mul = 1;
-
-            if (isBuaTriTue4 && isBuaTriTue3 && isBuaTriTue) {
-                mul = 6;
-            } else if (isBuaTriTue4 && !isBuaTriTue3 && isBuaTriTue) {
-                mul = 5;
-            } else if (isBuaTriTue4 && !isBuaTriTue3 && !isBuaTriTue) {
-                mul = 4;
-            } else if (isBuaTriTue3 && isBuaTriTue) {
-                mul = 4;
-            } else if (isBuaTriTue3 && !isBuaTriTue) {
-                mul = 3;
-            } else if (isBuaTriTue) {
-                mul = 2;
-            }
-            exp *= mul;
+            buaTriTueBonus = getBuaTriTueBonusMultiplier();
         }
         if (exp <= 0) {
             return;
@@ -19427,6 +19554,7 @@ public class Player {
                 exp += Utils.percentOf(exp, 100);
             }
             if (disciple.master != null) {
+                int discipleTnsmBonus = disciple.master.getTimedTnsmBonusMultiplier();
                 if (disciple.master.isRewardTNSMDragonNamek) {
                     exp += Utils.percentOf(exp, 10);
                 }
@@ -19500,33 +19628,19 @@ public class Player {
                     exp *= 2;
                 }
                 if (disciple.typeDisciple == 2) {
-                    boolean mabu2 = disciple.master.isBuaMabu2;
-                    boolean mabu3 = disciple.master.isBuaMabu3;
-                    boolean mabu4 = disciple.master.isBuaMabu4;
-
-                    int mul = 1;
-
-                    if (mabu4 && mabu3 && mabu2) {
-                        mul = 7;
-                    } else if (mabu4 && mabu3) {
-                        mul = 6;
-                    } else if (mabu4 && mabu2) {
-                        mul = 5;
-                    } else if (mabu4) {
-                        mul = 4;
-                    } else if (mabu3 && mabu2) {
-                        mul = 4;
-                    } else if (mabu3) {
-                        mul = 3;
-                    } else if (mabu2) {
-                        mul = 2;
-                    }
-                    exp *= mul;
+                    discipleTnsmBonus += disciple.master.getBuaMabuBonusMultiplier();
+                }
+                if (discipleTnsmBonus > 0) {
+                    exp *= 1 + discipleTnsmBonus;
                 }
 
             }
 
         } else {
+            int playerTnsmBonus = buaTriTueBonus + getTimedTnsmBonusMultiplier();
+            if (playerTnsmBonus > 0) {
+                exp *= 1 + playerTnsmBonus;
+            }
             if (exitsItemTime(ItemTimeName.DA_MA_THUAT_SELECT4)) {
                 exp += Utils.percentOf(exp, 100);
             }
@@ -22356,6 +22470,77 @@ public class Player {
         item.addItemOption(new ItemOption(30, 0));
         addItem(item);
         service.serverMessage("Bạn vừa nhận được " + item.template.name);
+    }
+
+    private Item getItemBagByIndex(int index) {
+        if (itemBag == null || index < 0 || index >= itemBag.length) {
+            return null;
+        }
+        return itemBag[index];
+    }
+
+    private boolean canReceiveSetSkh(Item chest) {
+        if (chest == null) {
+            service.serverMessage("Rương không hợp lệ");
+            return false;
+        }
+        int slotAvailableAfterUse = getSlotNullInBag();
+        if (chest.quantity <= 1) {
+            slotAvailableAfterUse++;
+        }
+        if (slotAvailableAfterUse < 5) {
+            service.serverMessage("Bạn cần đủ chỗ trống để nhận 5 món SKH");
+            return false;
+        }
+        return true;
+    }
+
+    private void openRuongSetSkhTuyChon(Item chest) {
+        if (chest == null || chest.template.id != ItemName.RUONG_SET_SKH_TUY_CHON) {
+            return;
+        }
+        if (!canReceiveSetSkh(chest)) {
+            return;
+        }
+        menus.clear();
+        menus.add(new KeyValue(CMDMenu.OPEN_RUONG_SET_SKH_TUY_CHON_PLANET, "Trái Đất", chest.indexUI, 0));
+        menus.add(new KeyValue(CMDMenu.OPEN_RUONG_SET_SKH_TUY_CHON_PLANET, "Namec", chest.indexUI, 1));
+        menus.add(new KeyValue(CMDMenu.OPEN_RUONG_SET_SKH_TUY_CHON_PLANET, "Xayda", chest.indexUI, 2));
+        menus.add(new KeyValue(CMDMenu.CANCEL, "Đóng"));
+        service.openUIConfirm(NpcName.CON_MEO, "Hãy chọn hành tinh bạn mong muốn ?", getPetAvatar(), menus);
+    }
+
+    private void openRuongSetSkhTuyChonSetMenu(int chestIndex, int gender) {
+        Item chest = getItemBagByIndex(chestIndex);
+        if (chest == null || chest.template.id != ItemName.RUONG_SET_SKH_TUY_CHON) {
+            return;
+        }
+        if (!canReceiveSetSkh(chest)) {
+            return;
+        }
+        menus.clear();
+        switch (gender) {
+            case 0:
+                menus.add(new KeyValue(CMDMenu.OPEN_RUONG_SET_SKH_TUY_CHON_SET, "Set Thiên Xin Hăng", chestIndex, gender, Item.THIENXINHANG));
+                menus.add(new KeyValue(CMDMenu.OPEN_RUONG_SET_SKH_TUY_CHON_SET, "Set Krilin", chestIndex, gender, Item.KIRIN));
+                menus.add(new KeyValue(CMDMenu.OPEN_RUONG_SET_SKH_TUY_CHON_SET, "Set Songoku", chestIndex, gender, Item.SONGOKU));
+                break;
+            case 1:
+                menus.add(new KeyValue(CMDMenu.OPEN_RUONG_SET_SKH_TUY_CHON_SET, "Set Picolo", chestIndex, gender, Item.PICOLO));
+                menus.add(new KeyValue(CMDMenu.OPEN_RUONG_SET_SKH_TUY_CHON_SET, "Set Ốc tiêu", chestIndex, gender, Item.OCTIEU));
+                menus.add(new KeyValue(CMDMenu.OPEN_RUONG_SET_SKH_TUY_CHON_SET, "Set Pikkoro Daimao", chestIndex, gender, Item.DAIMAO));
+                break;
+            case 2:
+                menus.add(new KeyValue(CMDMenu.OPEN_RUONG_SET_SKH_TUY_CHON_SET, "Set Nappa", chestIndex, gender, Item.NAPPA));
+                menus.add(new KeyValue(CMDMenu.OPEN_RUONG_SET_SKH_TUY_CHON_SET, "Set Cadic", chestIndex, gender, Item.CADIC));
+                menus.add(new KeyValue(CMDMenu.OPEN_RUONG_SET_SKH_TUY_CHON_SET, "Set Kakarot", chestIndex, gender, Item.KAKAROT));
+                break;
+            default:
+                service.serverMessage("Hành tinh không hợp lệ");
+                return;
+        }
+        menus.add(new KeyValue(CMDMenu.CANCEL, "Đóng"));
+        service.openUIConfirm(NpcName.CON_MEO, "Hãy chọn SKH bạn mong muốn ?", getPetAvatar(), menus);
     }
 
     public void openDoTLKHRandom(int gender) {

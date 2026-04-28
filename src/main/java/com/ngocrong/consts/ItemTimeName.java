@@ -138,4 +138,7 @@ public class ItemTimeName {
     public static final short MA_PHONG_BA_STAGE_1 = 130;
     public static final short MA_PHONG_BA_STAGE_2 = 131;
     public static final short MA_PHONG_BA_STAGE_3 = 132;
+    public static final short TNSM_X2 = 133;
+    public static final short TNSM_X5 = 134;
+    public static final short TNSM_X10 = 135;
 }

@@ -384,7 +384,7 @@ public class Disciple extends Player {
     @Override
     public void setDefaultHead() {
         if (typeDisciple == 2) {
-            setHead((short) 421);
+            setHead((short) 297);
             return;
         }
         if (typeDisciple == 1) {
@@ -421,7 +421,7 @@ public class Disciple extends Player {
     @Override
     public void setDefaultBody() {
         if (typeDisciple == 2) {
-            setBody((short) 422);
+            setBody((short) 298);
             return;
         }
         if (typeDisciple == 1) {
@@ -450,7 +450,7 @@ public class Disciple extends Player {
     @Override
     public void setDefaultLeg() {
         if (typeDisciple == 2) {
-            setLeg((short) 423);
+            setLeg((short) 299);
             return;
         }
         if (typeDisciple == 1) {
