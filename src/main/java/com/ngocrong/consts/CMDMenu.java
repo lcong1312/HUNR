@@ -172,6 +172,7 @@ public class CMDMenu {
     public static final int TACH_DO_THAN_LINH = 1005;
     public static final int TACH_DO_KICH_HOAT = 1006;
     public static final int NANG_CAP_2 = 1007;
+    public static final int DOI_DO_KICH_HOAT_VIP = 1008;
 
     //
     // CSMM - Kéo búa bao -> 1100 đổ lên

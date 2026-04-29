@@ -98,6 +98,8 @@ import org.json.JSONObject;
 import com.ngocrong.network.FastDataOutputStream;
 import com.ngocrong.user.func.BaiSu;
 import java.io.IOException;
+import java.lang.management.ManagementFactory;
+import com.sun.management.OperatingSystemMXBean;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -2414,7 +2416,7 @@ public class Player {
         if (mapID >= 160 && mapID <= 163) {
             return true;
         }
-        if (mapID == 155 || mapID == 183 || mapID == 184) {
+        if (mapID == 155 || mapID == 183 || mapID == 184 || mapID == MapName.HANH_TINH_NGUC_TU_NEW) {
             return true;
         }
         if (mapID >= 105 && mapID <= 110) {
@@ -3112,14 +3114,18 @@ public class Player {
                         sendChatGlobalFromAdmin();
                     }
                     if (text.equals("ccu")) {
+                        OperatingSystemMXBean osBean = (OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
+                        double cpuLoad = osBean.getCpuLoad() * 100;
+                        long totalPhysicalMem = osBean.getTotalPhysicalMemorySize() / (1024 * 1024);
+                        long freePhysicalMem = osBean.getFreePhysicalMemorySize() / (1024 * 1024);
+                        long usedPhysicalMem = totalPhysicalMem - freePhysicalMem;
                         service.dialogMessage(
-                                "Tổng CCU: " + SessionManager.getCountPlayer() + " người chơi đang online");
+                                "Tổng CCU: " + SessionManager.getCountPlayer() + " người chơi đang online"
+                                + "\nCPU: " + String.format("%.1f", cpuLoad) + "% / 100%"
+                                + "\nRAM: " + usedPhysicalMem + "MB / " + totalPhysicalMem + "MB");
                         return;
                     }
 
-                }
-                if (text.length() > 100) {
-                    return;
                 }
                 if (text.equals("velang")) {
                     this.joinMap(this.gender == 0 ? 0 : this.gender == 1 ? 7 : 14);
@@ -5854,7 +5860,7 @@ public class Player {
 
                     case NpcName.THAN_VU_TRU:
                         menus.add(new KeyValue(CMDMenu.TELEPORT_THAN_DIEN, "Về\nthần điện"));
-                        // menus.add(new KeyValue(CMDMenu.TELEPORT_THANH_DIA_KAIO, "Thánh địa Kaio"));
+                        menus.add(new KeyValue(CMDMenu.TELEPORT_THANH_DIA_KAIO, "Thánh địa Kaio"));
                         service.openUIConfirm(npc.templateId, "Con tìm ta có việc gì?", npc.avatar, menus);
                         break;
 
@@ -5901,7 +5907,8 @@ public class Player {
                             menus.add(new KeyValue(CMDMenu.EP_SAO_TRANG_BI, "Ép sao\ntrang bị"));
                             menus.add(new KeyValue(CMDMenu.PHA_LE_HOA, "Pha lê\nhóa trang bị"));
                             // menus.add(new KeyValue(CMDMenu.DOI_DO_HUY_DIET, "Đổi Đồ\nHủy Diệt"));
-                            menus.add(new KeyValue(CMDMenu.DOI_DO_KICH_HOAT, "Nâng Cấp\nKích Hoạt"));
+                            menus.add(new KeyValue(CMDMenu.DOI_DO_KICH_HOAT, "Nâng SKH\nThường"));
+                            menus.add(new KeyValue(CMDMenu.DOI_DO_KICH_HOAT_VIP, "Nâng SKH\nVIP"));
 //                            menus.add(new KeyValue(CMDMenu.CAPSULE_VIPPRO_COMBINE, "Capsule\nVIP PRO"));
 //                            menus.add(new KeyValue(CMDMenu.CAPSULE_VIPPRO_OPTION, "Mở chỉ số\nCapsule"));
 //                            menus.add(new KeyValue(1154, "Tách Vật phẩm SK"));
@@ -6265,6 +6272,11 @@ public class Player {
                                 menus.add(new KeyValue(CMDMenu.CANCEL, "OK"));
                                 menus.add(new KeyValue(CMDMenu.CANCEL, "Từ chối"));
                             }
+                        } else if (zone.map.mapID == MapName.THANH_DIA_KAIO
+                                || zone.map.mapID == MapName.THANH_DIA_KAIO_2) {
+                            sb.append("Ta có thể đưa ngươi đến Hành tinh Bill.");
+                            menus.add(new KeyValue(CMDMenu.TELEPORT_HANH_TINH_BILL, "Hành tinh\nBill"));
+                            menus.add(new KeyValue(CMDMenu.CANCEL, "Từ chối"));
                         } else {
                             menus.add(new KeyValue(1133, "Phù Hộ"));
 
@@ -6337,7 +6349,7 @@ public class Player {
 
                     case NpcName.MR_POPO: {
                         StringBuilder sb = new StringBuilder();
-                        if (zone.map.mapID == MapName.HANH_TINH_NGUC_TU || zone.map.isMapDeTu()) {
+                        if (zone.map.mapID == MapName.HANH_TINH_NGUC_TU || zone.map.mapID == MapName.HANH_TINH_NGUC_TU_NEW || zone.map.isMapDeTu()) {
                             sb.append("Ta có bùa hỗ trợ đệ tử, con muốn mua chứ?");
                             menus.add(new KeyValue(1190, "Mua bùa\nđệ tử"));
                             menus.add(new KeyValue(458, "Về nhà"));
@@ -6426,7 +6438,7 @@ public class Player {
                         break;
                     case NpcName.BILL:
                         if (zone.map.mapID == MapName.HANH_TINH_BILL) {
-                            menus.add(new KeyValue(MapName.HANH_TINH_NGUC_TU, "Hành tinh\nngục tù"));
+                            menus.add(new KeyValue(MapName.HANH_TINH_NGUC_TU_NEW, "Hành tinh\nngục tù"));
                             menus.add(new KeyValue(CMDMenu.CANCEL, "Từ chối"));
                             service.openUIConfirm(npc.templateId, "Ngươi muốn đến Hành tinh ngục tù sao?", npc.avatar,
                                     menus);
@@ -6636,6 +6648,10 @@ public class Player {
 
             case MapName.HANH_TINH_NGUC_TU:
                 teleport(MapName.HANH_TINH_NGUC_TU);
+                break;
+
+            case MapName.HANH_TINH_NGUC_TU_NEW:
+                teleport(MapName.HANH_TINH_NGUC_TU_NEW);
                 break;
 
             case CMDMenu.STORE:
@@ -6957,6 +6973,12 @@ public class Player {
                 break;
             case CMDMenu.DOI_DO_KICH_HOAT:
                 this.combine = CombineFactory.getCombine(CombineType.KICH_HOAT);
+                combine.setNpc(npc);
+                combine.setPlayer(this);
+                this.combine.showTab();
+                break;
+            case CMDMenu.DOI_DO_KICH_HOAT_VIP:
+                this.combine = CombineFactory.getCombine(CombineType.KICH_HOAT_VIP);
                 combine.setNpc(npc);
                 combine.setPlayer(this);
                 this.combine.showTab();
@@ -13166,19 +13188,6 @@ public class Player {
                                 + "Hoàn thành nhiệm vụ Xên tại Thị trấn Ginder");
                         return;
                     }
-                    if ((item.id == ItemName.GIAP_TAP_LUYEN_CAP_4 || item.id == ItemName.GIAP_TAP_LUYEN_CAP_5)
-                            && this.taskMain.id < 21) {
-                        service.dialogMessage("Bạn chưa thể mua lúc này , hãy tiếp tục hoàn thành nhiệm vụ\n"
-                                + "Hoàn thành nhiệm vụ Tiểu đội Sát thủ");
-                        return;
-                    }
-                    if (item.id == 880 || item.id == 881 || item.id == 882) {
-                        if (this.taskMain.id < 25) {
-                            service.dialogMessage("Bạn chưa thể mua lúc này , hãy tiếp tục hoàn thành nhiệm vụ\n"
-                                    + "Hoàn thành nhiệm vụ Xên tại Thị trấn Ginder");
-                            return;
-                        }
-                    }
                 }
 
                 int itemFoodToBuy = -1;
@@ -13191,6 +13200,10 @@ public class Player {
 
                 String specialCurrencyType = "Special";
                 if (item.isHuyDiet()) {
+                    if (countThanLinhEquipped() < 5) {
+                        service.sendThongBao("Bạn cần mặc đủ 5 món đồ thần linh mới có thể mua");
+                        return;
+                    }
                     buyGold = 0;
                     itemFoodToBuy = this.getThucAn();
                     if (itemFoodToBuy == -1) {
@@ -21828,6 +21841,18 @@ public class Player {
         } else {
             service.sendThongBao("Bạn không có thỏi vàng để rút");
         }
+    }
+
+    public int countThanLinhEquipped() {
+        int count = 0;
+        if (itemBody != null) {
+            for (Item item : itemBody) {
+                if (item != null && item.template.isThanLinh()) {
+                    count++;
+                }
+            }
+        }
+        return count;
     }
 
     public int shopBillByGender(int idDHD) {

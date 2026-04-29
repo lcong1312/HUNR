@@ -86,7 +86,7 @@ public class BossManager {
         bossChilled();
         bossFideGold();
         bossBill();
-        bossBardock();
+        //bossBardock();
 //        bossTet2();
 //        bossCumber();
         try {

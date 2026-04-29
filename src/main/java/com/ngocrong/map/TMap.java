@@ -178,7 +178,7 @@ public class TMap {
     }
 
     public boolean isMappNgucTu() {
-        return mapID == MapName.HANH_TINH_NGUC_TU;
+        return mapID == MapName.HANH_TINH_NGUC_TU_NEW;
     }
 
     public boolean isMapDeTu() {

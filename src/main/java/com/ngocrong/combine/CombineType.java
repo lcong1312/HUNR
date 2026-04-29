@@ -13,6 +13,7 @@ public enum CombineType {
     PHA_LE_HOA,
     HUY_DIET,
     KICH_HOAT,
+    KICH_HOAT_VIP,
     GHEP_DA,
     TACH_DO,
     TACH_DO_KICH_HOAT,

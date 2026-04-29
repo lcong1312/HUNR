@@ -157,7 +157,8 @@ public class MapName {
     public static final int VUNG_DAT_BANG_GIA = 152;
     public static final int LANH_DIA_BANG_HOI = 153;
     public static final int HANH_TINH_BILL = 154;
-    public static final int HANH_TINH_NGUC_TU = 155;
+    public static final int HANH_TINH_NGUC_TU = 155; // Map Đệ Tử (đổi tên từ Hành Tinh Ngục Tù)
+    public static final int HANH_TINH_NGUC_TU_NEW = 185; // Hành Tinh Ngục Tù mới (quái tấn công được người chơi)
 
     // Summer beach event map
     public static final int BAI_BIEN_NGAY_HE = 181;
