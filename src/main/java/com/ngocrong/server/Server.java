@@ -1456,6 +1456,7 @@ public class Server {
                 for (int i = 0; i < length2; i++) {
                     map.effects[i + length1] = eff2[i];
                 }
+                KhiGasMapData.applyFallback(map);
                 map.init();
                 mapManager.maps.put(map.mapID, map);
 

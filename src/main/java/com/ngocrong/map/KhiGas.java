@@ -74,8 +74,7 @@ public class KhiGas extends IMap<ZKhiGas> {
                 return targetMap == MapName.VUNG_DAT_BANG_GIA
                         || (targetMap == MapName.LAU_DAI_LYCHEE && isMapCleared(currentMap));
             case MapName.LAU_DAI_LYCHEE:
-                return targetMap == MapName.HANH_TINH_BONG_TOI
-                        || (targetMap == MapName.HANH_TINH_BONG_TOI && isMapCleared(currentMap));
+                return targetMap == MapName.HANH_TINH_BONG_TOI;
             default:
                 return false;
         }

@@ -80,6 +80,9 @@ public class TMap {
         if (tileID != 0) {
             loadMapFromResource();
             this.zones = new ArrayList<>();
+            if (isKhiGas()) {
+                return;
+            }
             for (autoIncrease = 0; autoIncrease < this.zoneNumber; autoIncrease++) {
                 Zone z = null;
                 if (mapID == MapName.VACH_NUI_ARU_2 || mapID == MapName.VACH_NUI_MOORI_2 || mapID == MapName.VACH_NUI_KAKAROT) {
