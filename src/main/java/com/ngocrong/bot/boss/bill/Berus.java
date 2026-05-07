@@ -150,6 +150,12 @@ public class Berus extends Boss {
             zone.addItemMap(itemMap);
             zone.service.addItemMap(itemMap);
         }
+        if (Utils.nextInt(100) < 10) {
+            Item item = new Item(ItemName.TRUNG_BILL);
+            item.setDefaultOptions();
+            item.quantity = 1;
+            this.dropItem(item, c);
+        }
         for (int i = 0; i < 10; i++) {
             var item = new Item(190);
             item.quantity = 500_000_000;

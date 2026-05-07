@@ -1,5 +1,6 @@
 package com.ngocrong.NQMP.Event;
 
+import _HunrProvision.ConfigStudio;
 import com.ngocrong.consts.ItemName;
 import com.ngocrong.item.Item;
 import com.ngocrong.item.ItemMap;
@@ -12,7 +13,7 @@ public class NuocMiaEvent {
 
     public static void mobReward(Player player,Mob mob) {
 
-        if (player == null || player.zone == null) {
+        if (!ConfigStudio.EVENT_NUOC_MIA || player == null || player.zone == null || player.zone.map == null || mob == null) {
             return;
         }
         int id = -1;
@@ -26,18 +27,26 @@ public class NuocMiaEvent {
         if (id == -1) {
             return;
         }
-        if (Utils.isTrue(1, 150)) {
-            Item it = new Item(id);
-            it.setDefaultOptions();
-            it.quantity = 1;
-            ItemMap map = new ItemMap(player.zone.autoIncrease++);
-            map.item = it;
-            map.playerID = Math.abs(player.id);
-            map.x = player.getX();
-            map.y = player.zone.map.collisionLand(player.getX(), player.getY());
-            player.zone.addItemMap(map);
-            mob.items.add(map);
+        int dropRate = Math.max(0, Math.min(100, ConfigStudio.EVENT_NUOC_MIA_DROP_RATE));
+        if (Utils.isTrue(dropRate, 100)) {
+            dropItem(player, mob, id);
         }
+    }
+
+    private static void dropItem(Player player, Mob mob, int itemId) {
+        Item item = new Item(itemId);
+        item.setDefaultOptions();
+        item.quantity = 1;
+
+        ItemMap map = new ItemMap(player.zone.autoIncrease++);
+        map.item = item;
+        map.playerID = Math.abs(player.id);
+        map.isPickedUp = false;
+        map.throwTime = System.currentTimeMillis();
+        map.x = (short) (mob.getX() + Utils.nextInt(-30, 30));
+        map.y = player.zone.map.collisionLand(mob.getX(), mob.getY());
+        player.zone.addItemMap(map);
+        mob.items.add(map);
     }
 
     public static void combine(Player player, byte type) {

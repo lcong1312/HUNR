@@ -1324,4 +1324,5 @@ public class ItemName {
     public static final int SACH_TUYET_KY_1_XAYDA = 2608;
     public static final int SACH_TUYET_KY_2_XAYDA = 2609;
     public static final int TRANG_SACH_CU = 2610;
+    public static final int TRUNG_BILL = 32720;
 }

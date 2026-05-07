@@ -1,6 +1,7 @@
 <?php
 $pcDownload = 'assets/dowload/' . rawurlencode('Chú bé rồng.zip');
 $apkDownload = 'assets/dowload/' . rawurlencode('Chuberong.apk');
+$ipaDownload = 'assets/dowload/' . rawurlencode('ChuBeRong.ipa');
 ?>
 <div class="download">
                 <div class="bg-content text-center">
@@ -10,6 +11,9 @@ $apkDownload = 'assets/dowload/' . rawurlencode('Chuberong.apk');
                         </a>
                         <a class="download-actions__link" href="<?= e($apkDownload) ?>" download="Chuberong.apk" title="Tải bản Android APK">
                             <img height="35" src="assets/images/android.png" alt="Android APK">
+                        </a>
+                        <a class="download-actions__link" href="<?= e($ipaDownload) ?>" download="Chuberong.ipa" title="Tải bản iPhone">
+                            <img height="35" src="assets/images/ip.png" alt="iPhone">
                         </a>
                     </div>
                 </div>

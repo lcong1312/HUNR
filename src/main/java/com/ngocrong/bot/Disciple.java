@@ -289,7 +289,7 @@ public class Disciple extends Player {
                         skillID = skillPet.skills[Utils.nextInt(skillPet.skills.length)];
                         skill = Skills.getSkill(skillID, (byte) 1);
                     }
-                    if (typeDisciple == 2) {
+                    if (typeDisciple == 2 || typeDisciple == 3) {
                         if (skillOpened == 1) {
                             skillID = SkillName.CHIEU_KAMEJOKO;
                             skill = Skills.getSkill(skillID, (byte) 1);
@@ -334,7 +334,7 @@ public class Disciple extends Player {
             byte skillID = 0;
             int random = Utils.nextInt(100);
 
-            if (typeDisciple == 2) {
+            if (typeDisciple == 2 || typeDisciple == 3) {
                 if (index == 2) {
                     skillID = SkillName.CHIEU_KAMEJOKO;
                 } else if (index == 3) {
@@ -383,6 +383,10 @@ public class Disciple extends Player {
 
     @Override
     public void setDefaultHead() {
+        if (typeDisciple == 3) {
+            setHead((short) 1245);
+            return;
+        }
         if (typeDisciple == 2) {
             setHead((short) 297);
             return;
@@ -420,6 +424,10 @@ public class Disciple extends Player {
 
     @Override
     public void setDefaultBody() {
+        if (typeDisciple == 3) {
+            setBody((short) 1246);
+            return;
+        }
         if (typeDisciple == 2) {
             setBody((short) 298);
             return;
@@ -449,6 +457,10 @@ public class Disciple extends Player {
 
     @Override
     public void setDefaultLeg() {
+        if (typeDisciple == 3) {
+            setLeg((short) 1247);
+            return;
+        }
         if (typeDisciple == 2) {
             setLeg((short) 299);
             return;

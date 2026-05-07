@@ -15885,6 +15885,14 @@ public class Player {
         this.service.petInfo((byte) 2);
     }
 
+    public void openBillEgg() {
+        if (myDisciple != null) {
+            deleteDisciple();
+        }
+        createDisciple(3, 3);
+        this.service.petInfo((byte) 2);
+    }
+
     public void createDisciple(int type, int gender) {
         try {
             if (myDisciple == null) {
@@ -15893,13 +15901,17 @@ public class Player {
                 disciple.typeDisciple = (byte) type;
                 disciple.id = -this.id;
                 disciple.name = "Đệ tử";
-                if (type != 2) {
+                if (type == 3) {
+                    disciple.petBonus = 30;
+                } else if (type != 2) {
                     disciple.petBonus = 10;
                 } else {
                     disciple.petBonus = 20;
                 }
                 if (Config.serverID() == 2) {
-                    if (type == 2) {
+                    if (type == 3) {
+                        disciple.petBonus = 30;
+                    } else if (type == 2) {
                         disciple.petBonus = (byte) Utils.getIntbyRandom(0, 20);
                     } else {
                         disciple.petBonus = 0;
@@ -15924,7 +15936,7 @@ public class Player {
                 disciple.info.setStamina();
                 if (type == 1) {
                     disciple.info.power = 1500000L;
-                } else if (type == 2) {
+                } else if (type == 2 || type == 3) {
                     disciple.info.power = 1500000L;
                 } else {
                     disciple.info.power = 2000L;
@@ -16193,6 +16205,31 @@ public class Player {
                     return;
                 }
                 this.openUubEgg();
+                break;
+            }
+            case ItemName.TRUNG_BILL: {
+                if (this.myDisciple != null) {
+                    if (!this.myDisciple.isEmptyBody()) {
+                        this.service.serverMessage("Hãy tháo hết trang bị của đệ tử xuống để sử dụng vật phẩm này");
+                        return;
+                    }
+                }
+                if (this.myDisciple == null) {
+                    this.service.serverMessage("Bạn cần phải có đệ tử Mabu trước tiên");
+                    return;
+                }
+                if (this.myDisciple.typeDisciple != 2) {
+                    this.service.dialogMessage("Bạn cần phải có đệ tử Mabu trước tiên");
+                    return;
+                }
+                int indexTrung = getIndexBagById(ItemName.TRUNG_BILL);
+                if (indexTrung != -1) {
+                    removeItem(indexTrung, 1);
+                } else {
+                    service.serverMessage("Bạn không có trứng trong hành trang");
+                    return;
+                }
+                this.openBillEgg();
                 break;
             }
             case ItemName.QUA_TRUNG:

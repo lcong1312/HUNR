@@ -55,6 +55,7 @@ public class ConfigStudio {
     public static final boolean EVENT_TAM_THANG_BA = getBoolean("event.tam_thang_ba.enabled", false);
     public static final boolean EVENT_SUMMER_BEACH = getBoolean("event.summer_beach.enabled", false);
     public static final boolean EVENT_NUOC_MIA = getBoolean("event.nuoc_mia.enabled", false);
+    public static final int EVENT_NUOC_MIA_DROP_RATE = getInt("event.nuoc_mia.drop_rate", 10);
     public static final boolean EVENT_LUA_THAN = getBoolean("event.lua_than.enabled", false);
     public static final boolean EVENT_QUOC_KHANH = getBoolean("event.quoc_khanh.enabled", false);
     public static final boolean EVENT_CAU_CA = getBoolean("event.cau_ca.enabled", false);
