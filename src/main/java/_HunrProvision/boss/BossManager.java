@@ -74,21 +74,20 @@ public class BossManager {
 
         bossTestServer();
         if (Config.serverID() == 1) {
-            bossRaiti();
             bossSuperMabu();
         }
 //        bossMatTroi();
 //        bossMaTroi();
 //        bossThoDaiCa();
 
-//        bossZamasu();
+        bossZamasu();
         //   NuThan();
         bossChilled();
         bossFideGold();
         bossBill();
         //bossBardock();
 //        bossTet2();
-//        bossCumber();
+        bossCumber();
         try {
             Utils.setTimeout(() -> {
                 BaoCat baocat = new BaoCat();
@@ -445,10 +444,9 @@ public class BossManager {
     }
 
     private static void bossCumber() {
-        int[] mapIDs = new int[]{19};
         Utils.setTimeout(() -> {
             Cumber boss = new Cumber(false);
-            boss.setLocation(mapIDs[Utils.nextInt(mapIDs.length)], -1);
+            boss.setLocation(MapName.HANH_TINH_NGUC_TU_NEW, -1);
         }, 5000);
 
     }
@@ -465,9 +463,9 @@ public class BossManager {
 
     static void bossZamasu() {
         Utils.setTimeout(() -> {
-            for (int i = 0; i < 5; i++) {
+            for (int i = 0; i < 1; i++) {
                 ZamasuFusion boss = new ZamasuFusion(false);
-                boss.setLocation(182, -1);
+                boss.setLocation(MapName.HANH_TINH_NGUC_TU_NEW, -1);
             }
         }, 5000);
     }

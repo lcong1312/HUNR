@@ -6,6 +6,7 @@ package com.ngocrong.bot.boss.Zamasu;
 
 import _HunrProvision.boss.Boss;
 import com.ngocrong.consts.ItemName;
+import com.ngocrong.consts.MapName;
 import com.ngocrong.item.Item;
 import com.ngocrong.map.tzone.Zone;
 import com.ngocrong.mob.Mob;
@@ -34,8 +35,6 @@ public class ZamasuFusion extends Boss {
             this.name = "Zamasu";
             setInfo(500_000_000L, 1000000, 1000000, 1000, 10);
         }
-        var limitdamage = isSuper ? 50_000_000 : 500_000;
-        this.limitDame = limitdamage;
         setDefaultPart();
         setTypePK((byte) 5);
         point = 5;
@@ -86,8 +85,7 @@ public class ZamasuFusion extends Boss {
 
     @Override
     public long injure(Player plAtt, Mob mob, long dameInput) {
-        var limitDame = isSuper ? 50_000_000 : 500_000;
-        return Math.min(limitDame, dameInput);
+        return dameInput;
     }
 
     @Override
@@ -95,16 +93,38 @@ public class ZamasuFusion extends Boss {
         if (obj == null) {
             return;
         }
-        Item item = new Item(ItemName.VE_TICH_DIEM);
-        item.quantity = 3;
-        dropItem(item, (Player) obj);
+        int[] random = {
+            ItemName.AO_THAN_LINH, ItemName.AO_THAN_XAYDA, ItemName.AO_THAN_NAMEC,
+            ItemName.QUAN_THAN_LINH, ItemName.QUAN_THAN_NAMEC,
+            ItemName.GIAY_THAN_LINH, ItemName.GIAY_THAN_XAYDA, ItemName.GIAY_THAN_NAMEC
+        };
+        int[] Gang = {
+            ItemName.GANG_THAN_LINH, ItemName.GANG_THAN_XAYDA, ItemName.GANG_THAN_NAMEC, ItemName.GANG_THAN_XAYDA, ItemName.GANG_THAN_NAMEC
+        };
+        Player c = (Player) obj;
+        int percent = Utils.nextInt(100);
+        Item item;
+        int manhthiensuId = ItemName.MANH_AO_THIEN_SU_TD + Utils.nextInt(0, 14);
+        if (percent < 80) {
+            item = new Item(manhthiensuId);
+        } else if (percent < 90) {
+            item = new Item(random[Utils.nextInt(random.length)]);
+        } else if (percent < 95) {
+            item = new Item(ItemName.NHAN_THAN_LINH);
+        } else {
+            item = new Item(Gang[Utils.nextInt(Gang.length)]);
+        }
 
-        item = new Item(ItemName.VE_TICH_DIEM);
+        item.setDefaultOptions();
         item.quantity = 1;
-        dropItem(item, null);
-        item = new Item(ItemName.VE_TICH_DIEM);
-        item.quantity = 1;
-        dropItem(item, null);
+        dropItem(item, c);
+
+        for (int i = 0; i < 10; i++) {
+            Item goldBar = new Item(457);
+            goldBar.setDefaultOptions();
+            goldBar.quantity = 1;
+            dropItem(goldBar, null);
+        }
     }
 
     @Override
@@ -119,7 +139,7 @@ public class ZamasuFusion extends Boss {
         } else {
             Utils.setTimeout(() -> {
                 ZamasuFusion bl = new ZamasuFusion(false);
-                bl.setLocation(182, -1);
+                bl.setLocation(MapName.HANH_TINH_NGUC_TU_NEW, -1);
             }, 10 * 60000);
         }
     }

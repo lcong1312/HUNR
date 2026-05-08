@@ -75,25 +75,6 @@ public class SuperMabu extends Boss {
         Item quatrung = new Item(568);
         quatrung.quantity = 1;
         dropItem(quatrung, player);
-        quatrung = new Item(568);
-        quatrung.quantity = 1;
-        dropItem(quatrung, player);
-
-        Utils.setTimeout(() -> {
-            // Use the captured reference instead of this.zone
-            int[] arrayX = new int[]{24, currentZone.map.width / 2, currentZone.map.width - 80};
-            for (int i = 0; i < 3; i++) {
-                var quatrung2 = new Item(568);
-                quatrung2.quantity = 1;
-                ItemMap itemMap = new ItemMap(currentZone.autoIncrease++);
-                itemMap.item = quatrung2;
-                itemMap.playerID = -1;
-                itemMap.x = (short) arrayX[i];
-                itemMap.y = currentZone.map.collisionLand(itemMap.x, getY());
-                currentZone.addItemMap(itemMap);
-                currentZone.service.addItemMap(itemMap);
-            }
-        }, 10000);
     }
 
     @Override

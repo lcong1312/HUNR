@@ -2,6 +2,7 @@ package com.ngocrong.NQMP.Cumber;
 
 import _HunrProvision.boss.Boss;
 import com.ngocrong.consts.ItemName;
+import com.ngocrong.consts.MapName;
 import com.ngocrong.item.Item;
 import com.ngocrong.item.ItemMap;
 import com.ngocrong.lib.RandomCollection;
@@ -23,7 +24,7 @@ public class Cumber extends Boss {
 
     private final boolean isSuper;
 
-    public static final int MAP = 19;
+    public static final int MAP = MapName.HANH_TINH_NGUC_TU_NEW;
 
     public static RandomCollection<Integer> ITEMS = new RandomCollection<>();
 
@@ -41,10 +42,10 @@ public class Cumber extends Boss {
         this.limit = -1;
         if (isSuper) {
             this.name = "Super Cumber";
-            setInfo(10000000000L, Long.MAX_VALUE, 1500000, 1000, 10);
+            setInfo(1_000_000_000L, Long.MAX_VALUE, 1500000, 1000, 10);
         } else {
             this.name = "Cumber";
-            setInfo(5000000000L, Long.MAX_VALUE, 1000000, 1000, 10);
+            setInfo(500_000_000L, Long.MAX_VALUE, 1000000, 1000, 10);
         }
         setDefaultPart();
         setTypePK((byte) 5);
@@ -139,6 +140,13 @@ public class Cumber extends Boss {
         zone.addItemMap(itemMap);
         zone.service.addItemMap(itemMap);
 
+        for (int i = 0; i < 10; i++) {
+            Item goldBar = new Item(457);
+            goldBar.setDefaultOptions();
+            goldBar.quantity = 1;
+            dropItem(goldBar, null);
+        }
+
     }
 
     @Override
@@ -154,7 +162,7 @@ public class Cumber extends Boss {
         } else {
             Utils.setTimeout(() -> {
                 Cumber bl = new Cumber(false);
-                bl.setLocation(19, -1);
+                bl.setLocation(MAP, -1);
             }, 30 * 60000);
         }
     }

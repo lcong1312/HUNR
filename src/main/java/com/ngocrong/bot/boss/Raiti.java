@@ -82,12 +82,7 @@ public class Raiti extends Boss {
 
     @Override
     public void startDie() {
-        int[] mapIDs = new int[]{0, 7, 14};
         super.startDie();
-        Utils.setTimeout(() -> {
-            Raiti boss = new Raiti();
-            boss.setLocation(mapIDs[Utils.nextInt(mapIDs.length)], -1);
-        }, 5 * 60 * 1000);
     }
 
     @Override
