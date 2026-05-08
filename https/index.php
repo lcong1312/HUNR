@@ -218,7 +218,7 @@ function register_account(string $username, string $password): ?string
 
     $insert = $pdo->prepare(
         'INSERT INTO nr_user(username, password, status, gold_bar, coin, lock_gold, lock_time, activated, role, create_time, ip, domain)
-         VALUES (?, ?, 0, 0, 0, NULL, NULL, 1, 0, NOW(), ?, ?)'
+         VALUES (?, ?, 0, 0, 0, NULL, NULL, 0, 0, NOW(), ?, ?)'
     );
     $insert->execute([
         $username,

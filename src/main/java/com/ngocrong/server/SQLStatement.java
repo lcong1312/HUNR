@@ -29,7 +29,7 @@ public class SQLStatement {
     public static final String INIT_ACHIEVEMENT = "SELECT * FROM `nr_achievement`";
     public static final String INIT_LUCKY_WHEEL = "SELECT * FROM `nr_lucky_wheel`";
     public static final String LOAD_COLLECTION = "SELECT * FROM `nr_collection_book`";
-    public static final String REGISTER = "INSERT INTO `nr_user` (`username`, `password`, `status`, `gold_bar`, `coin`, `lock_gold`, `lock_time`, `activated`, `role`, `create_time`) VALUES (?, ?,0, 0, 0, NULL, NULL, 1, 1, NOW())";
+    public static final String REGISTER = "INSERT INTO `nr_user` (`username`, `password`, `status`, `gold_bar`, `coin`, `lock_gold`, `lock_time`, `activated`, `role`, `create_time`) VALUES (?, ?,0, 0, 0, NULL, NULL, 0, 0, NOW())";
     public static final String POWER_RANK = "SELECT `name`, CAST(JSON_UNQUOTE(JSON_EXTRACT(info,\"$.power\")) AS UNSIGNED) AS power from nr_player where server_id = ? ORDER BY power DESC LIMIT 100";
     public static final String TASK_RANK = "SELECT `name`, CAST(JSON_UNQUOTE(JSON_EXTRACT(task,\"$.id\")) AS UNSIGNED) AS taskId,"
             + "CAST(JSON_UNQUOTE(JSON_EXTRACT(task,\"$.index\")) AS UNSIGNED) AS taskIndex,"

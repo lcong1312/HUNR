@@ -1600,7 +1600,11 @@ public class Session implements ISession {
 
         @Override
         public void run() {
-            while (!socket.isClosed() && dis != null) {
+            while (true) {
+                Socket currentSocket = socket;
+                if (currentSocket == null || currentSocket.isClosed() || dis == null) {
+                    break;
+                }
                 try {
                     Message message = readMessage();
 
@@ -1622,7 +1626,8 @@ public class Session implements ISession {
                     break;
                 }
             }
-            if (socket.isClosed()) {
+            Socket currentSocket = socket;
+            if (currentSocket == null || currentSocket.isClosed()) {
                 //System.err.println("Close session because socket closed");
             }
             if (dis == null) {
@@ -1684,10 +1689,12 @@ public class Session implements ISession {
 
         @Override
         public void run() {
-            if (socket.isClosed()) {
+            Socket currentSocket = socket;
+            if (currentSocket == null || currentSocket.isClosed()) {
                 if (heartbeatTask != null) {
                     heartbeatTask.cancel(false);
                 }
+
                 return;
             }
             long now = System.currentTimeMillis();
