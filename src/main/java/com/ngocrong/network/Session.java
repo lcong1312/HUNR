@@ -928,6 +928,8 @@ public class Session implements ISession {
             _player.pointBoMong = data.pointBoMong != null ? data.pointBoMong : 0;
             _player.countNhiemVuBoMong = data.countNhiemVuBoMong != null ? data.countNhiemVuBoMong : 0;
             _player.lastResetNvBoMong = data.lastResetNvBoMong != null ? data.lastResetNvBoMong : 0;
+            _player.bossGoldBarKillCount = data.bossGoldBarKillCount != null ? data.bossGoldBarKillCount : 0;
+            _player.bossGoldBarRewardMask = data.bossGoldBarRewardMask != null ? data.bossGoldBarRewardMask : 0;
             _player.lastCoinValue = data.lastCoinValue != null ? data.lastCoinValue : 0;
             _player.countTaskCompletedToday = data.countTaskCompletedToday != null ? data.countTaskCompletedToday : 0;
             if (ConfigStudio.BO_MONG_LEGACY_MODE) {

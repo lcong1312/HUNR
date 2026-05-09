@@ -161,7 +161,7 @@ public class SessionManager {
     public static void chatVip(String text) {
         for (Session ss : sessions.values()) {
             try {
-                if (ss.isEnter && ss.socket != null && !ss.socket.isClosed() && ss._player != null) {
+                if (ss.isEnter && ss.socket != null && !ss.socket.isClosed() && ss._player != null && ss._player.service != null) {
                     ss._player.service.chatVip(text);
                 }
             } catch (Exception ex) {
@@ -191,7 +191,7 @@ public class SessionManager {
     public static void serverMessage(String text) {
         for (Session ss : sessions.values()) {
             try {
-                if (ss.isEnter && ss.socket != null && !ss.socket.isClosed() && ss._player != null) {
+                if (ss.isEnter && ss.socket != null && !ss.socket.isClosed() && ss._player != null && ss._player.service != null) {
                     ss._player.service.sendThongBao(text);
                 }
             } catch (Exception ex) {
@@ -215,7 +215,7 @@ public class SessionManager {
                     service.updateItem((byte) 1);
                     service.updateItem((byte) 2);
                     service.updateItem((byte) 100);
-                    if (ss._player != null) {
+                    if (ss._player != null && ss._player.service != null) {
                         ss._player.service.sendThongBao("Dữ liệu vật phẩm đã được cập nhật.");
                     }
                     count++;
@@ -230,7 +230,7 @@ public class SessionManager {
     public static void addThongBaoAll(String text) {
         for (Session ss : sessions.values()) {
             try {
-                if (ss.isEnter && ss.socket != null && !ss.socket.isClosed() && ss._player != null) {
+                if (ss.isEnter && ss.socket != null && !ss.socket.isClosed() && ss._player != null && ss._player.service != null) {
                     ss._player.service.dialogMessage(text);
                 }
             } catch (Exception ex) {
@@ -245,7 +245,7 @@ public class SessionManager {
     public static void addBigMessage(String text) {
         for (Session ss : sessions.values()) {
             try {
-                if (ss.isEnter && ss.socket != null && !ss.socket.isClosed() && ss._player != null) {
+                if (ss.isEnter && ss.socket != null && !ss.socket.isClosed() && ss._player != null && ss._player.service != null) {
                     ss._player.service.addBigMessage(ss._player.getPetAvatar(), text, (byte) 0, null, null);
                 }
             } catch (Exception ex) {

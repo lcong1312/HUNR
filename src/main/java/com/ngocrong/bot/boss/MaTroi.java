@@ -75,6 +75,7 @@ public class MaTroi extends Boss {
             item.quantity = 1;
             dropItem(item, c);
         } else if (percent < 90) {
+            markGoldBarDrop();
             for (int i = 0; i < 20; i++) {
                 Item gold = new Item(ItemName.THOI_VANG);
                 gold.setDefaultOptions();

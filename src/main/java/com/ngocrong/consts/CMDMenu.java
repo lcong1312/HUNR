@@ -258,6 +258,7 @@ public class CMDMenu {
     public static final int BO_MONG_HUY_NV_CONFIRM = 3004;
     public static final int BO_MONG_NO_HU = 3005;
     public static final int BO_MONG_NO_HU_CONFIRM = 3006;
+    public static final int BO_MONG_BOSS_REWARD = 3007;
     public static final int BO_MONG_LEGACY_TASK = 3010;
     public static final int BO_MONG_LEGACY_ACHIEVEMENT = 3011;
     public static final int BO_MONG_LEGACY_TOP = 3012;

@@ -74,8 +74,9 @@ public class ClanMember {
 
     public int getNumberOfRewardsCanBeReceived() {
         int n = 0;
+        long now = System.currentTimeMillis();
         for (ClanReward r : rewards) {
-            if (!r.isCanBeReceivedDirectly()) {
+            if (r.getStar() == 7 && !r.isCanBeReceivedDirectly() && r.getTimeEnd() > now) {
                 n++;
             }
         }

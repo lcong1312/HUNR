@@ -452,7 +452,7 @@ public class HoangAnhDz {
     }
 
     public static boolean isItemRemove(int itemId) {
-        return itemId == ItemName.DA_LANH
+        if (itemId == ItemName.DA_LANH
                 || itemId == ItemName.KHUC_MIA
                 || itemId == ItemName.TRAI_TAC
                 || itemId == ItemName.NUOC_MIA_SIZE_M
@@ -461,6 +461,9 @@ public class HoangAnhDz {
                 || itemId == ItemName.NUOC_MIA_THOM
                 || itemId == ItemName.NUOC_MIA_KHONG_LO
                 || itemId == ItemName.NUOC_MIA_XOAI
-                || itemId == ItemName.NUOC_MIA_TAC;
+                || itemId == ItemName.NUOC_MIA_TAC) {
+            return !ConfigStudio.EVENT_NUOC_MIA;
+        }
+        return false;
     }
 }

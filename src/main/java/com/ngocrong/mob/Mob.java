@@ -1244,6 +1244,10 @@ public class Mob {
                         killer.pickItem(itemMap, 10);
                     }
                 }
+                boolean droppedGoldBar = this.isBoss && hasGoldBarDrop();
+                if (droppedGoldBar && killer != null && killer.isHuman()) {
+                    killer.trackGoldBarBossKill();
+                }
                 // Log để debug kill boss
                 if (this.isBoss) {
                     logger.info(String.format("[BoMong] Boss %s killed by player %s", this.getClass().getSimpleName(), killer != null ? String.valueOf(killer.id) : "NULL"));
@@ -1264,7 +1268,7 @@ public class Mob {
                         if (nv.tienDo >= nv.yeuCau) {
                             killer.completeNhiemVuBoMong();
                         }
-                    } else if (nv.loaiNv == BoMongService.LOAI_KILL_BOSS && this.isBoss) {
+                    } else if (nv.loaiNv == BoMongService.LOAI_KILL_BOSS && this.isBoss && droppedGoldBar) {
                         String bossClassName = this.getClass().getSimpleName();
                         logger.info(String.format("[BoMong] Player %d kill boss %s: Starting check. Current progress: %d/%d", killer.id, bossClassName, nv.tienDo, nv.yeuCau));
                         
@@ -1326,6 +1330,15 @@ public class Mob {
 
     public boolean meCantAttack() {
         return (!this.isFreeze && !this.isSleep && !isHeld && !this.isBlind && !this.isMaPhongBa);
+    }
+
+    private boolean hasGoldBarDrop() {
+        for (ItemMap itemMap : this.items) {
+            if (itemMap != null && itemMap.item != null && itemMap.item.id == ItemName.THOI_VANG) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public short getMaPhongBaBody() {

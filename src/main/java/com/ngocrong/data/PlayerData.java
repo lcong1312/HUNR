@@ -174,6 +174,12 @@ public class PlayerData {
     @Column(name = "last_reset_nv_bo_mong")
     public Long lastResetNvBoMong;
 
+    @Column(name = "boss_gold_bar_kill_count")
+    public Integer bossGoldBarKillCount;
+
+    @Column(name = "boss_gold_bar_reward_mask")
+    public Integer bossGoldBarRewardMask;
+
     @Column(name = "last_coin_value")
     public Integer lastCoinValue;
 

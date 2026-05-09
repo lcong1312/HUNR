@@ -110,4 +110,8 @@ public interface PlayerDataRepository extends JpaRepository<PlayerData, Integer>
     @Modifying
     @Query("UPDATE PlayerData p SET p.pointBoMong = :pointBoMong, p.countNhiemVuBoMong = :countNhiemVuBoMong, p.lastResetNvBoMong = :lastResetNvBoMong WHERE p.id = :id")
     void saveBoMongPoint(Integer id, Integer pointBoMong, Integer countNhiemVuBoMong, Long lastResetNvBoMong);
+
+    @Modifying
+    @Query("UPDATE PlayerData p SET p.bossGoldBarKillCount = :bossGoldBarKillCount, p.bossGoldBarRewardMask = :bossGoldBarRewardMask WHERE p.id = :id")
+    void saveBossGoldBarProgress(Integer id, Integer bossGoldBarKillCount, Integer bossGoldBarRewardMask);
 }

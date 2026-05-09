@@ -245,13 +245,17 @@ public class Player {
     // LONG
 
     // Bo Mong
+    private static final int[] BOSS_GOLD_BAR_MILESTONES = {100, 200, 300, 400, 500, 600, 700, 800, 900, 1000};
     public int pointBoMong;
     public int countNhiemVuBoMong;
     public long lastResetNvBoMong;
+    public int bossGoldBarKillCount;
+    public int bossGoldBarRewardMask;
     public int lastCoinValue;
     public int countTaskCompletedToday;
     public BoMongService currentNhiemVuBoMong;
     public LegacySideTask legacySideTask = new LegacySideTask();
+    private transient boolean viewingBossGoldBarAchievementList;
     public long trainStartTime;
     public int trainDurationAccumulated;
     public long lastCoinCheckTime;
@@ -5806,6 +5810,7 @@ public class Player {
                             menus.add(new KeyValue(CMDMenu.BO_MONG_LEGACY_TASK, "Nhiệm vụ\nhàng ngày"));
                             menus.add(new KeyValue(CMDMenu.BO_MONG_LEGACY_ACHIEVEMENT, "Nhận ngọc\nmiễn phí"));
                             menus.add(new KeyValue(CMDMenu.BO_MONG_LEGACY_TOP, "Xem Top\nnăng động"));
+                            menus.add(new KeyValue(CMDMenu.BO_MONG_BOSS_REWARD, "Thưởng\ndiệt Boss"));
                             String menuText = "Ta là Bò Mộng.\nTa giúp ngươi việc bang hội và việc hằng ngày.\nNgươi muốn gì nào?";
                             service.openUIConfirm(npc.templateId, menuText, npc.avatar, menus);
                         } else {
@@ -5824,9 +5829,11 @@ public class Player {
                                 }
                             }
                             menus.add(new KeyValue(CMDMenu.BO_MONG_NO_HU, "Nổ Hũ"));
+                            menus.add(new KeyValue(CMDMenu.BO_MONG_BOSS_REWARD, "Thưởng\ndiệt Boss"));
                             String menuText = "Ta là Bò Mộng, ngươi muốn làm gì?\n\n";
                             menuText += "Nhiệm vụ hôm nay: " + countNhiemVuBoMong + "/10\n";
-                            menuText += "Điểm tích lũy: " + pointBoMong + "/1000";
+                            menuText += "Điểm tích lũy: " + pointBoMong + "/1000\n";
+                            menuText += "Boss rơi thỏi vàng: " + bossGoldBarKillCount + "/1000";
                             service.openUIConfirm(npc.templateId, menuText, npc.avatar, menus);
                         }
                         break;
@@ -6737,6 +6744,10 @@ public class Player {
                 handleBoMongNoHuConfirm(keyValue);
                 break;
 
+            case CMDMenu.BO_MONG_BOSS_REWARD:
+                handleBoMongBossReward();
+                break;
+
             case CMDMenu.BO_MONG_LEGACY_TASK:
                 openLegacyBoMongTaskMenu();
                 break;
@@ -7345,6 +7356,7 @@ public class Player {
                 achievements.get(2).upadateCount(magicTree.level);// Nông dân chăm chỉ
                 achievements.get(8).upadateCount(timePlayed / 60 / 60);// Hoạt động trăm chỉ
                 achievements.get(11).upadateCount(0);// Lần đầu nạp ngọc
+                viewingBossGoldBarAchievementList = false;
                 service.achievement((byte) 0, (byte) -1);
                 break;
 //            case 421:
@@ -7932,12 +7944,13 @@ public class Player {
                 sb.append("1) Giữ ngọc sao đen trên người hơn 5 phút liên tục").append("\b");
                 sb.append("2) Sau 30 phút tham gia tàu sẽ đón về và đang giữ ngọc sao đen trên người").append("\n");
                 sb.append("Các phần thưởng như sau").append("\b");
-                sb.append("1 sao đen: +20% HP, KI và Sức đánh").append("\b");
-                sb.append("2 sao đen: Mỗi giờ nhận ngẫu nhiên 1 CN/BH/BK/GX/AD hoặc CN2/BH2/BK2")
-                        .append("\b");
-                sb.append("3 sao đen: Mỗi giờ nhận 2 thỏi vàng").append("\b");
-                sb.append("4 sao đen: +10% TNSM sư phụ và đệ tử cho cả ngày").append("\b");
-                sb.append("Các phần thưởng mỗi giờ đến gặp ta để nhận nhé");
+                sb.append("1 sao đen: +10% sức đánh gốc").append("\b");
+                sb.append("2 sao đen: +15% HP").append("\b");
+                sb.append("3 sao đen: +15% KI").append("\b");
+                sb.append("4 sao đen: +5% Chí mạng").append("\b");
+                sb.append("5 sao đen: +16% giáp").append("\b");
+                sb.append("6 sao đen: 5 vật phẩm ngẫu nhiên cho bang").append("\b");
+                sb.append("7 sao đen: Tự động 2 thỏi vàng/giờ vào túi đồ");
                 service.openUISay(npc.templateId, sb.toString(), npc.avatar);
             }
             break;
@@ -7973,33 +7986,20 @@ public class Player {
                 if (clan != null) {
                     ClanMember mem = clan.getMember(this.id);
                     if (mem != null) {
-                        long now = System.currentTimeMillis();
+                        boolean hasStar7 = false;
                         for (ClanReward r : mem.rewards) {
-                            if (!r.isExpired()) {
-                                if (!r.isCanBeReceivedDirectly()) {
-                                    long t = now - r.getReceiveTime();
-                                    long timeDelay = r.getTimeDelay();
-                                    int star = r.getStar();
-                                    if (t < timeDelay) {
-                                        int timeRemaining = (int) ((timeDelay - t) / 1000);
-                                        menus.add(new KeyValue(CMDMenu.CANCEL,
-                                                String.format("%d sao\n%s", star, Utils.timeAgo(timeRemaining))));
-                                    } else {
-                                        int cmd = -1;
-                                        if (star == 2) {
-                                            cmd = CMDMenu.BLACK_DRAGONBALL_REWARD_5_STAR;
-                                        } else if (star == 3) {
-                                            cmd = CMDMenu.BLACK_DRAGONBALL_REWARD_6_STAR;
-                                        }
-                                        if (cmd != -1) {
-                                            menus.add(new KeyValue(cmd, String.format("Nhận\nthưởng\n%d sao", star)));
-                                        }
-                                    }
-                                }
+                            if (!r.isExpired() && r.getStar() == 7) {
+                                hasStar7 = true;
+                                break;
                             }
                         }
-                        service.openUIConfirm(npc.templateId,
-                                "Ngươi đang có phần thưởng ngọc sao đen, có muốn nhận không?", npc.avatar, menus);
+                        if (hasStar7) {
+                            service.openUISay(npc.templateId,
+                                    "Phần thưởng 7 sao đen sẽ tự động cộng vào túi đồ mỗi giờ khi ngươi đăng nhập.",
+                                    npc.avatar);
+                        } else {
+                            service.sendThongBao("Hiện không có phần thưởng nào.");
+                        }
                     }
                 }
                 break;
@@ -14743,7 +14743,7 @@ public class Player {
     }
 
     public boolean doUsePotion() {
-        if (itemBag == null) {
+        if (itemBag == null || zone == null || zone.service == null) {
             return false;
         }
         for (int i = 0; i < itemBag.length; i++) {
@@ -14920,6 +14920,9 @@ public class Player {
                         }
                     }
                 } else if (item.template.type == Item.TYPE_DAUTHAN) {
+                    if (zone == null || zone.service == null) {
+                        return;
+                    }
                     long now = System.currentTimeMillis();
                     if (now - lastUsePotion >= 10000) {
                         lastUsePotion = now;
@@ -14937,7 +14940,9 @@ public class Player {
                             myDisciple.info.recovery(Info.ALL, recovery);
                             int p = (int) (item.template.level * 10);
                             myDisciple.info.updateStamina(myDisciple.info.maxStamina * p / 100);
-                            zone.service.playerLoadHP(myDisciple, (byte) 1);
+                            if (myDisciple.zone != null) {
+                                zone.service.playerLoadHP(myDisciple, (byte) 1);
+                            }
                             service.chat(myDisciple, "Cảm ơn sư phụ");
                         }
                         removeItem(item.indexUI, 1);
@@ -19627,11 +19632,39 @@ public class Player {
             if (mem != null) {
                 ClanReward r = mem.getClanReward(star);
                 if (r != null) {
-                    return true;
+                    return !r.isExpired();
                 }
             }
         }
         return false;
+    }
+
+    public void autoCollectStar7Reward() {
+        if (clan == null) return;
+        ClanMember mem = clan.getMember(this.id);
+        if (mem == null) return;
+        ClanReward r = mem.getClanReward(7);
+        if (r == null || r.isExpired()) return;
+        long now = System.currentTimeMillis();
+        long elapsed = now - r.getReceiveTime();
+        int count = (int) (elapsed / r.getTimeDelay());
+        if (count <= 0) return;
+        int collected = 0;
+        for (int i = 0; i < count; i++) {
+            Item item = new Item(ItemName.THOI_VANG);
+            item.quantity = 2;
+            item.setDefaultOptions();
+            if (addItem(item)) {
+                collected++;
+            } else {
+                service.sendThongBao(Language.ME_BAG_FULL);
+                break;
+            }
+        }
+        if (collected > 0) {
+            r.setReceiveTime(now);
+            service.sendThongBao(String.format("Tự động nhận %d thỏi vàng từ Ngọc Rồng 7 sao đen", collected * 2));
+        }
     }
 
     private int getBuaTriTueMultiplier() {
@@ -19780,9 +19813,6 @@ public class Player {
                 if (disciple.master.exitsItemTime(ItemTimeName.TRAI_TIM_CHUNG_TAY)) {
                     exp += Utils.percentOf(exp, 50);
                 }
-                if (disciple.master.isRewardClan(4)) {
-                    exp += Utils.percentOf(exp, 10);
-                }
                 if (disciple.master.isUocThienMenhDeTu) {
                     exp *= 2;
                 }
@@ -19829,9 +19859,6 @@ public class Player {
             }
             if (exitsItemTime(ItemTimeName.PHIEU_X2_TNSM)) {
                 exp += Utils.percentOf(exp, 100);
-            }
-            if (isRewardClan(4)) {
-                exp += Utils.percentOf(exp, 10);
             }
             if (isRewardTNSMDragonNamek) {
                 exp += Utils.percentOf(exp, 10);
@@ -19984,6 +20011,10 @@ public class Player {
                 return;
             }
             byte index = ms.reader().readByte();
+            if (viewingBossGoldBarAchievementList) {
+                receiveBossGoldBarAchievementReward(index);
+                return;
+            }
             if (index < 0 || index >= achievements.size()) {
                 return;
             }
@@ -21494,6 +21525,7 @@ public class Player {
         service.setMaxStamina();
         service.setStamina();
         service.loadPoint();
+        autoCollectStar7Reward();
         service.specialSkill((byte) 0);
         if (shortcut != null) {
             service.changeOnSkill(shortcut);
@@ -24238,6 +24270,7 @@ public class Player {
         achievements.get(2).upadateCount(magicTree.level);
         achievements.get(8).upadateCount(timePlayed / 60 / 60);
         achievements.get(11).upadateCount(0);
+        viewingBossGoldBarAchievementList = false;
         service.achievement((byte) 0, (byte) -1);
     }
 
@@ -24618,6 +24651,210 @@ public class Player {
             pointBoMong = Math.min(1000, pointBoMong + diemSuDung);
             saveBoMongPoint();
             service.sendThongBao("Hành trang đầy! Không thể nhận quà. Điểm đã được hoàn lại.");
+        }
+    }
+
+    private void handleBoMongBossReward() {
+        viewingBossGoldBarAchievementList = true;
+        sendBossGoldBarAchievementList();
+    }
+
+    public void trackGoldBarBossKill() {
+        if (this.id <= 0 || this.isBot()) {
+            return;
+        }
+        if (bossGoldBarKillCount >= 1000) {
+            return;
+        }
+        bossGoldBarKillCount = Math.max(0, bossGoldBarKillCount);
+        bossGoldBarKillCount = Math.min(1000, bossGoldBarKillCount + 1);
+        saveBossGoldBarProgress();
+    }
+
+    private void sendBossGoldBarAchievementList() {
+        try {
+            Message ms = new Message(Cmd.ACHIEVEMENT);
+            FastDataOutputStream ds = ms.writer();
+            ds.writeByte(0);
+            ds.writeByte(BOSS_GOLD_BAR_MILESTONES.length);
+            int killCount = Math.max(0, Math.min(1000, bossGoldBarKillCount));
+            for (int i = 0; i < BOSS_GOLD_BAR_MILESTONES.length; i++) {
+                int milestone = BOSS_GOLD_BAR_MILESTONES[i];
+                int rewardQuantity = getBossGoldBarRewardQuantity(milestone);
+                ds.writeUTF((i + 1) + ". Mốc " + milestone + " boss - " + rewardQuantity + " thỏi vàng");
+                ds.writeUTF(String.format("Tiến độ %d/%d", Math.min(killCount, milestone), milestone));
+                ds.writeShort(0);
+                ds.writeBoolean(killCount >= milestone);
+                ds.writeBoolean(isBossGoldBarRewardClaimed(i));
+            }
+            ds.flush();
+            service.sendMessage(ms);
+            ms.cleanup();
+        } catch (IOException ex) {
+            logger.error("failed", ex);
+        }
+    }
+
+    private void receiveBossGoldBarAchievementReward(int index) {
+        if (index < 0 || index >= BOSS_GOLD_BAR_MILESTONES.length) {
+            return;
+        }
+        int milestone = BOSS_GOLD_BAR_MILESTONES[index];
+        if (bossGoldBarKillCount < milestone) {
+            service.sendThongBao("Bạn chưa hoàn thành mốc " + milestone + " boss rơi thỏi vàng.");
+            return;
+        }
+        if (isBossGoldBarRewardClaimed(index)) {
+            service.sendThongBao("Bạn đã nhận thưởng mốc này rồi.");
+            return;
+        }
+        if (giveBossGoldBarKillReward(milestone)) {
+            bossGoldBarRewardMask |= 1 << index;
+            saveBossGoldBarProgress();
+            service.achievement((byte) 1, (byte) index);
+        }
+    }
+
+    private boolean isBossGoldBarRewardClaimed(int index) {
+        return (bossGoldBarRewardMask & (1 << index)) != 0;
+    }
+
+    private int getBossGoldBarRewardQuantity(int milestone) {
+        return (milestone / 100) * 1000;
+    }
+
+    private boolean giveBossGoldBarKillReward(int milestone) {
+        if (this.service == null) {
+            return false;
+        }
+        int rewardQuantity = getBossGoldBarRewardQuantity(milestone);
+        if (getItemInBag(ItemName.THOI_VANG) == null && getSlotNullInBag() == 0) {
+            service.sendThongBao("Đạt mốc " + milestone + " boss nhưng hành trang đã đầy, không thể nhận " + rewardQuantity + " thỏi vàng.");
+            return false;
+        }
+        Item reward = createBossGoldBarReward(0);
+        if (!canReceiveBossGoldBarReward(reward, rewardQuantity)) {
+            service.sendThongBao("Đạt mốc " + milestone + " boss nhưng hành trang không đủ chỗ chứa " + rewardQuantity + " thỏi vàng.");
+            return false;
+        }
+        int goldBefore = getQuantityInBagById(ItemName.THOI_VANG);
+        if (addBossGoldBarReward(reward, rewardQuantity)) {
+            saveBossGoldBarRewardHistory(goldBefore, rewardQuantity,
+                    String.format("%s nhận %d thỏi vàng mốc %d boss rơi thỏi vàng", this.name, rewardQuantity, milestone));
+            service.sendThongBao("Đạt mốc " + milestone + " boss rơi thỏi vàng, bạn nhận được " + rewardQuantity + " thỏi vàng.");
+            return true;
+        } else {
+            service.sendThongBao("Đạt mốc " + milestone + " boss nhưng hành trang đã đầy, không thể nhận " + rewardQuantity + " thỏi vàng.");
+            return false;
+        }
+    }
+
+    private Item createBossGoldBarReward(int quantity) {
+        Item reward = new Item(ItemName.THOI_VANG);
+        reward.setDefaultOptions();
+        reward.quantity = quantity;
+        return reward;
+    }
+
+    private boolean canReceiveBossGoldBarReward(Item reward, int rewardQuantity) {
+        int maxQuantity = getBossGoldBarStackLimit();
+        long availableQuantity = 0;
+        for (Item item : itemBag) {
+            if (item == null) {
+                availableQuantity += maxQuantity;
+            } else if (canStackBossGoldBarReward(item, reward)) {
+                availableQuantity += Math.max(0, maxQuantity - item.quantity);
+            }
+            if (availableQuantity >= rewardQuantity) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean addBossGoldBarReward(Item reward, int rewardQuantity) {
+        int maxQuantity = getBossGoldBarStackLimit();
+        int remaining = rewardQuantity;
+        for (Item item : itemBag) {
+            if (!canStackBossGoldBarReward(item, reward)) {
+                continue;
+            }
+            int quantityCanAdd = Math.min(remaining, Math.max(0, maxQuantity - item.quantity));
+            if (quantityCanAdd <= 0) {
+                continue;
+            }
+            item.quantity += quantityCanAdd;
+            remaining -= quantityCanAdd;
+            if (remaining == 0) {
+                service.setItemBag();
+                return true;
+            }
+        }
+        for (int i = 0; i < itemBag.length && remaining > 0; i++) {
+            if (itemBag[i] != null) {
+                continue;
+            }
+            int quantityCanAdd = Math.min(remaining, maxQuantity);
+            Item item = createBossGoldBarReward(quantityCanAdd);
+            item.indexUI = i;
+            itemBag[i] = item;
+            remaining -= quantityCanAdd;
+        }
+        if (remaining == 0) {
+            service.setItemBag();
+            return true;
+        }
+        return false;
+    }
+
+    private int getBossGoldBarStackLimit() {
+        int maxQuantity = Server.getMaxQuantityItem();
+        return maxQuantity > 0 ? maxQuantity : Integer.MAX_VALUE;
+    }
+
+    private boolean canStackBossGoldBarReward(Item item, Item reward) {
+        if (item == null || item.id != reward.id) {
+            return false;
+        }
+        if (item.options == null || reward.options == null) {
+            return item.options == reward.options;
+        }
+        if (item.options.size() != reward.options.size()) {
+            return false;
+        }
+        for (ItemOption rewardOption : reward.options) {
+            boolean found = false;
+            for (ItemOption option : item.options) {
+                if (option != null && rewardOption != null
+                        && option.optionTemplate.id == rewardOption.optionTemplate.id
+                        && option.param == rewardOption.param) {
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private void saveBossGoldBarRewardHistory(int goldBefore, int numberGold, String note) {
+        if (this.session == null || this.session.user == null) {
+            return;
+        }
+        try {
+            HistoryGoldBar history = new HistoryGoldBar();
+            history.setUserName(this.session.user.getUsername());
+            history.setPlayerName(this.name);
+            history.setGoldBefore(goldBefore);
+            history.setGoldAfter(goldBefore + numberGold);
+            history.setNumberGold(numberGold);
+            history.setCreateDate(Instant.now());
+            history.setNote(note);
+            GameRepository.getInstance().historyGoldBar.save(history);
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
@@ -25055,6 +25292,14 @@ public class Player {
         }
         try {
             GameRepository.getInstance().player.saveBoMongPoint(this.id, this.pointBoMong, this.countNhiemVuBoMong, this.lastResetNvBoMong);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void saveBossGoldBarProgress() {
+        try {
+            GameRepository.getInstance().player.saveBossGoldBarProgress(this.id, this.bossGoldBarKillCount, this.bossGoldBarRewardMask);
         } catch (Exception e) {
             e.printStackTrace();
         }

@@ -142,6 +142,12 @@ public class Whis extends Boss {
             zone.service.addItemMap(itemMap);
         }
         for (int i = 0; i < 10; i++) {
+            Item goldBar = new Item(ItemName.THOI_VANG);
+            goldBar.setDefaultOptions();
+            goldBar.quantity = 1;
+            this.dropItem(goldBar, null);
+        }
+        for (int i = 0; i < 10; i++) {
             var item = new Item(190);
             item.quantity = 500_000_000;
             this.dropItem(item, null);

@@ -668,7 +668,7 @@ public class Disciple extends Player {
             skillNotFocus((byte) 2);
         }
         if (!(isBlind() || isFreeze() || isSleep() || isCharge())) {
-            if (discipleStatus == 1) {
+            if (discipleStatus == 1 && zone != null) {
                 int d = Utils.getDistance(master.getX(), master.getY(), getX(), getY());
                 if (d > 50) {
                     followMaster();
@@ -688,6 +688,9 @@ public class Disciple extends Player {
 
     public void updateEveryFiveSeconds() {
         super.updateEveryFiveSeconds();
+        if (master == null || master.zone == null || master.service == null || zone == null) {
+            return;
+        }
         long now = System.currentTimeMillis();
         if (info.stamina == 0 || info.mp <= (info.mpFull * 10 / 100) || info.hp <= (info.hpFull * 10 / 100)) {
             if (!master.doUsePotion()) {
@@ -701,6 +704,9 @@ public class Disciple extends Player {
     @Override
     public void update() {
         super.update();
+        if (master == null || master.zone == null || master.service == null || zone == null) {
+            return;
+        }
         if (!(master.isDead() || isDead() || isFreeze() || isSleep() || isHeld() || isStone()) && (discipleStatus == 1 || discipleStatus == 2) && !isAttacking) {
             changeSkill(0);
             if (skillOpened >= 3) {

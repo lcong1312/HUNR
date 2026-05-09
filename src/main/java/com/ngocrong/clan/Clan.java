@@ -7,6 +7,8 @@ import com.ngocrong.map.Treasure;
 import com.ngocrong.repository.GameRepository;
 import com.ngocrong.user.Player;
 import com.ngocrong.item.Item;
+import com.ngocrong.consts.ItemName;
+import com.ngocrong.util.Utils;
 import com.ngocrong.map.Barrack;
 import com.ngocrong.map.tzone.ClanTerritory;
 import com.ngocrong.server.SessionManager;
@@ -137,18 +139,46 @@ public class Clan {
     public void addClanRewardForMember(int star) {
         List<ClanMember> list = getMembers();
         long now = System.currentTimeMillis();
+        int[] star6Items = {ItemName.CUONG_NO_2, ItemName.BO_HUYET_2, ItemName.BO_KHI_2};
         for (ClanMember mem : list) {
             if (mem != null) {
                 ClanReward r = new ClanReward();
                 r.setStar(star);
-                // Các sao nhận trực tiếp: 1 và 4, các sao còn lại phải đến NPC nhận
-                boolean direct = star == 1 || star == 4 || star == 8 || star == 9 || star == 10;
+                boolean direct = (star >= 1 && star <= 5) || star == 8 || star == 9 || star == 10;
                 r.setCanBeReceivedDirectly(direct);
-                r.setNumberOfTimesReceived(24);
+                r.setNumberOfTimesReceived(22);
                 r.setTimeDelay(3600000);
                 r.setTimeStart(now);
-                r.setTimeEnd(now + (24 * 3600000));
+                r.setTimeEnd(now + 79200000L);
                 mem.addClanReward(r);
+                Player player = SessionManager.findChar(mem.playerID);
+                if (player != null && player.info != null && player.service != null) {
+                    // Sao 6: auto-add 5 item ngẫu nhiên
+                    if (star == 6) {
+                        for (int i = 0; i < 5; i++) {
+                            int itemID = star6Items[Utils.nextInt(star6Items.length)];
+                            Item item = new Item(itemID);
+                            item.quantity = 1;
+                            item.setDefaultOptions();
+                            player.addItem(item);
+                        }
+                        player.service.sendThongBao("Bạn nhận được 5 vật phẩm ngẫu nhiên từ Ngọc Rồng 6 sao đen");
+                    }
+                    // Sao 7: auto-add 2 thỏi vàng
+                    if (star == 7) {
+                        Item item = new Item(ItemName.THOI_VANG);
+                        item.quantity = 2;
+                        item.setDefaultOptions();
+                        if (player.addItem(item)) {
+                            player.service.sendThongBao("Bạn nhận được 2 thỏi vàng từ Ngọc Rồng 7 sao đen");
+                        }
+                    }
+                    player.info.setInfo();
+                    player.service.loadPoint();
+                    if (player.zone != null && player.zone.service != null) {
+                        player.zone.service.playerLoadBody(player);
+                    }
+                }
             }
         }
     }

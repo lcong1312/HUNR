@@ -59,7 +59,7 @@ public class BossManager {
         bossGalaxySoldier();
 
 //        bossHaiTac();
-//        bossTayDu();
+        bossTayDu();
         bossFide();
         bossKuKu();
         bossMapDauDinh();
@@ -345,10 +345,10 @@ public class BossManager {
     }
 
     public static void bossTayDu() {
-        MainUpdate.runTaskDay(() -> {
+        MainUpdate.runTaskDayInWindow(() -> {
             TayDuManager taydu = new TayDuManager();
             taydu.spawnTeam();
-        }, "08:00");
+        }, "08:00", "23:59");
     }
 
     public static void bossGinyu() {

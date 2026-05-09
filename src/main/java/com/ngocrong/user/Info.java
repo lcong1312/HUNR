@@ -737,14 +737,19 @@ public class Info {
                     }
                     switch (clanReward.getStar()) {
                         case 1:
-                            // +20% HP, KI và Sức đánh cho cả bang
-                            this.damageFull += damageFull * 20 / 100;
-                            this.hpFullTemp += hpFullTemp * 20 / 100;
-                            this.mpFullTemp += mpFullTemp * 20 / 100;
+                            this.damageFull += Utils.percentOf(this.damageFull, 10);
+                            break;
+                        case 2:
+                            this.hpFullTemp += Utils.percentOf(this.hpFullTemp, 15);
+                            break;
+                        case 3:
+                            this.mpFullTemp += Utils.percentOf(this.mpFullTemp, 15);
                             break;
                         case 4:
-                            // +10% TNSM sư phụ và đệ tử
-                            options[101] += 10;
+                            this.criticalFull += 5;
+                            break;
+                        case 5:
+                            this.defenseFull += Utils.percentOf(this.defenseFull, 16);
                             break;
 //                        case 5:
 //                            options[108] += 10;

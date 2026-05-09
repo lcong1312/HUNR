@@ -35,6 +35,8 @@ public final class SchemaCompatibility {
         ensureColumn(connection, "nr_player", "point_bo_mong", "INT DEFAULT 0");
         ensureColumn(connection, "nr_player", "count_nhiem_vu_bo_mong", "INT DEFAULT 0");
         ensureColumn(connection, "nr_player", "last_reset_nv_bo_mong", "BIGINT DEFAULT 0");
+        ensureColumn(connection, "nr_player", "boss_gold_bar_kill_count", "INT DEFAULT 0");
+        ensureColumn(connection, "nr_player", "boss_gold_bar_reward_mask", "INT DEFAULT 0");
         ensureColumn(connection, "nr_player", "last_coin_value", "INT DEFAULT 0");
         ensureColumn(connection, "nr_player", "count_task_completed_today", "INT DEFAULT 0");
         ensureColumn(connection, "nr_player", "side_task", "TEXT NULL");

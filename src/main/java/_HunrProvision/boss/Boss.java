@@ -26,6 +26,7 @@ import com.ngocrong.NQMP.Event.LuaThanEvent;
 import com.ngocrong.NQMP.Event.QuocKhanh;
 import _HunrProvision.services.BoMongService;
 import com.ngocrong.bot.Bot;
+import com.ngocrong.bot.Disciple;
 import com.ngocrong.bot.VirtualBot;
 import org.apache.log4j.Logger;
 
@@ -52,6 +53,7 @@ public abstract class Boss extends Player implements Bot {
     public boolean isShow = true;
     public byte percentDame = -1;
     public boolean canDispose = false;
+    private transient boolean droppedGoldBarThisDeath;
     public static List<Boss> listBoss = new CopyOnWriteArrayList<>();
 
     public static String strBoss(Player player) {
@@ -95,6 +97,9 @@ public abstract class Boss extends Player implements Bot {
     }
 
     public void dropItem(Item item, Player player) {
+        if (item != null && item.id == ItemName.THOI_VANG) {
+            markGoldBarDrop();
+        }
         ItemMap itemMap = new ItemMap(zone.autoIncrease++);
         itemMap.item = item;
         itemMap.playerID = player == null ? -1 : Math.abs(player.id);
@@ -102,6 +107,10 @@ public abstract class Boss extends Player implements Bot {
         itemMap.y = (short) Math.min(zone.map.collisionLand(itemMap.x, getY()), getY());
         zone.addItemMap(itemMap);
         zone.service.addItemMap(itemMap);
+    }
+
+    protected void markGoldBarDrop() {
+        droppedGoldBarThisDeath = true;
     }
 
     protected void dropGroupA(Player player) {
@@ -406,9 +415,18 @@ public abstract class Boss extends Player implements Bot {
 
     @Override
     public void killed(Object killer) {
+        droppedGoldBarThisDeath = false;
         super.killed(killer);
         if (killer instanceof Player) {
             Player _c = (Player) killer;
+            boolean droppedGoldBar = droppedGoldBarThisDeath;
+            Player rewardPlayer = _c;
+            if (rewardPlayer.isDisciple() && rewardPlayer instanceof Disciple) {
+                rewardPlayer = ((Disciple) rewardPlayer).master;
+            }
+            if (droppedGoldBar && rewardPlayer != null && rewardPlayer.isHuman()) {
+                rewardPlayer.trackGoldBarBossKill();
+            }
             sendNotificationWhenDead(_c.name);
             if (ConfigStudio.EVENT_LUA_THAN) {
                 LuaThanEvent.bossReward(_c, this);
@@ -421,6 +439,11 @@ public abstract class Boss extends Player implements Bot {
                  BoMongService nv = _c.currentNhiemVuBoMong;
                 
                 if (nv.loaiNv == BoMongService.LOAI_KILL_BOSS) {
+                    if (!droppedGoldBar) {
+                        logger.debug(String.format("[BoMong] Player %d killed boss %s: skip progress because this boss did not drop thỏi vàng",
+                                _c.id, this.getClass().getSimpleName()));
+                        return;
+                    }
                     String bossClassName = this.getClass().getSimpleName();
                     
                     if (nv.bossIds == null || nv.bossIds.length == 0) {
