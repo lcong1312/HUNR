@@ -7,10 +7,15 @@ import com.ngocrong.server.DropRateService;
 import com.ngocrong.server.mysql.SchemaCompatibility;
 import com.ngocrong.util.VietnamTime;
 import _HunrProvision.services.BoMongService;
+import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.event.ContextClosedEvent;
+import org.springframework.context.event.EventListener;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
@@ -18,6 +23,8 @@ import java.util.TimeZone;
 
 @SpringBootApplication
 public class Run implements CommandLineRunner {
+
+    private static final Logger logger = Logger.getLogger(Run.class);
 
     public static void main(String[] args) {
         TimeZone vietnamTimeZone = VietnamTime.timeZone();
@@ -68,6 +75,16 @@ public class Run implements CommandLineRunner {
         }
         MatrixChallengePC.loadPCKey();
         DragonBall.getInstance().start();
+    }
+
+    @EventListener
+    @Order(Ordered.HIGHEST_PRECEDENCE)
+    public void onContextClosed(ContextClosedEvent event) {
+        try {
+            DragonBall.getInstance().stop();
+        } catch (Exception ex) {
+            logger.error("Shutdown server failed", ex);
+        }
     }
 
     @Autowired

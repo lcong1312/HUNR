@@ -48,6 +48,7 @@ import com.ngocrong.item.ItemMap;
 import com.ngocrong.map.tzone.Zone;
 import com.ngocrong.mob._BigBoss.Hirudegarn;
 import com.ngocrong.network.FastDataOutputStream;
+import com.ngocrong.network.ResourceCache;
 import com.ngocrong.security.multilayer.MultiLayerCryptoSystem;
 import com.ngocrong.top.AutoReward.AutoReward;
 import lombok.Getter;
@@ -1787,10 +1788,10 @@ public class Server {
         }
     }
 
-    public void initItemTemplate() {
+    public synchronized void initItemTemplate() {
         try {
-            iOptionTemplates = new ArrayList<>();
-            iTemplates = new HashMap<>();
+            ArrayList<ItemOptionTemplate> loadedOptionTemplates = new ArrayList<>();
+            HashMap<Integer, ItemTemplate> loadedItemTemplates = new HashMap<>();
             Connection conn = MySQLConnect.getConnection();
             Statement stmt = conn.createStatement();
             ResultSet res = stmt.executeQuery(SQLStatement.INIT_ITEM_OPTION);
@@ -1799,10 +1800,11 @@ public class Server {
                 iOptionTemplate.id = res.getInt("id");
                 iOptionTemplate.name = res.getString("name");
                 iOptionTemplate.type = res.getByte("type");
-                iOptionTemplates.add(iOptionTemplate);
+                loadedOptionTemplates.add(iOptionTemplate);
             }
             res.close();
             stmt.close();
+            iOptionTemplates = loadedOptionTemplates;
             Statement stmt2 = conn.createStatement();
             ResultSet res2 = stmt2.executeQuery(SQLStatement.INIT_ITEM_TEMPLATE);
             while (res2.next()) {
@@ -1835,12 +1837,14 @@ public class Server {
                         iTemplate.options.add(new ItemOption(id, param));
                     }
                 }
-                iTemplates.put((int) iTemplate.id, iTemplate);
+                loadedItemTemplates.put((int) iTemplate.id, iTemplate);
 
             }
             res2.close();
             stmt2.close();
-            overrideTeamobiMountMappings();
+            overrideTeamobiMountMappings(loadedItemTemplates);
+            iOptionTemplates = loadedOptionTemplates;
+            iTemplates = loadedItemTemplates;
         } catch (SQLException ex) {
             
             logger.error("failed!", ex);
@@ -1850,14 +1854,38 @@ public class Server {
         }
     }
 
+    public synchronized int reloadItemData(boolean notifyClients) {
+        logger.info("Reloading item database cache...");
+        initSmallVersion();
+        initImage();
+        setCacheImage();
+        initImgByName();
+        initItemTemplate();
+        initArrHeadFromDb();
+        setCacheItem(0);
+        setCacheItem(1);
+        setCacheItem(2);
+        initFlags();
+        ResourceCache.getInstance().clearAllCache();
+        int notified = notifyClients ? SessionManager.reloadItemDataForClients() : 0;
+        logger.info("Reload item database cache done. templates=" + iTemplates.size()
+                + ", options=" + iOptionTemplates.size()
+                + ", notifiedSessions=" + notified);
+        return notified;
+    }
+
     public ItemOptionTemplate getItemOptionTemplate(int id) {
-        if (id >= 0 && id < iOptionTemplates.size()) {
-            ItemOptionTemplate template = iOptionTemplates.get(id);
+        ArrayList<ItemOptionTemplate> optionTemplates = iOptionTemplates;
+        if (optionTemplates == null) {
+            return null;
+        }
+        if (id >= 0 && id < optionTemplates.size()) {
+            ItemOptionTemplate template = optionTemplates.get(id);
             if (template != null && template.id == id) {
                 return template;
             }
         }
-        for (ItemOptionTemplate template : iOptionTemplates) {
+        for (ItemOptionTemplate template : optionTemplates) {
             if (template != null && template.id == id) {
                 return template;
             }
@@ -2050,16 +2078,24 @@ public class Server {
     }
 
     private void overrideTeamobiMountMappings() {
+        overrideTeamobiMountMappings(iTemplates);
+    }
+
+    private void overrideTeamobiMountMappings(HashMap<Integer, ItemTemplate> templates) {
         // Keep Teamobi mount part aligned with its mount range.
         // If the item still uses part 18, the client falls back to the old golden dragon when flying.
-        remapTeamobiMount(32711, 30030, 30);
-        remapTeamobiMount(32712, 30031, 31);
-        remapTeamobiMount(32713, 30032, 32);
-        remapTeamobiMount(32714, 30033, 33);
+        remapTeamobiMount(templates, 32711, 30030, 30);
+        remapTeamobiMount(templates, 32712, 30031, 31);
+        remapTeamobiMount(templates, 32713, 30032, 32);
+        remapTeamobiMount(templates, 32714, 30033, 33);
     }
 
     private void remapTeamobiMount(int itemId, int mountId, int part) {
-        ItemTemplate template = iTemplates.get(itemId);
+        remapTeamobiMount(iTemplates, itemId, mountId, part);
+    }
+
+    private void remapTeamobiMount(HashMap<Integer, ItemTemplate> templates, int itemId, int mountId, int part) {
+        ItemTemplate template = templates.get(itemId);
         if (template != null) {
             template.mountID = mountId;
             template.part = (short) part;
@@ -2202,8 +2238,9 @@ public class Server {
                         }
                     }
                 } catch (IOException e) {
-                    
-                    logger.error("failed!", e);
+                    if (start) {
+                        logger.error("failed!", e);
+                    }
                 }
             }
         } catch (Exception e) {
@@ -2215,8 +2252,21 @@ public class Server {
     protected void stop() {
         if (start) {
             start = false;
-            int savedSoSinhBots = VirtualBotSoSinhPersistence.saveAllActiveBots();
-            logger.info("Saved " + savedSoSinhBots + " VirtualBot_SoSinh before shutdown");
+            try {
+                SessionManager.close();
+            } catch (Exception e) {
+                logger.error("Close sessions before shutdown failed", e);
+            }
+            try {
+                saveData();
+            } catch (Exception e) {
+                logger.error("Save data before shutdown failed", e);
+            }
+            try {
+                setOfflineAll();
+            } catch (Exception e) {
+                logger.error("Set players offline before shutdown failed", e);
+            }
             close();
 
         }
@@ -2377,77 +2427,93 @@ public class Server {
     }
 
     private void activeCommandLine() {
-        new Thread(() -> {
-            Scanner sc = new Scanner(System.in);
-            while (true) {
-                String line = sc.nextLine();
-                if (line.startsWith("timesocket")) {
-                    int time = Integer.parseInt(line.replace("timesocket", ""));
-                    Session.PING_INTERVAL = Session.TIMEOUT = time;
-                    System.err.println("Set time socket = " + time + " success");
-                }
+        Thread commandLineThread = new Thread(() -> {
+            try {
+                Scanner sc = new Scanner(System.in);
+                while (start) {
+                    if (!sc.hasNextLine()) {
+                        break;
+                    }
+                    String line = sc.nextLine();
+                    if (line.startsWith("timesocket")) {
+                        int time = Integer.parseInt(line.replace("timesocket", ""));
+                        Session.PING_INTERVAL = Session.TIMEOUT = time;
+                        System.err.println("Set time socket = " + time + " success");
+                    }
 //                if (line.equals("loaddll")) {
 //                    loadDllValid();
 //                }
-                if (line.equals("fullBot")) {
-                    for (int i = 0; i < 250; i++) {
-                        if (BotCold.TotalBotCold < 100) {
-                            int[] map = new int[]{105, 106, 107, 108, 109, 110};
-                            TMap map2 = MapManager.getInstance().getMap(map[Utils.nextInt(map.length)]);
-                            HoangAnhDz.createBotCold(1, map2.mapID);
-                        }
-                        if (VirtualBot.TotalBot < 150) {
-                            int[] map = new int[]{0, 7, 14, 5};
-                            VirtualBot.TotalBot++;
-                            HoangAnhDz.createBot(1, map[Utils.nextInt(map.length)]);
+                    if (line.equals("fullBot")) {
+                        for (int i = 0; i < 250; i++) {
+                            if (BotCold.TotalBotCold < 100) {
+                                int[] map = new int[]{105, 106, 107, 108, 109, 110};
+                                TMap map2 = MapManager.getInstance().getMap(map[Utils.nextInt(map.length)]);
+                                HoangAnhDz.createBotCold(1, map2.mapID);
+                            }
+                            if (VirtualBot.TotalBot < 150) {
+                                int[] map = new int[]{0, 7, 14, 5};
+                                VirtualBot.TotalBot++;
+                                HoangAnhDz.createBot(1, map[Utils.nextInt(map.length)]);
+                            }
                         }
                     }
-                }
-                if (line.equals("bot")) {
-                    System.err.println("TotalBotCold : " + BotCold.TotalBotCold);
-                    System.err.println("TotalBot : " + VirtualBot.TotalBot);
-                }
-                if (line.equals("heap")) {
-                    HeapDumpHelper.saveHeap();
-                }
-                if (line.equals("test")) {
-                    checkTest();
-                }
-                if (line.equals("dhvt")) {
-                    MainUpdate.ResetDHVT();
-                }
-                if (line.equals("hiru")) {
-                    List<Zone> zones = MapManager.getInstance().getMap(126).zones;
-                    for (Zone z : zones) {
-                        Hirudegarn.addMob(z);
-                        logger.info("Init Hirudegarn : 126 - " + z.zoneID);
+                    if (line.equals("bot")) {
+                        System.err.println("TotalBotCold : " + BotCold.TotalBotCold);
+                        System.err.println("TotalBot : " + VirtualBot.TotalBot);
                     }
+                    if (line.equals("heap")) {
+                        HeapDumpHelper.saveHeap();
+                    }
+                    if (line.equals("test")) {
+                        checkTest();
+                    }
+                    if (line.equals("dhvt")) {
+                        MainUpdate.ResetDHVT();
+                    }
+                    if (line.equals("reload_item") || line.equals("reload_items") || line.equals("reload_db_item")) {
+                        try {
+                            int notified = reloadItemData(true);
+                            System.err.println("Reload item DB success. Notified sessions: " + notified);
+                        } catch (Exception ex) {
+                            logger.error("Reload item DB failed", ex);
+                        }
+                    }
+                    if (line.equals("hiru")) {
+                        List<Zone> zones = MapManager.getInstance().getMap(126).zones;
+                        for (Zone z : zones) {
+                            Hirudegarn.addMob(z);
+                            logger.info("Init Hirudegarn : 126 - " + z.zoneID);
+                        }
 
-                }
-                if (line.equals("baotri")) {
-                    try {
-                        Server server = DragonBall.getInstance().getServer();
-                        if (!server.isMaintained) {
-                            ServerMaintenance serverMaintenance = new ServerMaintenance("Bảo trì", 30);
-                            Thread t = new Thread(serverMaintenance);
-                            t.start();
-                        } else {
-                            System.err.println("2");
+                    }
+                    if (line.equals("baotri")) {
+                        try {
+                            Server server = DragonBall.getInstance().getServer();
+                            if (!server.isMaintained) {
+                                ServerMaintenance serverMaintenance = new ServerMaintenance("Bảo trì", 30);
+                                Thread t = new Thread(serverMaintenance);
+                                t.start();
+                            } else {
+                                System.err.println("2");
+                            }
+                        } catch (Exception ex) {
+
+                            logger.error("maintenance", ex);
                         }
-                    } catch (Exception ex) {
-                        
-                        logger.error("maintenance", ex);
-                    }
-                } else if (line.equals("show")) {
-                    try {
-                        logger.info("Tổng CCU: " + SessionManager.sessions.size() + " người chơi đang online");
-                    } catch (Exception ex) {
-                        
-                        logger.error("Count ccu error", ex);
+                    } else if (line.equals("show")) {
+                        try {
+                            logger.info("Tổng CCU: " + SessionManager.sessions.size() + " người chơi đang online");
+                        } catch (Exception ex) {
+
+                            logger.error("Count ccu error", ex);
+                        }
                     }
                 }
+            } catch (Exception ignored) {
             }
-        }, "Active line").start();
+        }, "Active line");
+        commandLineThread.setDaemon(true);
+        commandLineThread.start();
     }
 
     private void autoUpdateCCU() {

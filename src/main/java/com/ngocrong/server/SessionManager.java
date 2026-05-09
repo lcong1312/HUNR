@@ -202,6 +202,31 @@ public class SessionManager {
         }
     }
 
+    public static int reloadItemDataForClients() {
+        int count = 0;
+        for (Session ss : sessions.values()) {
+            try {
+                if (ss.socket != null && !ss.socket.isClosed() && ss.user != null && ss.getService() instanceof Service) {
+                    Service service = (Service) ss.getService();
+                    service.setResource();
+                    service.sendSmallVersion();
+                    service.sendVersion();
+                    service.updateItem((byte) 0);
+                    service.updateItem((byte) 1);
+                    service.updateItem((byte) 2);
+                    service.updateItem((byte) 100);
+                    if (ss._player != null) {
+                        ss._player.service.sendThongBao("Dữ liệu vật phẩm đã được cập nhật.");
+                    }
+                    count++;
+                }
+            } catch (Exception ex) {
+                logger.error("reload item data for client failed", ex);
+            }
+        }
+        return count;
+    }
+
     public static void addThongBaoAll(String text) {
         for (Session ss : sessions.values()) {
             try {
@@ -266,11 +291,9 @@ public class SessionManager {
     }
 
     public static void close() {
-        for (Session ss : sessions.values()) {
+        for (Session ss : new ArrayList<>(sessions.values())) {
             try {
-                if (ss.isEnter && ss.socket != null && !ss.socket.isClosed() && ss._player != null) {
-                    ss.close();
-                }
+                ss.close();
             } catch (Exception ex) {
                 
                 logger.error("failed!", ex);

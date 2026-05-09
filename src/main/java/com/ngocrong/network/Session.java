@@ -96,7 +96,7 @@ public class Session implements ISession {
     public IMessageHandler messageHandler;
     @Getter
     private IService service;
-    protected boolean isConnected;
+    protected volatile boolean isConnected;
     private byte curR, curW;
     private final Sender sender;
     private Thread collectorThread;
@@ -125,6 +125,7 @@ public class Session implements ISession {
     private ScheduledFuture<?> heartbeatTask;
     private volatile long lastReceiveTime;
     private volatile long lastSendTime;
+    private volatile boolean isClosing;
     public boolean isConfirm = false;
     public long lastConfirm = System.currentTimeMillis(), lastCreateSession = System.currentTimeMillis();
     private static final int SOCKET_BUFFER_SIZE = 4096;
@@ -340,11 +341,23 @@ public class Session implements ISession {
 
     @Override
     public void sendMessage(Message message) {
+        if (isClosing || dos == null) {
+            if (message != null) {
+                message.cleanup();
+            }
+            return;
+        }
         sender.addMessage(message);
         lastSendTime = System.currentTimeMillis();
     }
 
     public void sendMessage(Message message, boolean batch) {
+        if (isClosing || dos == null) {
+            if (message != null) {
+                message.cleanup();
+            }
+            return;
+        }
         if (batch) {
             sender.addMessage(message);
             lastSendTime = System.currentTimeMillis();
@@ -362,6 +375,11 @@ public class Session implements ISession {
         if (m == null) {
             return;
         }
+        DataOutputStream out = dos;
+        if (isClosing || out == null) {
+            m.cleanup();
+            return;
+        }
 
         byte[] data = m.getData();
         boolean skipBase64 = (m.getCommand() == Cmd.GET_IMAGE_SOURCE);
@@ -375,9 +393,9 @@ public class Session implements ISession {
         }
         // Gửi command byte
         if (isConnected) {
-            dos.writeByte(writeKey(b));
+            out.writeByte(writeKey(b));
         } else {
-            dos.writeByte(b);
+            out.writeByte(b);
         }
 
         if (data != null) {
@@ -390,7 +408,7 @@ public class Session implements ISession {
                     for (int i = 0; i < numBits; i += 8) {
                         int bitsToSend = Math.min(8, numBits - i);
                         byte value = (byte) ((size >> i & ((1 << bitsToSend) - 1)) - 128);
-                        dos.writeByte(writeKey(value));
+                        out.writeByte(writeKey(value));
                     }
                 } else {
                     // Message thường sử dụng 3 byte (24-bit) thay vì 2 byte
@@ -399,15 +417,15 @@ public class Session implements ISession {
                     byte byte2 = (byte) ((size >> 8) & 0xFF);
                     byte byte3 = (byte) (size & 0xFF);
 
-                    dos.writeByte(writeKey(byte1));
-                    dos.writeByte(writeKey(byte2));
-                    dos.writeByte(writeKey(byte3));
+                    out.writeByte(writeKey(byte1));
+                    out.writeByte(writeKey(byte2));
+                    out.writeByte(writeKey(byte3));
                 }
             } else {
                 // Không mã hóa cũng sử dụng 3 byte
-                dos.writeByte((size >> 16) & 0xFF);
-                dos.writeByte((size >> 8) & 0xFF);
-                dos.writeByte(size & 0xFF);
+                out.writeByte((size >> 16) & 0xFF);
+                out.writeByte((size >> 8) & 0xFF);
+                out.writeByte(size & 0xFF);
             }
 
             // Mã hóa data nếu cần
@@ -417,10 +435,10 @@ public class Session implements ISession {
                 }
             }
 
-            dos.write(data);
+            out.write(data);
         }
 
-        dos.flush();
+        out.flush();
         m.cleanup();
     }
 
@@ -470,7 +488,11 @@ public class Session implements ISession {
     }
 
     @Override
-    public void close() {
+    public synchronized void close() {
+        if (isClosing) {
+            return;
+        }
+        isClosing = true;
         try {
             try {
                 try {

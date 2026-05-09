@@ -284,7 +284,7 @@ public class Player {
     public boolean canReactDame = true;
     private boolean isNewMember;
     private boolean isNhapThe;
-    private boolean isLoggedOut;
+    private volatile boolean isLoggedOut;
     private boolean isMask;
     private boolean isFreeze, isSleep, isBlind, isProtected, isHuytSao, isHeld, isCritFirstHit;
     private boolean isBuaTriTue, isBuaManhMe, isBuaDaTrau, isBuaOaiHung, isBuaBatTu, isBuaDeoDai, isBuaThuHut,
@@ -7583,6 +7583,10 @@ public class Player {
                 break;
             case 522:
                 Top topVQTD = Top.getTop(Top.TOP_VQTD);
+                if (topVQTD == null) {
+                    service.sendThongBao("Bảng xếp hạng vòng quay chưa sẵn sàng.");
+                    return;
+                }
                 topVQTD.show(this);
                 break;
             case 523:
@@ -11929,7 +11933,7 @@ public class Player {
             lastTimeUseGiftCode = now;
             Server server = DragonBall.getInstance().getServer();
             Config config = server.getConfig();
-            String code = inputDlg.getText().toLowerCase();
+            String code = inputDlg.getText().trim().toLowerCase();
             int lent = code.length();
             if (code.isEmpty() || lent < 5 || lent > 30) {
                 service.dialogMessage("Mã quà tặng có chiều dài từ 5 đến 30 ký tự");
@@ -11959,16 +11963,16 @@ public class Player {
                 service.dialogMessage("Bạn không đủ chỗ trống trong hành trang");
                 return;
             }
-            GiftHistoryData historyData = new GiftHistoryData();
-            historyData.createTime = new Timestamp(now);
-            historyData.giftCodeId = giftCodeData.id;
-            historyData.playerId = this.id;
-            GameRepository.getInstance().giftCodeHistory.save(historyData);
             StringBuilder sb = new StringBuilder();
             sb.append("Chúc mừng, bạn đã được tặng").append("\b");
+            ArrayList<Item> rewardItems = new ArrayList<>();
             for (int i = 0; i < size; i++) {
                 JSONObject itemObj = (JSONObject) arrItem.get(i);
                 Item newItem = new Item(itemObj.getInt("id"));
+                if (newItem.template == null) {
+                    service.dialogMessage("Giftcode có vật phẩm không hợp lệ, vui lòng liên hệ admin");
+                    return;
+                }
                 newItem.quantity = itemObj.getInt("quantity");
                 newItem.setDefaultOptions();
                 if (itemObj.has("expire")) {
@@ -11981,21 +11985,66 @@ public class Player {
                     JSONArray arrOption = itemObj.getJSONArray("options");
                     newItem.addItemOptions(arrOption);
                 }
-                addItem(newItem);
+                rewardItems.add(newItem);
                 sb.append(String.format("- x%s %s", Utils.currencyFormat(newItem.quantity), newItem.template.name))
                         .append("\b");
             }
-            if (giftCodeData.gold > 0) {
-                addGold(gold);
-                sb.append(String.format("- %s vàng", Utils.currencyFormat(gold))).append("\b");
+            long giftGold = giftCodeData.gold != null ? giftCodeData.gold : 0L;
+            int giftDiamond = giftCodeData.diamond != null ? giftCodeData.diamond : 0;
+            int giftDiamondLock = giftCodeData.diamondLock != null ? giftCodeData.diamondLock : 0;
+            if (giftGold > 0) {
+                sb.append(String.format("- %s vàng", Utils.currencyFormat(giftGold))).append("\b");
             }
-            if (giftCodeData.diamond > 0) {
-                addDiamond(giftCodeData.diamond);
-                sb.append(String.format("- %s ngọc xanh", Utils.currencyFormat(giftCodeData.diamond))).append("\b");
+            if (giftDiamond > 0) {
+                sb.append(String.format("- %s ngọc xanh", Utils.currencyFormat(giftDiamond))).append("\b");
             }
-            if (giftCodeData.diamondLock > 0) {
-                addDiamondLock(giftCodeData.diamondLock);
-                sb.append(String.format("- %s hồng ngọc", Utils.currencyFormat(giftCodeData.diamondLock))).append("\b");
+            if (giftDiamondLock > 0) {
+                sb.append(String.format("- %s hồng ngọc", Utils.currencyFormat(giftDiamondLock))).append("\b");
+            }
+
+            Item[] bagSnapshot = cloneItemArray(this.itemBag);
+            long goldSnapshot = this.gold;
+            int diamondSnapshot = this.diamond;
+            int diamondLockSnapshot = this.diamondLock;
+            boolean savedReward = false;
+            try {
+                for (Item rewardItem : rewardItems) {
+                    if (!addItem(rewardItem)) {
+                        throw new IllegalStateException("Giftcode add item failed: " + rewardItem.id);
+                    }
+                }
+                if (giftGold > 0) {
+                    addGold(giftGold);
+                }
+                if (giftDiamond > 0) {
+                    addDiamond(giftDiamond);
+                }
+                if (giftDiamondLock > 0) {
+                    addDiamondLock(giftDiamondLock);
+                }
+                if (!saveDataSafely()) {
+                    throw new IllegalStateException("Giftcode save player failed");
+                }
+                savedReward = true;
+
+                GiftHistoryData historyData = new GiftHistoryData();
+                historyData.createTime = new Timestamp(now);
+                historyData.giftCodeId = giftCodeData.id;
+                historyData.playerId = this.id;
+                GameRepository.getInstance().giftCodeHistory.saveAndFlush(historyData);
+            } catch (Exception rewardEx) {
+                this.itemBag = bagSnapshot;
+                this.gold = goldSnapshot;
+                this.diamond = diamondSnapshot;
+                this.diamondLock = diamondLockSnapshot;
+                service.setItemBag();
+                service.loadInfo();
+                if (savedReward) {
+                    saveDataSafely();
+                }
+                logger.error("giftcode reward failed: " + code + " player=" + this.name, rewardEx);
+                service.dialogMessage("Có lỗi khi nhận giftcode, vui lòng thử lại hoặc liên hệ admin");
+                return;
             }
             String text = sb.toString();
             String[] arr = text.split("\\\b");
@@ -12008,7 +12057,11 @@ public class Player {
                     sb2.append("\b");
                 }
             }
-            service.openUISay(NpcName.CON_MEO, sb2.toString(), getPetAvatar());
+            try {
+                service.openUISay(NpcName.CON_MEO, sb2.toString(), getPetAvatar());
+            } catch (Exception uiEx) {
+                logger.error("giftcode show reward failed: " + code + " player=" + this.name, uiEx);
+            }
         } catch (Exception ex) {
             
             //System.err.println("Error at 91");
@@ -12016,6 +12069,17 @@ public class Player {
         } finally {
             lockAction.unlock();
         }
+    }
+
+    private Item[] cloneItemArray(Item[] source) {
+        if (source == null) {
+            return null;
+        }
+        Item[] clone = new Item[source.length];
+        for (int i = 0; i < source.length; i++) {
+            clone[i] = source[i] != null ? source[i].clone() : null;
+        }
+        return clone;
     }
 
     public void deleteItemBoxCrackBall(int index, boolean isShow) {
@@ -18488,7 +18552,9 @@ public class Player {
 
             }
             if (this.mobMe.timeLive == 0) {
-                zone.service.mobMeUpdate(this, null, -1, (byte) -1, (byte) 7);
+                if (zone != null && zone.service != null) {
+                    zone.service.mobMeUpdate(this, null, -1, (byte) -1, (byte) 7);
+                }
                 this.mobMe = null;
             }
         }
@@ -18528,10 +18594,10 @@ public class Player {
                     if (zone == null || zone.service == null) {
                         if (zone == null) {
                             logger.debug("zone is null");
-                        }
-                        if (zone.service == null) {
+                        } else if (zone.service == null) {
                             logger.debug("service is null");
                         }
+                        return;
                     }
                     List<Player> list = zone.getListChar(Zone.TYPE_HUMAN, Zone.TYPE_PET);
                     if (list.size() > 1) {
@@ -18610,10 +18676,13 @@ public class Player {
                 try {
                     if (isHaveEquipInvisible) {
                         isInvisible = true;
+                        if (zone == null || zone.service == null) {
+                            return;
+                        }
                         zone.service.playerLoadAll(this);
                         long delay = 1000;
                         Utils.setTimeout(() -> {
-                            if (zone != null) {
+                            if (zone != null && zone.service != null) {
                                 isInvisible = false;
                                 zone.service.playerLoadAll(this);
                             }
@@ -21113,11 +21182,17 @@ public class Player {
     public long lastSaveData = 0l;
 
     public void saveData() {
+        saveDataSafely();
+    }
+
+    public boolean saveDataSafely() {
+        lockAction.lock();
+        try {
         if (this instanceof VirtualBot || this instanceof BotCold) {
-            return;
+            return true;
         }
         if (this.isBoss()) {
-            return;
+            return true;
         }
         lastSaveData = System.currentTimeMillis();
         try {
@@ -21138,7 +21213,7 @@ public class Player {
         try {
             if (isLoggedOut) {
                 //System.err.println("return SaveData..............\n");
-                return;
+                return false;
 
             }
             if (myDisciple != null) {
@@ -21296,11 +21371,16 @@ public class Player {
                 mabuEgg.save();
             }
             logger.debug("saveDataPlayer " + this.name + " success");
+            return true;
         } catch (Exception e) {
             
             //System.err.println("Error at 25");
             e.printStackTrace();
             logger.debug("Error at saveDataPlayer -> " + this.name, e);
+            return false;
+        }
+        } finally {
+            lockAction.unlock();
         }
     }
 
