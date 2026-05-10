@@ -3588,6 +3588,23 @@ public class Service implements IService {
         }
     }
 
+    public void registerResult(boolean success, String text) {
+        try {
+            Message ms = new Message(Cmd.REGISTER);
+            FastDataOutputStream ds = ms.writer();
+            ds.writeBoolean(success);
+            if (!success) {
+                ds.writeUTF(text);
+            }
+            ds.flush();
+            sendMessage(ms);
+            ms.cleanup();
+        } catch (Exception ex) {
+            
+            logger.error("failed!", ex);
+        }
+    }
+
     public void setLinkListServer() {
         try {
             Server server = DragonBall.getInstance().getServer();

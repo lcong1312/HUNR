@@ -68,29 +68,7 @@ public class MessageHandler implements IMessageHandler {
                         break;
                     case Cmd.LOGIN2:
                         if (session.user == null) {
-                            try {
-                                String usernameSet = "@guest.ingame_" + System.currentTimeMillis();
-                                String password = "a";
-                                Integer nextId = GameRepository.getInstance().user.getNextId();
-                                if (nextId == null) {
-                                    nextId = 1;
-                                }
-                                GameRepository.getInstance().user.createUser(
-                                    nextId,
-                                    usernameSet,
-                                    password,
-                                    0,
-                                    0,
-                                    0,
-                                    1,
-                                    new Timestamp(System.currentTimeMillis())
-                                );
-                                service.playGuest(usernameSet);
-                            } catch (Exception ex) {
-                                
-                                logger.error("Failed to create guest account", ex);
-                                service.dialogMessage("Có lỗi xảy ra khi tạo tài khoản. Vui lòng thử lại.");
-                            }
+                            service.dialogMessage("Vui lòng đăng ký tài khoản bằng form Chơi mới.");
                         } else {
                             service.dialogMessage(ConfigStudio.MESSAGE_LOGIN2);
                         }
@@ -672,25 +650,49 @@ public class MessageHandler implements IMessageHandler {
 
                     case Cmd.REGISTER:
                         {
-                            String usernameInput = mss.reader().readUTF();
-                            String password = mss.reader().readUTF();
-                            String usernameAo = mss.reader().readUTF();
-                            String passwordAo = "a";
-                            
+                            String usernameInput = mss.reader().readUTF().trim();
+                            String password = mss.reader().readUTF().trim();
+                            if (mss.reader().available() > 0) {
+                                mss.reader().readUTF();
+                            }
+                            if (mss.reader().available() > 0) {
+                                mss.reader().readUTF();
+                            }
+                            if (usernameInput.length() < 5 || password.isEmpty()) {
+                                service.registerResult(false, "Tài khoản hoặc mật khẩu không hợp lệ.");
+                                break;
+                            }
                             String username = usernameInput.toLowerCase();
+                            if (!username.matches("[a-z0-9._@]+")) {
+                                service.registerResult(false, "Tài khoản chỉ được dùng chữ, số, dấu chấm, @ hoặc _.");
+                                break;
+                            }
                             
                             List<UserData> existingUsers = GameRepository.getInstance().user.findByUsername(username);
                             if (existingUsers.isEmpty()) {
                                 try {
-                                    GameRepository.getInstance().user.updateUser(usernameAo, passwordAo, username, password);
-                                    service.dialogMessage("Chúc mừng bạn đã kích hoạt tài khoản ảo thành công\nUsername: " + usernameInput + "\nPassword: " + password + "\nChúc bạn chơi game vui vẻ");
+                                    Integer nextId = GameRepository.getInstance().user.getNextId();
+                                    if (nextId == null) {
+                                        nextId = 1;
+                                    }
+                                    GameRepository.getInstance().user.createUser(
+                                        nextId,
+                                        username,
+                                        password,
+                                        0,
+                                        0,
+                                        0,
+                                        0,
+                                        new Timestamp(System.currentTimeMillis())
+                                    );
+                                    service.registerResult(true, null);
                                 } catch (Exception e) {
                                     
                                     logger.error("Failed to update user", e);
-                                    service.dialogMessage("Có lỗi xảy ra khi kích hoạt tài khoản. Vui lòng thử lại.");
+                                    service.registerResult(false, "Có lỗi xảy ra khi đăng ký tài khoản. Vui lòng thử lại.");
                                 }
                             } else {
-                                service.dialogMessage("Tên đăng nhập đã tồn tại. Vui lòng chọn tên khác.");
+                                service.registerResult(false, "Tên đăng nhập đã tồn tại. Vui lòng chọn tên khác.");
                             }
                             break;
                         }
