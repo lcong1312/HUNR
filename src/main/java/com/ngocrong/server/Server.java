@@ -2059,6 +2059,13 @@ public class Server {
         putHeadAvatar(2165, 29008);
         putHeadAvatar(2168, 32015);
         putHeadAvatar(2171, 15904);
+        putHeadAvatar(2174, 16789);
+        putHeadAvatar(2177, 16820);
+        putHeadAvatar(2180, 16863);
+        putHeadAvatar(2183, 16892);
+        putHeadAvatar(2189, 16103);
+        putHeadAvatar(2192, 16132);
+        putHeadAvatar(2195, 16173);
 
         putHeadAvatar(1400, 31126);
         putHeadAvatar(1401, 31133);

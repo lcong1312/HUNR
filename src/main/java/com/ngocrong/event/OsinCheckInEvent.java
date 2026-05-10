@@ -139,7 +139,9 @@ public class OsinCheckInEvent {
         if (existingBuff == null) {
             Item base = new Item(ItemName.PHIEU_X2_TNSM);
             player.setItemTime(ItemTimeName.PHIEU_X2_TNSM, base.template.iconID, true, Utils.getSecondsUntilEndOfDay());
-            player.service.sendThongBao("Bạn nhận được x2 TNSM trong ngày do server đã đạt mốc " + currentHighestMilestone + " người điểm danh!");
+            if (player.service != null) {
+                player.service.sendThongBao("Bạn nhận được x2 TNSM trong ngày do server đã đạt mốc " + currentHighestMilestone + " người điểm danh!");
+            }
         }
     }
 
@@ -172,7 +174,9 @@ public class OsinCheckInEvent {
                 rewardMessage.append(String.format("%s x%d", specialReward.template.name, specialReward.quantity));
                 hasGivenAnyReward = true;
             } else {
-                p.service.sendThongBao("Hành trang không đủ chỗ trống để nhận một phần quà điểm danh.");
+                if (p.service != null) {
+                    p.service.sendThongBao("Hành trang không đủ chỗ trống để nhận một phần quà điểm danh.");
+                }
             }
         }
 
@@ -182,7 +186,7 @@ public class OsinCheckInEvent {
             repo().save(checkInData);
 
             // Thông báo tổng hợp
-            if (rewardMessage.length() > 0) {
+            if (rewardMessage.length() > 0 && p.service != null) {
                 p.service.sendThongBao(String.format("Bạn nhận được quà điểm danh mốc %d: %s",
                         currentMilestone, rewardMessage.toString()));
             }

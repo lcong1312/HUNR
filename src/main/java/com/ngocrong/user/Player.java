@@ -18135,12 +18135,16 @@ public class Player {
                     } else {
                         itm.seconds = item.seconds;
                     }
-                    service.setItemTime(itm);
+                    if (service != null) {
+                        service.setItemTime(itm);
+                    }
                     return;
                 }
             }
             this.itemTimes.add(item);
-            service.setItemTime(item);
+            if (service != null) {
+                service.setItemTime(item);
+            }
         }
     }
 
@@ -18185,18 +18189,21 @@ public class Player {
         if (item.template.id == 2486) {
             return 15238;
         }
+        if (item.template.id == 2492) {
+            return 16181;
+        }
         return (short) (item.template.iconID - 1);
     }
 
     public static byte[] getPetFollowFrames(short smallId) {
-        if (smallId == 15238) {
+        if (smallId == 15238 || smallId == 16181) {
             return new byte[]{0, 1, 2, 3, 4, 5};
         }
         return new byte[]{0, 1, 2, 3, 4, 5, 6, 7};
     }
 
     public static short getPetFollowSize(short smallId) {
-        if (smallId == 15238 || smallId == 15250 || smallId == 15252) {
+        if (smallId == 15238 || smallId == 15250 || smallId == 15252 || smallId == 16181) {
             return 225;
         }
         return (short) (smallId == 15067 ? 65 : 75);
@@ -19079,8 +19086,10 @@ public class Player {
         ItemTime itemTime = new ItemTime(itemTimeId, iconId, second, isSave);
         addItemTime(itemTime);
         info.setInfo();
-        service.loadPoint();
-        if (zone != null) {
+        if (service != null) {
+            service.loadPoint();
+        }
+        if (zone != null && zone.service != null) {
             zone.service.playerLoadBody(this);
         }
     }
