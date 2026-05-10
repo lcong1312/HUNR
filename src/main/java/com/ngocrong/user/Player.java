@@ -16632,6 +16632,9 @@ public class Player {
                 this.addItem(ct);
                 removeItem(item.indexUI, 1);
                 break;
+            case ItemName.RUONG_TEAMOBI_CHI_SO_AN:
+                openRuongTeamobiChiSoAn(item);
+                break;
             case ItemName.RUONG_CAI_TRANG_THO_DAU_BAC:
                 if (isBagFull()) {
                     service.sendThongBao(Language.ME_BAG_FULL);
@@ -17361,6 +17364,88 @@ public class Player {
                 // SessionManager.countPhaoHoa = 0;
                 // }
                 break;
+        }
+    }
+
+    private void openRuongTeamobiChiSoAn(Item item) {
+        if (item == null || item.template.id != ItemName.RUONG_TEAMOBI_CHI_SO_AN) {
+            return;
+        }
+        if (getSlotNullInBag() < 1) {
+            service.serverMessage("Bạn cần ít nhất 1 ô trống trong hành trang ");
+            return;
+        }
+        int[] rewardIds = {
+            2480, 2481, 2482, 2483, 2485, 2488, 2489,
+            2484, 2492,
+            2490, 2491, 2493
+        };
+        int rewardId = rewardIds[Utils.nextInt(rewardIds.length)];
+        Item reward = new Item(rewardId);
+        reward.quantity = 1;
+        reward.setDefaultOptions();
+        addTeamobiHiddenOptions(reward, getTeamobiHiddenOptionCount(rewardId), getTeamobiHiddenOptionMax(rewardId));
+        if (addItem(reward)) {
+            removeItem(item.indexUI, 1);
+            service.combine((byte) 6, null, item.template.iconID, reward.template.iconID);
+            service.serverMessage("Bạn nhận được " + reward.template.name);
+        } else {
+            service.serverMessage("Hành trang đã đầy");
+        }
+    }
+
+    private int getTeamobiHiddenOptionCount(int itemId) {
+        switch (itemId) {
+            case 2480:
+            case 2481:
+            case 2482:
+            case 2483:
+            case 2485:
+            case 2488:
+            case 2489:
+                return 4;
+            case 2484:
+            case 2492:
+                return 2;
+            case 2490:
+            case 2491:
+            case 2493:
+                return 3;
+            default:
+                return 0;
+        }
+    }
+
+    private int getTeamobiHiddenOptionMax(int itemId) {
+        switch (itemId) {
+            case 2480:
+            case 2481:
+            case 2482:
+            case 2483:
+            case 2485:
+            case 2488:
+            case 2489:
+                return 50;
+            case 2484:
+            case 2492:
+                return 20;
+            case 2490:
+            case 2491:
+            case 2493:
+                return 30;
+            default:
+                return 0;
+        }
+    }
+
+    private void addTeamobiHiddenOptions(Item item, int count, int maxPercent) {
+        if (item == null || count <= 0 || maxPercent <= 0) {
+            return;
+        }
+        List<Integer> optionIds = new ArrayList<>(Arrays.asList(77, 103, 50, 108, 94, 14));
+        Collections.shuffle(optionIds);
+        for (int i = 0; i < count && i < optionIds.size(); i++) {
+            item.addItemOption(new ItemOption(optionIds.get(i), Utils.nextInt(1, maxPercent)));
         }
     }
 

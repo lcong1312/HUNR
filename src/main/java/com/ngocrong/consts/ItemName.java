@@ -1136,6 +1136,7 @@ public class ItemName {
     public static final int TNSM_X10 = 32718;
     public static final int RUONG_SET_SKH_TUY_CHON = 32719;
     public static final int HAO_QUANG_HAC_TIM = 32721;
+    public static final int RUONG_TEAMOBI_CHI_SO_AN = 32722;
     // Summer beach event items
     public static final int _SAO_BIEN = 2306;
     public static final int DA_THACH_MA = 2307;
