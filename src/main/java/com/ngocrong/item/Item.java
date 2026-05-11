@@ -303,7 +303,10 @@ public class Item {
         if (itemOption.optionTemplate.id >= 34 && itemOption.optionTemplate.id <= 36) {
             this.levelMosaicStone = itemOption.param;
         }
-        if (itemOption.optionTemplate.id >= 127 && itemOption.optionTemplate.id <= 135) {
+        int optionId = itemOption.optionTemplate.id;
+        if ((optionId >= 127 && optionId <= 135)
+                || optionId == 198 || optionId == 200 || optionId == 202 || optionId == 204 || optionId == 206
+                || optionId == 208 || optionId == 210 || optionId == 212 || optionId == 214) {
             this.isSet = true;
         }
         if (itemOption.optionTemplate.id == 72) {
@@ -605,7 +608,10 @@ public class Item {
         if (options != null && !options.isEmpty()) {
             for (ItemOption io : options) {
                 if (io.id == 127 || io.id == 128 || io.id == 129 || io.id == 130 || io.id == 131 || io.id == 132
-                        || io.id == 133 || io.id == 134 || io.id == 135 || io.id == 224 || io.id == 225) {
+                        || io.id == 133 || io.id == 134 || io.id == 135
+                        || io.id == 198 || io.id == 200 || io.id == 202 || io.id == 204 || io.id == 206
+                        || io.id == 208 || io.id == 210 || io.id == 212 || io.id == 214
+                        || io.id == 224 || io.id == 225) {
                     return true;
                 }
             }

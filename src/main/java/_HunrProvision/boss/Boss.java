@@ -54,6 +54,7 @@ public abstract class Boss extends Player implements Bot {
     public byte percentDame = -1;
     public boolean canDispose = false;
     private transient boolean droppedGoldBarThisDeath;
+    private transient boolean droppedAngelPieceForGoldBarThisDeath;
     public static List<Boss> listBoss = new CopyOnWriteArrayList<>();
 
     public static String strBoss(Player player) {
@@ -97,6 +98,9 @@ public abstract class Boss extends Player implements Bot {
     }
 
     public void dropItem(Item item, Player player) {
+        boolean shouldDropAngelPiece = item != null
+                && item.id == ItemName.THOI_VANG
+                && !droppedAngelPieceForGoldBarThisDeath;
         if (item != null && item.id == ItemName.THOI_VANG) {
             markGoldBarDrop();
         }
@@ -107,10 +111,24 @@ public abstract class Boss extends Player implements Bot {
         itemMap.y = (short) Math.min(zone.map.collisionLand(itemMap.x, getY()), getY());
         zone.addItemMap(itemMap);
         zone.service.addItemMap(itemMap);
+        if (shouldDropAngelPiece) {
+            dropAngelPieceForGoldBar(player);
+        }
     }
 
     protected void markGoldBarDrop() {
         droppedGoldBarThisDeath = true;
+    }
+
+    protected void dropAngelPieceForGoldBar(Player player) {
+        if (droppedAngelPieceForGoldBarThisDeath || zone == null) {
+            return;
+        }
+        droppedAngelPieceForGoldBarThisDeath = true;
+        Item item = new Item(ItemName.MANH_AO_THIEN_SU_TD + Utils.nextInt(0, 14));
+        item.setDefaultOptions();
+        item.quantity = Utils.nextInt(1, 5);
+        dropItem(item, player);
     }
 
     protected void dropGroupA(Player player) {
@@ -416,6 +434,7 @@ public abstract class Boss extends Player implements Bot {
     @Override
     public void killed(Object killer) {
         droppedGoldBarThisDeath = false;
+        droppedAngelPieceForGoldBarThisDeath = false;
         super.killed(killer);
         if (killer instanceof Player) {
             Player _c = (Player) killer;

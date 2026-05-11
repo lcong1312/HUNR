@@ -49,6 +49,7 @@ public class TeamHaiTac extends Boss {
         // Drop the gold bars
         if (goldToDrop > 0) {
             markGoldBarDrop();
+            dropAngelPieceForGoldBar(null);
         }
         for (int i = 0; i < goldToDrop; i++) {
             Item item = new Item(ItemName.THOI_VANG);

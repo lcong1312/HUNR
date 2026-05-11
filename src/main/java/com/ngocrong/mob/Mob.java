@@ -63,7 +63,7 @@ public class Mob {
     private static Logger logger = Logger.getLogger(Mob.class);
 
     public static final int[] LEVEL = {-1, -1, 1, 2, 3, 4, 5, 6, 9, 9, 9, 9, 10, 10, 10, 11, 11, 11, 11, 12, 12, 12, 12, -1, -1, -1};
-    public static final int[][][] OPTIONS = {{{127, 139}, {128, 140}, {129, 141}}, {{130, 142}, {131, 143}, {132, 144}}, {{133, 136}, {134, 137}, {135, 138}}};
+    public static final int[][][] OPTIONS = {{{127, 139}, {128, 140}, {129, 141}}, {{130, 195}, {131, 143}, {132, 144}}, {{133, 136}, {134, 137}, {135, 138}}};
 
     public static ArrayList<MobTemplate> vMobTemplate = new ArrayList<>();
     public static byte[] data;
@@ -960,7 +960,9 @@ public class Mob {
         }
         long damageFull = _owner.info.damageFull;
         long dame = Utils.percentOf(damageFull, this.percentDamage);
-        if (_owner.isSetPikkoroDaimao()) {
+        if (_owner.isSetPikkoroDaimao2()) {
+            dame += Utils.percentOf(dame, 200);
+        } else if (_owner.isSetPikkoroDaimao()) {
             dame += Utils.percentOf(dame, 100);
         }
         if (obj instanceof Player) {

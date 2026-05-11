@@ -54,6 +54,10 @@ public class CombineFactory {
                 return new DoiDoKichHoat();
             case KICH_HOAT_VIP:
                 return new NangSKHVip();
+            case THIEN_SU:
+                return new DoiDoThienSu();
+            case KICH_HOAT_CAP_2:
+                return new NangSKHCap2();
             case GHEP_DA:
                 return new GhepDaNangCap();
             case TACH_DO:

@@ -14,6 +14,8 @@ public enum CombineType {
     HUY_DIET,
     KICH_HOAT,
     KICH_HOAT_VIP,
+    THIEN_SU,
+    KICH_HOAT_CAP_2,
     GHEP_DA,
     TACH_DO,
     TACH_DO_KICH_HOAT,

@@ -951,10 +951,14 @@ public class Zone extends Thread {
             if ((skill.template.id == SkillName.CHIEU_KAMEJOKO)) {
                 dame += (dame * _player.info.optionKame / 100);
             }
-            if ((skill.template.id == SkillName.CHIEU_KAMEJOKO && _player.isSetSongoku())) {
+            if (skill.template.id == SkillName.CHIEU_KAMEJOKO && _player.isSetSongoku2()) {
+                dame += Utils.percentOf(dame, 200);
+            } else if (skill.template.id == SkillName.CHIEU_KAMEJOKO && _player.isSetSongoku()) {
                 dame += Utils.percentOf(dame, 100);
             }
-            if ((skill.template.id == SkillName.CHIEU_DAM_GALICK && _player.isSetKakarot())) {
+            if (skill.template.id == SkillName.CHIEU_DAM_GALICK && _player.isSetKakarot2()) {
+                dame += Utils.percentOf(dame, 200);
+            } else if (skill.template.id == SkillName.CHIEU_DAM_GALICK && _player.isSetKakarot()) {
                 dame += Utils.percentOf(dame, 150);
             }
             if (flagXChuong && _player.info.options[159] > 0 && System.currentTimeMillis() - _player.lastXChuong >= 60000) {
@@ -1047,12 +1051,16 @@ public class Zone extends Thread {
                 if (target.isBoss()) {
                     dame /= 2;
                 }
-                if (_player.isSetKirin()) {
+                if (_player.isSetKirin2()) {
+                    dame += Utils.percentOf(dame, 200);
+                } else if (_player.isSetKirin()) {
                     dame += Utils.percentOf(dame, 100);
                 }
                 flag = true;
             } else if (skill.template.id == SkillName.LIEN_HOAN) {
-                if (_player.isSetOcTieu()) {
+                if (_player.isSetOcTieu2()) {
+                    dame += Utils.percentOf(dame, 200);
+                } else if (_player.isSetOcTieu()) {
                     dame += Utils.percentOf(dame, 100);
                 }
             }
@@ -1456,7 +1464,9 @@ public class Zone extends Thread {
             if (_player.isBuaManhMe()) {
                 dame *= 2;
             }
-            if ((skill.template.id == SkillName.CHIEU_DAM_GALICK && _player.isSetKakarot()) || (skill.template.id == SkillName.CHIEU_KAMEJOKO && _player.isSetSongoku())) {
+            if ((skill.template.id == SkillName.CHIEU_DAM_GALICK && _player.isSetKakarot2()) || (skill.template.id == SkillName.CHIEU_KAMEJOKO && _player.isSetSongoku2())) {
+                dame *= 4;
+            } else if ((skill.template.id == SkillName.CHIEU_DAM_GALICK && _player.isSetKakarot()) || (skill.template.id == SkillName.CHIEU_KAMEJOKO && _player.isSetSongoku())) {
                 dame *= 3;
             }
             if (_player.isDisciple()) {
@@ -1506,11 +1516,15 @@ public class Zone extends Thread {
             } else if (skill.template.id == SkillName.QUA_CAU_KENH_KHI) {
                 long hp = getTotalHP();
                 dame = (hp / 10) + (_player.info.damageFull * 10);
-                if (_player.isSetKirin()) {
+                if (_player.isSetKirin2()) {
+                    dame += Utils.percentOf(dame, 200);
+                } else if (_player.isSetKirin()) {
                     dame *= 2;
                 }
             } else if (skill.template.id == SkillName.LIEN_HOAN) {
-                if (_player.isSetOcTieu()) {
+                if (_player.isSetOcTieu2()) {
+                    dame += Utils.percentOf(dame, 200);
+                } else if (_player.isSetOcTieu()) {
                     dame += Utils.percentOf(dame, 100);
                 }
             }

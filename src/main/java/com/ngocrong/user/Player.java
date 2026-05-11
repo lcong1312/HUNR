@@ -329,7 +329,8 @@ public class Player {
     private boolean isExploded;
     private boolean isAutoPlay;
     private boolean setThienXinHang, setKirin, setSongoku, setPicolo, setOcTieu, setPikkoroDaimao, setKakarot, setCaDic,
-            setNappa, setThanLinh, caiTrangLaze, caiTrangTuSat, setHuyDiet;
+            setNappa, setThienXinHang2, setKirin2, setSongoku2, setPicolo2, setOcTieu2, setPikkoroDaimao2,
+            setKakarot2, setCaDic2, setNappa2, setThanLinh, caiTrangLaze, caiTrangTuSat, setHuyDiet;
     public boolean isCold;
     private boolean isMod;
     private boolean isHaveEquipInvisible, isHaveEquipTransformIntoChocolate, isHaveEquipTransformIntoStone,
@@ -3810,7 +3811,7 @@ public class Player {
                 if (achievements != null) {
                     achievements.get(14).addCount(1);// kỹ năng thành thạo
                 }
-                int seconds = (select.damage / 1000) * (setThienXinHang ? 2 : 1);
+                int seconds = (select.damage / 1000) * (setThienXinHang2 ? 3 : (setThienXinHang ? 2 : 1));
                 int distance = Utils.getDistance(0, 0, select.dx, select.dy);
                 List<Player> list = zone.getListChar(Zone.TYPE_ALL);
                 for (Player _player : list) {
@@ -3880,7 +3881,7 @@ public class Player {
                         if (!this.isDead && zone != null) {
                             setMonkey(true);
                             int level = getSkill(13).point;
-                            this.timeIsMoneky = (55 + (10 * level)) * (setCaDic ? 5 : 1);
+                            this.timeIsMoneky = (55 + (10 * level)) * (setCaDic2 ? 7 : (setCaDic ? 5 : 1));
                             this.updateSkin();
                             this.info.setInfo();
                             service.loadPoint();
@@ -5914,8 +5915,10 @@ public class Player {
                             menus.add(new KeyValue(CMDMenu.EP_SAO_TRANG_BI, "Ép sao\ntrang bị"));
                             menus.add(new KeyValue(CMDMenu.PHA_LE_HOA, "Pha lê\nhóa trang bị"));
                             // menus.add(new KeyValue(CMDMenu.DOI_DO_HUY_DIET, "Đổi Đồ\nHủy Diệt"));
+                            menus.add(new KeyValue(CMDMenu.DOI_DO_THIEN_SU, "Đổi đồ\nThiên Sứ"));
                             menus.add(new KeyValue(CMDMenu.DOI_DO_KICH_HOAT, "Nâng SKH\nThường"));
                             menus.add(new KeyValue(CMDMenu.DOI_DO_KICH_HOAT_VIP, "Nâng SKH\nVIP"));
+                            menus.add(new KeyValue(CMDMenu.DOI_DO_KICH_HOAT_CAP_2, "Nâng SKH\nCấp 2"));
 //                            menus.add(new KeyValue(CMDMenu.CAPSULE_VIPPRO_COMBINE, "Capsule\nVIP PRO"));
 //                            menus.add(new KeyValue(CMDMenu.CAPSULE_VIPPRO_OPTION, "Mở chỉ số\nCapsule"));
 //                            menus.add(new KeyValue(1154, "Tách Vật phẩm SK"));
@@ -6990,6 +6993,18 @@ public class Player {
                 break;
             case CMDMenu.DOI_DO_KICH_HOAT_VIP:
                 this.combine = CombineFactory.getCombine(CombineType.KICH_HOAT_VIP);
+                combine.setNpc(npc);
+                combine.setPlayer(this);
+                this.combine.showTab();
+                break;
+            case CMDMenu.DOI_DO_THIEN_SU:
+                this.combine = CombineFactory.getCombine(CombineType.THIEN_SU);
+                combine.setNpc(npc);
+                combine.setPlayer(this);
+                this.combine.showTab();
+                break;
+            case CMDMenu.DOI_DO_KICH_HOAT_CAP_2:
+                this.combine = CombineFactory.getCombine(CombineType.KICH_HOAT_CAP_2);
                 combine.setNpc(npc);
                 combine.setPlayer(this);
                 this.combine.showTab();
@@ -18643,7 +18658,7 @@ public class Player {
     public void updateTimeLiveMobMe() {
         if (this.mobMe != null) {
             if (this.mobMe.timeLive > 0) {
-                if (!isSetPikkoroDaimao()) {
+                if (!isSetPikkoroDaimao() && !isSetPikkoroDaimao2()) {
                     this.mobMe.timeLive--;
                 }
 
@@ -23666,8 +23681,8 @@ public class Player {
             service.sendThongBao("Vật phẩm không hợp lệ");
             return;
         }
-        if (item.quantity < 10) {
-            service.sendThongBao("Cần có x10 Mảnh thiên sứ");
+        if (item.quantity < 99) {
+            service.sendThongBao("Cần có x99 Mảnh thiên sứ");
             return;
         }
         Item itemCreate = new Item(item.template.id + 114);
@@ -23676,8 +23691,13 @@ public class Player {
         itemCreate.addItemOption(new ItemOption(optionBonus[Utils.nextInt(optionBonus.length)], Utils.nextInt(1, 5)));
         itemCreate.addItemOption(new ItemOption(30, 0));
         itemCreate.quantity = 1;
-        if (addItem(itemCreate)) {
-            this.removeItem(item.indexUI, 10);
+        if (item.quantity == 99) {
+            itemCreate.indexUI = item.indexUI;
+            itemBag[item.indexUI] = itemCreate;
+            service.refreshItem((byte) 1, itemCreate);
+            service.sendThongBao("Bạn nhận được " + itemCreate.template.name);
+        } else if (addItem(itemCreate)) {
+            this.removeItem(item.indexUI, 99);
             service.sendThongBao("Bạn nhận được " + itemCreate.template.name);
         } else {
             service.sendThongBao("Hành trang không đủ ô trống");

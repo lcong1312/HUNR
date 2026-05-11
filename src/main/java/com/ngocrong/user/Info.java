@@ -271,6 +271,7 @@ public class Info {
         boolean isOptLaze = false;
         boolean isOptTuSat = false;
         int setThienXinHang = 0, setKirin = 0, setSongoku = 0, setPicolo = 0, setOcTieu = 0, setPikkoroDaimao = 0, setKakarot = 0, setCaDic = 0, setNappa = 0;
+        int setThienXinHang2 = 0, setKirin2 = 0, setSongoku2 = 0, setPicolo2 = 0, setOcTieu2 = 0, setPikkoroDaimao2 = 0, setKakarot2 = 0, setCaDic2 = 0, setNappa2 = 0;
         int setThanLinh = 0;
         int setHuyDiet = 0;
         int upgradeMin = -1;
@@ -350,6 +351,33 @@ public class Info {
                         }
                         if (id == 135) {
                             setNappa++;
+                        }
+                        if (id == 198) {
+                            setThienXinHang2++;
+                        }
+                        if (id == 200) {
+                            setKirin2++;
+                        }
+                        if (id == 202) {
+                            setSongoku2++;
+                        }
+                        if (id == 204) {
+                            setPicolo2++;
+                        }
+                        if (id == 206) {
+                            setOcTieu2++;
+                        }
+                        if (id == 208) {
+                            setPikkoroDaimao2++;
+                        }
+                        if (id == 210) {
+                            setKakarot2++;
+                        }
+                        if (id == 212) {
+                            setCaDic2++;
+                        }
+                        if (id == 214) {
+                            setNappa2++;
                         }
                         if (id == 25) {
                             isHaveEquipInvisible = true;
@@ -461,6 +489,15 @@ public class Info {
         _player.setSetPikkoroDaimao(setPikkoroDaimao == 5);
         _player.setSetSongoku(setSongoku == 5);
         _player.setSetThienXinHang(setThienXinHang == 5);
+        _player.setSetCaDic2(setCaDic2 == 5);
+        _player.setSetKakarot2(setKakarot2 == 5);
+        _player.setSetKirin2(setKirin2 == 5);
+        _player.setSetNappa2(setNappa2 == 5);
+        _player.setSetOcTieu2(setOcTieu2 == 5);
+        _player.setSetPicolo2(setPicolo2 == 5);
+        _player.setSetPikkoroDaimao2(setPikkoroDaimao2 == 5);
+        _player.setSetSongoku2(setSongoku2 == 5);
+        _player.setSetThienXinHang2(setThienXinHang2 == 5);
         _player.setSetThanLinh(setThanLinh >= 1);
         _player.setSetHuyDiet(setHuyDiet == 5);
         ArrayList<Card> cards = _player.getCards();
@@ -591,10 +628,14 @@ public class Info {
             this.mpFullTemp *= phuX;
         }
 
-        if (_player.isSetNappa()) {
+        if (_player.isSetNappa2()) {
+            this.hpFullTemp += Utils.percentOf(this.hpFullTemp, 150);
+        } else if (_player.isSetNappa()) {
             this.hpFullTemp += Utils.percentOf(this.hpFullTemp, 80);
         }
-        if (_player.isSetPicolo()) {
+        if (_player.isSetPicolo2()) {
+            this.mpFullTemp += Utils.percentOf(this.mpFullTemp, 150);
+        } else if (_player.isSetPicolo()) {
             this.mpFullTemp += Utils.percentOf(this.mpFullTemp, 80);
         }
         if (_player.isSetHuyDiet()) {

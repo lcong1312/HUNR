@@ -72,6 +72,7 @@ public class MatTroi extends Boss {
             dropItem(item, c);
         } else {
             markGoldBarDrop();
+            dropAngelPieceForGoldBar(null);
             for (int i = 0; i < 20; i++) {
                 Item gold = new Item(ItemName.THOI_VANG);
                 gold.setDefaultOptions();

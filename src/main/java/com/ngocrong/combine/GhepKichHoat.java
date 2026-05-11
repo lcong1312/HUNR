@@ -9,7 +9,7 @@ import com.ngocrong.util.Utils;
 
 public class GhepKichHoat extends Combine {
 
-    public static final int[][][] OPTIONS = {{{127, 139}, {128, 140}, {129, 141}}, {{130, 142}, {131, 143}, {132, 144}}, {{133, 136}, {134, 137}, {135, 138}}};
+    public static final int[][][] OPTIONS = {{{127, 139}, {128, 140}, {129, 141}}, {{130, 195}, {131, 143}, {132, 144}}, {{133, 136}, {134, 137}, {135, 138}}};
 
     public static final int[] ITEMS = {ItemName.AO_VAI_3_LO, ItemName.AO_SOI_LEN, ItemName.AO_VAI_THO, ItemName.QUAN_VAI_DEN, ItemName.QUAN_SOI_LEN, ItemName.QUAN_VAI_THO,
         ItemName.GANG_VAI_DEN, ItemName.GANG_SOI_LEN, ItemName.GANG_VAI_THO, ItemName.GIAY_NHUA, ItemName.GIAY_SOI_LEN, ItemName.GIAY_VAI_THO, ItemName.RADA_CAP_1};

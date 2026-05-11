@@ -122,6 +122,7 @@ public class XenCon extends Boss {
             zone.service.addItemMap(itemMap);
 
             markGoldBarDrop();
+            dropAngelPieceForGoldBar(c);
             for (int i = 0; i < 10; i++) {
 
                 itemMap = new ItemMap(zone.autoIncrease++);

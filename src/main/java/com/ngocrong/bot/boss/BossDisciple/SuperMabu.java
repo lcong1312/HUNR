@@ -8,7 +8,6 @@ import _HunrProvision.boss.Boss;
 import com.ngocrong.consts.ItemName;
 import com.ngocrong.item.Item;
 import com.ngocrong.item.ItemMap;
-import com.ngocrong.map.tzone.Zone;
 import com.ngocrong.mob.Mob;
 import com.ngocrong.server.DropRateService;
 import com.ngocrong.server.SessionManager;
@@ -61,18 +60,13 @@ public class SuperMabu extends Boss {
 
     @Override
     public void killed(Object obj) {
-        Player player = (Player) obj;
-        if (player == null) {
-            return;
-        }
-
-        // Capture the zone reference before the async operation
-        final Zone currentZone = this.zone;
-        if (currentZone == null) {
+        Player player = obj instanceof Player ? (Player) obj : null;
+        if (this.zone == null) {
             return; // Safety check
         }
 
-        Item quatrung = new Item(568);
+        Item quatrung = new Item(ItemName.QUA_TRUNG);
+        quatrung.setDefaultOptions();
         quatrung.quantity = 1;
         dropItem(quatrung, player);
     }

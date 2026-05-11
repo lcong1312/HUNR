@@ -120,7 +120,7 @@ public class DoiDoKichHoat extends Combine {
             {128, 140},
             {129, 141}
         }, {
-            {130, 142},
+            {130, 195},
             {131, 143},
             {132, 144}
         }, {
