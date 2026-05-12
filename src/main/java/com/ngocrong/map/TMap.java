@@ -117,11 +117,14 @@ public class TMap {
     }
 
     public boolean isBlackDragonBall() {
-        // Sự kiện Ngọc Rồng Sao Đen chỉ diễn ra tại 4 hành tinh bên dưới
+        // Sự kiện Ngọc Rồng Sao Đen chỉ diễn ra tại 7 hành tinh bên dưới
         return mapID == MapName.HANH_TINH_M_2
                 || mapID == MapName.HANH_TINH_POLARIS
                 || mapID == MapName.HANH_TINH_CRETACEOUS
-                || mapID == MapName.HANH_TINH_MONMAASU;
+                || mapID == MapName.HANH_TINH_MONMAASU
+                || mapID == MapName.HANH_TINH_RUDEEZE
+                || mapID == MapName.HANH_TINH_GELBO
+                || mapID == MapName.HANH_TINH_TIGERE;
     }
 
     public boolean isBarrack() {

@@ -7991,6 +7991,18 @@ public class Player {
                 if (!map.zones.isEmpty()) {
                     list.add(new KeyValue(MapName.HANH_TINH_MONMAASU, "Hành tinh Monmaasu", "Vũ trụ"));
                 }
+                map = MapManager.getInstance().getMap(MapName.HANH_TINH_RUDEEZE);
+                if (!map.zones.isEmpty()) {
+                    list.add(new KeyValue(MapName.HANH_TINH_RUDEEZE, "Hành tinh Rudeeze", "Vũ trụ"));
+                }
+                map = MapManager.getInstance().getMap(MapName.HANH_TINH_GELBO);
+                if (!map.zones.isEmpty()) {
+                    list.add(new KeyValue(MapName.HANH_TINH_GELBO, "Hành tinh Gelbo", "Vũ trụ"));
+                }
+                map = MapManager.getInstance().getMap(MapName.HANH_TINH_TIGERE);
+                if (!map.zones.isEmpty()) {
+                    list.add(new KeyValue(MapName.HANH_TINH_TIGERE, "Hành tinh Tigere", "Vũ trụ"));
+                }
                 listMapTransport = list;
                 setCommandTransport((byte) 1);
                 service.mapTransport(list);

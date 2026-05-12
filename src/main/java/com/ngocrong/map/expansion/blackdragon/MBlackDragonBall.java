@@ -10,17 +10,20 @@ public class MBlackDragonBall extends IMap<ZBlackDragonBall> {
 
     private static final Logger logger = Logger.getLogger(MBlackDragonBall.class);
     public static byte[] FLAG_ARRAY = {2, 3, 4, 5, 6, 7};
-    // Chỉ sử dụng 4 bản đồ cho sự kiện Ngọc Rồng Sao Đen
+    // Sử dụng đủ 7 bản đồ cho sự kiện Ngọc Rồng Sao Đen
     public static int[] MAPS = {
         MapName.HANH_TINH_M_2,
         MapName.HANH_TINH_POLARIS,
         MapName.HANH_TINH_CRETACEOUS,
-        MapName.HANH_TINH_MONMAASU
+        MapName.HANH_TINH_MONMAASU,
+        MapName.HANH_TINH_RUDEEZE,
+        MapName.HANH_TINH_GELBO,
+        MapName.HANH_TINH_TIGERE
     };
 
     public MBlackDragonBall() {
         super(3600);
-        int[] zoneNumber = new int[]{5, 5, 3, 30};
+        int[] zoneNumber = new int[]{5, 5, 3, 30, 30, 30, 5};
         for (int i = 0; i < MAPS.length; i++) {
             int m = MAPS[i];
             TMap map = MapManager.getInstance().getMap(m);
