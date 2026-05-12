@@ -129,6 +129,7 @@ public class BlackGoku extends Boss {
             dropItem(item, (Player) obj);
         }
         dropGroupC((Player) obj);
+        dropRandomTnsmItemsLikeGoldBar();
 
     }
 

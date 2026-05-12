@@ -131,6 +131,29 @@ public abstract class Boss extends Player implements Bot {
         dropItem(item, player);
     }
 
+    protected void dropRandomTnsmItemsLikeGoldBar() {
+        if (zone == null || zone.map == null) {
+            return;
+        }
+        int count = Utils.nextInt(1, 3);
+        for (int i = 0; i < count; i++) {
+            Item item = new Item(Utils.nextInt(ItemName.TNSM_X2, ItemName.TNSM_X10));
+            item.setDefaultOptions();
+            item.quantity = 1;
+            ItemMap itemMap = new ItemMap(zone.autoIncrease++);
+            itemMap.item = item;
+            itemMap.playerID = -1;
+            int minX = 50;
+            int maxX = zone.map.width - 50;
+            itemMap.x = maxX > minX
+                    ? (short) Utils.nextInt(minX, maxX)
+                    : (short) Utils.nextInt(getX() - 100, getX() + 100);
+            itemMap.y = zone.map.collisionLand(itemMap.x, getY());
+            zone.addItemMap(itemMap);
+            zone.service.addItemMap(itemMap);
+        }
+    }
+
     protected void dropGroupA(Player player) {
         RandomCollection<Integer> rc = new RandomCollection<>();
         rc.add(10, ItemName.NGOC_RONG_3_SAO);

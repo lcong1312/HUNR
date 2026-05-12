@@ -143,6 +143,7 @@ public class XenCon extends Boss {
             return;
         }
         dropGroupC((Player) obj);
+        dropRandomTnsmItemsLikeGoldBar();
     }
 
     @Override

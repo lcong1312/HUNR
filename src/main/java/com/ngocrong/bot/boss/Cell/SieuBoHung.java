@@ -94,6 +94,9 @@ public class SieuBoHung extends Boss {
             return;
         }
         dropGroupC((Player) obj);
+        if (!isSuper) {
+            dropRandomTnsmItemsLikeGoldBar();
+        }
     }
 
     @Override

@@ -39,7 +39,6 @@ public class NgoKhong extends TeamTayDu {
             skills.add(Skills.getSkill((byte) SkillName.CHIEU_KAMEJOKO, (byte) 7).clone());
             skills.add(Skills.getSkill((byte) SkillName.CHIEU_MASENKO, (byte) 7).clone());
             skills.add(Skills.getSkill((byte) SkillName.CHIEU_ANTOMIC, (byte) 7).clone());
-            skills.add(Skills.getSkill((byte) SkillName.KHIEN_NANG_LUONG, (byte) 7).clone());
             skills.add(Skills.getSkill((byte) SkillName.TROI, (byte) 7).clone());
         } catch (Exception ex) {
             logger.error("init skill err", ex);

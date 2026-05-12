@@ -101,6 +101,7 @@ public class XenBoHung extends Boss {
             }
             dropItem(item, player);
         }
+        dropRandomTnsmItemsLikeGoldBar();
     }
 
     @Override

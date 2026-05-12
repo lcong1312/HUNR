@@ -114,6 +114,7 @@ public class Cooler extends Boss {
 //        killer.pointBoss += 3;
 //        killer.isChangePoint = true;
         dropGroupC((Player) obj);
+        dropRandomTnsmItemsLikeGoldBar();
 
     }
 

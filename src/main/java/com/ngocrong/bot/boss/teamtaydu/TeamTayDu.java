@@ -2,10 +2,8 @@ package com.ngocrong.bot.boss.teamtaydu;
 
 import _HunrProvision.boss.Boss;
 import com.ngocrong.item.Item;
-import com.ngocrong.mob.Mob;
 import com.ngocrong.server.DropRateService;
 import com.ngocrong.server.SessionManager;
-import com.ngocrong.skill.Skill;
 import com.ngocrong.skill.SkillName;
 import com.ngocrong.skill.Skills;
 import com.ngocrong.user.Player;
@@ -21,25 +19,6 @@ public class TeamTayDu extends Boss {
         super();
         this.percentDame = 5;
 
-    }
-
-    @Override
-    public long injure(Player player, Mob mob, long dame) {
-        Skill skill = player.select;
-        if (skill == null) {
-            return 0;
-        }
-        if (skill.template.id == SkillName.TU_PHAT_NO || skill.template.id == SkillName.MAKANKOSAPPO
-                || skill.template.id == SkillName.QUA_CAU_KENH_KHI) {
-            return 0;
-        }
-        if (mob != null) {
-            return 0;
-        }
-        if (dame > 1_000_000) {
-            return 1_000_000;
-        }
-        return dame;
     }
 
     @Override
@@ -83,7 +62,6 @@ public class TeamTayDu extends Boss {
             skills.add(Skills.getSkill((byte) SkillName.CHIEU_KAMEJOKO, (byte) 7).clone());
             skills.add(Skills.getSkill((byte) SkillName.CHIEU_MASENKO, (byte) 7).clone());
             skills.add(Skills.getSkill((byte) SkillName.CHIEU_ANTOMIC, (byte) 7).clone());
-            skills.add(Skills.getSkill((byte) SkillName.KHIEN_NANG_LUONG, (byte) 7).clone());
 
         } catch (Exception ex) {
             ex.printStackTrace();
