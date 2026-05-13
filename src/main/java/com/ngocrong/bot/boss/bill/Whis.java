@@ -145,7 +145,7 @@ public class Whis extends Boss {
             Item goldBar = new Item(ItemName.THOI_VANG);
             goldBar.setDefaultOptions();
             goldBar.quantity = 1;
-            this.dropItem(goldBar, null);
+            this.dropItem(goldBar, null, c);
         }
         for (int i = 0; i < 10; i++) {
             var item = new Item(190);

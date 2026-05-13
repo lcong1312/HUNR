@@ -40,7 +40,7 @@ public class TeamTayDu extends Boss {
             }
             for (int i = 0; i < thoivang; i++) {
                 int tempId = 457;
-                this.dropItem(new Item(tempId), null);
+                this.dropItem(new Item(tempId), null, pl);
             }
             if (Utils.isTrue(1 * DropRateService.getMobRate(), 100)) {
                 // dothanlinh

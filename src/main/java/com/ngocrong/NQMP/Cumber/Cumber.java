@@ -119,7 +119,7 @@ public class Cumber extends Boss {
         Player c = (Player) obj;
         int percent = Utils.nextInt(100);
         Item item;
-        int manhthiensuId = ItemName.MANH_AO_THIEN_SU_TD + Utils.nextInt(0, 14);
+        int manhthiensuId = randomAngelPieceIdByPlanet(c);
         if (percent < 80) {
             item = new Item(manhthiensuId);
         } else if (percent < 90) {
@@ -144,7 +144,7 @@ public class Cumber extends Boss {
             Item goldBar = new Item(457);
             goldBar.setDefaultOptions();
             goldBar.quantity = 1;
-            dropItem(goldBar, null);
+            dropItem(goldBar, null, c);
         }
 
     }

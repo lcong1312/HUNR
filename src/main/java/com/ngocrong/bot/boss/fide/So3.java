@@ -91,7 +91,7 @@ public class So3 extends Boss {
                 Item item = new Item(ItemName.THOI_VANG);
                 item.setDefaultOptions();
                 item.quantity = 1;
-                dropItem(item, null);
+                dropItem(item, null, c);
             }
         }
     }

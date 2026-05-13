@@ -95,7 +95,7 @@ public class TeamBojack extends Boss {
         Player c = (Player) obj;
         int num = Utils.nextInt(4, 14);
         markGoldBarDrop();
-        dropAngelPieceForGoldBar(null);
+        dropAngelPieceForGoldBar(c);
         for (int i = 0; i < 10; i++) {
             Item item = new Item(ItemName.THOI_VANG);
             item.setDefaultOptions();

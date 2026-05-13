@@ -164,7 +164,7 @@ public class ThoDaiCa extends Boss {
             dropItem(item, player);
         } else if (roll < 40) {
             markGoldBarDrop();
-            dropAngelPieceForGoldBar(null);
+            dropAngelPieceForGoldBar(player);
             for (int i = 0; i < 20; i++) {
                 Item gold = new Item(ItemName.THOI_VANG);
                 gold.setDefaultOptions();

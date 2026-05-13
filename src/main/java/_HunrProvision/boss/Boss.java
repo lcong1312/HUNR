@@ -55,6 +55,29 @@ public abstract class Boss extends Player implements Bot {
     public boolean canDispose = false;
     private transient boolean droppedGoldBarThisDeath;
     private transient boolean droppedAngelPieceForGoldBarThisDeath;
+    private static final int[][] ANGEL_PIECE_IDS_BY_PLANET = new int[][]{
+        {
+            ItemName.MANH_AO_THIEN_SU_TD,
+            ItemName.MANH_QUAN_THIEN_SU_TD,
+            ItemName.MANH_GANG_THIEN_SU_TD,
+            ItemName.MANH_GIAY_THIEN_SU_TD,
+            ItemName.MANH_NHAN_THIEN_SU_TD
+        },
+        {
+            ItemName.MANH_AO_THIEN_SU_NM,
+            ItemName.MANH_QUAN_THIEN_SU_NM,
+            ItemName.MANH_GANG_THIEN_SU_NM,
+            ItemName.MANH_GIAY_THIEN_SU_NM,
+            ItemName.MANH_NHAN_THIEN_SU_NM
+        },
+        {
+            ItemName.MANH_AO_THIEN_SU_XD,
+            ItemName.MANH_QUAN_THIEN_SU_XD,
+            ItemName.MANH_GANG_THIEN_SU_XD,
+            ItemName.MANH_GIAY_THIEN_SU_XD,
+            ItemName.MANH_NHAN_THIEN_SU_XD
+        }
+    };
     public static List<Boss> listBoss = new CopyOnWriteArrayList<>();
 
     public static String strBoss(Player player) {
@@ -98,6 +121,10 @@ public abstract class Boss extends Player implements Bot {
     }
 
     public void dropItem(Item item, Player player) {
+        dropItem(item, player, player);
+    }
+
+    protected void dropItem(Item item, Player player, Player angelPiecePlayer) {
         boolean shouldDropAngelPiece = item != null
                 && item.id == ItemName.THOI_VANG
                 && !droppedAngelPieceForGoldBarThisDeath;
@@ -112,7 +139,7 @@ public abstract class Boss extends Player implements Bot {
         zone.addItemMap(itemMap);
         zone.service.addItemMap(itemMap);
         if (shouldDropAngelPiece) {
-            dropAngelPieceForGoldBar(player);
+            dropAngelPieceForGoldBar(angelPiecePlayer);
         }
     }
 
@@ -125,10 +152,23 @@ public abstract class Boss extends Player implements Bot {
             return;
         }
         droppedAngelPieceForGoldBarThisDeath = true;
-        Item item = new Item(ItemName.MANH_AO_THIEN_SU_TD + Utils.nextInt(0, 14));
+        Item item = new Item(randomAngelPieceIdByPlanet(player));
         item.setDefaultOptions();
         item.quantity = Utils.nextInt(1, 5);
         dropItem(item, player);
+    }
+
+    protected int randomAngelPieceIdByPlanet(Player player) {
+        Player planetOwner = player;
+        if (planetOwner instanceof Disciple && ((Disciple) planetOwner).master != null) {
+            planetOwner = ((Disciple) planetOwner).master;
+        }
+        int planet = planetOwner == null ? -1 : planetOwner.gender;
+        if (planet >= 0 && planet < ANGEL_PIECE_IDS_BY_PLANET.length) {
+            int[] itemIds = ANGEL_PIECE_IDS_BY_PLANET[planet];
+            return itemIds[Utils.nextInt(itemIds.length)];
+        }
+        return ItemName.MANH_AO_THIEN_SU_TD + Utils.nextInt(0, 14);
     }
 
     protected void dropRandomTnsmItemsLikeGoldBar() {
