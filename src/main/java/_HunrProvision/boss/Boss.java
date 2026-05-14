@@ -154,7 +154,7 @@ public abstract class Boss extends Player implements Bot {
         droppedAngelPieceForGoldBarThisDeath = true;
         Item item = new Item(randomAngelPieceIdByPlanet(player));
         item.setDefaultOptions();
-        item.quantity = Utils.nextInt(1, 5);
+        item.quantity = Utils.nextInt(3, 10);
         dropItem(item, player);
     }
 
