@@ -26,15 +26,11 @@ public class TeamTayDu extends Boss {
         if (obj instanceof Player) {
             Player pl = (Player) obj;
             int thoivang = Utils.nextInt(5, 10);
-            for (int i = 0; i < 10; i++) {
-                int tempId = Utils.nextInt(5) == 0 ? 16 : 17;
-                this.dropItem(new Item(tempId), null);
-            }
             for (int i = 0; i < 30; i++) {
                 int tempId = Utils.nextInt(220, 224);
                 this.dropItem(new Item(tempId), null);
             }
-            for (int i = 0; i < 15; i++) {
+            for (int i = 0; i < 5; i++) {
                 int tempId = Utils.nextInt(381, 385);
                 this.dropItem(new Item(tempId), null);
             }

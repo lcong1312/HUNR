@@ -898,6 +898,11 @@ public class Mob {
             this.damage2 = 5000;
         }
 
+        if (this.templateId == 77) {
+            this.damage1 = 350_000;
+            this.damage2 = 300_000;
+        }
+
     }
 
     public void setLevelBoss() {
