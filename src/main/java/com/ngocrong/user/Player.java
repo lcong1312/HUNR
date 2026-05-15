@@ -5784,6 +5784,7 @@ public class Player {
                         //  menus.add(new KeyValue(1220, "Đi tới Bãi biển rực cháy"));
 //                        if (Config.serverID() == 1) {
                         menus.add(new KeyValue(1191, "Di chuyển tới Map Đệ tử"));
+                        menus.add(new KeyValue(1235, "Di chuyển tới\nRừng thần mộc"));
 //                        }
 //                        menus.add(new KeyValue(605, "Top 100\nSức mạnh"));
                         //   menus.add(new KeyValue(1210, "Úp Bông tai Cấp 2"));
@@ -9619,6 +9620,13 @@ public class Player {
                 break;
             case 1191:
                 this.joinMap(155);
+                break;
+            case 1235:
+                if (info.power < 60_000_000_000L) {
+                    service.sendThongBao("Yêu cầu sức mạnh tối thiểu 60 tỉ để vào Rừng thần mộc");
+                    break;
+                }
+                this.joinMap(156);
                 break;
 
             case 1192:
@@ -20072,7 +20080,7 @@ public class Player {
         }
         exp /= 5;
         exp = Zone.callEXP(this, exp);
-        if (zone.map.isMapDeTu() || zone.map.isMapPorata2()) {
+        if (zone.map.isMapDeTu()) {
             return;
         }
 

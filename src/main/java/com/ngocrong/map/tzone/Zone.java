@@ -1640,6 +1640,9 @@ public class Zone extends Thread {
                         } else if (map.isCold()) {
                             //cold= 1.5
                             exp += Utils.percentOf(exp, 50);
+                        } else if (map.isMapPorata2()) {
+                            // porata2 = 0.7
+                            exp -= Utils.percentOf(exp, 30);
                         } else if (map.mapID >= 168 && map.mapID <= 174) {
                             //maptet = 0.01
 //                            exp /= 100;                     
