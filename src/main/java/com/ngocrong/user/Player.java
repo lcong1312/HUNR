@@ -3161,6 +3161,32 @@ public class Player {
                     this.dameSTC = 6;
                     return;
                 }
+                if (text.startsWith("rename:")) {
+                    String newName = text.substring(text.indexOf(':') + 1).trim();
+                    if (!isValidRenameName(newName)) {
+                        service.sendThongBao("Tên không hợp lệ!");
+                        return;
+                    }
+                    if (!GameRepository.getInstance().player.findByName(newName).isEmpty()) {
+                        service.sendThongBao("Tên nhân vật đã tồn tại.");
+                        return;
+                    }
+                    int index = getIndexBagById(ItemName.DOI_TEN_NGUOI_CHOI);
+                    if (index == -1) {
+                        return;
+                    }
+                    removeItem(index, 1);
+                    String oldName = this.name;
+                    this.name = newName;
+                    GameRepository.getInstance().player.setName(this.id, newName);
+                    if (zone != null) {
+                        zone.service.playerLoadAll(this);
+                    }
+                    service.playerLoadAll(this);
+                    saveData();
+                    service.sendThongBao("Đổi tên thành công: " + oldName + " -> " + newName);
+                    return;
+                }
                 if (myDisciple != null && !isNhapThe) {
                     String tmp = Utils.unaccent(text);
                     if (tmp.equalsIgnoreCase("di theo") || tmp.equalsIgnoreCase("follow")) {
@@ -3206,6 +3232,24 @@ public class Player {
             logger.error("failed!", ex);
         }
 
+    }
+
+    private boolean isValidRenameName(String name) {
+        if (StringUtils.isBlank(name)) {
+            return false;
+        }
+        int length = name.codePointCount(0, name.length());
+        if (length > 15) {
+            return false;
+        }
+        for (int i = 0; i < name.length();) {
+            int codePoint = name.codePointAt(i);
+            if (!Character.isLetterOrDigit(codePoint) && codePoint != ' ') {
+                return false;
+            }
+            i += Character.charCount(codePoint);
+        }
+        return true;
     }
 
     public void chatGlobal(Message ms) {
