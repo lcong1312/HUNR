@@ -13,7 +13,7 @@ public class SQLStatement {
     public static final String INIT_EFFECT = "SELECT * FROM `nr_effect`";
     public static final String INIT_IMAGE_BY_NAME = "SELECT * FROM `nr_image_by_name`";
     public static final String INIT_IMAGE = "SELECT * FROM `nr_image`";
-    public static final String INIT_PART = "SELECT * FROM `nr_part`";
+    public static final String INIT_PART = "SELECT * FROM `nr_part` ORDER BY `id` ASC";
     public static final String INIT_SKILL_PAINT = "SELECT * FROM `nr_skill_paint`";
     public static final String INIT_EFFECT_DATA = "SELECT * FROM `nr_effect_data`";
     public static final String INIT_BACKGROUND = "SELECT * FROM `nr_background_item`";

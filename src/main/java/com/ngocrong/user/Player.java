@@ -2768,6 +2768,14 @@ public class Player {
             String text = ms.reader().readUTF();
             if (!text.isEmpty()) {
                 if (this.getSession().user.getRole() == 1) {
+                    if (text.equals("baotri")) {
+                        if (ServerMaintenance.startMaintenance("Bảo trì", 30)) {
+                            service.sendThongBao("Đã bật bảo trì sau 30 giây.");
+                        } else {
+                            service.sendThongBao("Máy chủ đang trong trạng thái bảo trì.");
+                        }
+                        return;
+                    }
                     if (text.equals("dropratefish1")) {
                         int[] r = new int[]{DropRateService.getFishBiteRate(false), DropRateService.getFishBiteRate(true)};
                         inputDlg = new InputDialog(CMDTextBox.DROP_RATE_FISH1, "Nhập tỉ lệ cá cắn câu",

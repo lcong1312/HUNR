@@ -18,19 +18,24 @@ public class ServerMaintenance implements Runnable {
         this.seconds = seconds;
     }
 
-    public static void BaoTri(int second) {
+    public static boolean startMaintenance(String message, int seconds) {
         try {
             Server server = DragonBall.getInstance().getServer();
             if (!server.isMaintained) {
-                ServerMaintenance serverMaintenance = new ServerMaintenance("Bảo trì định kỳ hằng ngày 17h05", second);
-                Thread t = new Thread(serverMaintenance);
+                ServerMaintenance serverMaintenance = new ServerMaintenance(message, seconds);
+                Thread t = new Thread(serverMaintenance, "Server maintenance");
                 t.start();
-            } else {
+                return true;
             }
         } catch (Exception ex) {
             
             logger.error("maintenance", ex);
         }
+        return false;
+    }
+
+    public static void BaoTri(int second) {
+        startMaintenance("Bảo trì định kỳ hằng ngày 17h05", second);
     }
 
     void close(Server server) {

@@ -2066,6 +2066,9 @@ public class Server {
         putHeadAvatar(2189, 16103);
         putHeadAvatar(2192, 16132);
         putHeadAvatar(2195, 16173);
+        putHeadAvatar(2201, 16977);
+        putHeadAvatar(2202, 16977);
+        putHeadAvatar(2203, 16977);
 
         putHeadAvatar(1400, 31126);
         putHeadAvatar(1401, 31133);
@@ -2494,18 +2497,8 @@ public class Server {
 
                     }
                     if (line.equals("baotri")) {
-                        try {
-                            Server server = DragonBall.getInstance().getServer();
-                            if (!server.isMaintained) {
-                                ServerMaintenance serverMaintenance = new ServerMaintenance("Bảo trì", 30);
-                                Thread t = new Thread(serverMaintenance);
-                                t.start();
-                            } else {
-                                System.err.println("2");
-                            }
-                        } catch (Exception ex) {
-
-                            logger.error("maintenance", ex);
+                        if (!ServerMaintenance.startMaintenance("Bảo trì", 30)) {
+                            System.err.println("2");
                         }
                     } else if (line.equals("show")) {
                         try {
